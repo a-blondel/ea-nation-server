@@ -1,0 +1,9 @@
+﻿ %{START CMD=news TITLE="Welcome" BTN1="OK" BTN1-GOTO="$quit" TELE=TOSVVIEWen %}
+This server is a fan-made preservation project that is not affiliated nor endorsed by EA.
+
+Join our Discord server to stay updated on the latest news and events: https://discord.gg/fwrQHHxrQQ
+
+Please be respectful and have fun !
+
+- EA Nation Revival Team
+%{%}

@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - includeAll:
+      path: db/changelog/changes/
+  - changeSet:
+      id: 002-data
+      author: ablondel
+      dbms: h2
+      changes:
+        - sqlFile:
+            path: db/samples/basic.sql

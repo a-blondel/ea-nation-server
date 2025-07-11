@@ -1,0 +1,154 @@
+server:
+  port: ${SERVER_PORT:8080} # Local port
+
+http:
+  port: ${HTTP_PORT:80} # Tunnel port, exposed to the outside world
+  dns_name: ${DNS_NAME:http://localhost}
+
+ssl:
+  protocols: 'SSLv3,TLSv1.2'
+  cipher-suites: 'SSL_RSA_WITH_RC4_128_MD5,SSL_RSA_WITH_RC4_128_SHA'
+  certificate:
+    cipher-algorithm: 'MD5WITHRSA'
+  debug:
+    enabled: ${SSL_DEBUG_ENABLED:false}
+tcp:
+  # Must be machine IP if hosting for other machines. Must be WSL IP if using docker through WSL (local only)
+  host: ${TCP_HOST_IP:127.0.0.1}
+  buddy-port: ${TCP_BUDDY_PORT:5000}
+  debug:
+    enabled: ${TCP_DEBUG_ENABLED:false}
+    exclusions: ${TCP_DEBUG_EXCLUSIONS:~png,+snp}
+ssc2:
+  key: 51ba8aee64ddfacae5baefa6bf61e009
+
+spring:
+  datasource:
+    url: ${DB_URL}
+    port: ${DB_PORT:5432}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:test@example.com}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+#  jpa:
+#    hibernate:
+#    show-sql: true
+#    properties:
+#      hibernate:
+#        format_sql: true
+
+game:
+  servers:
+    - vers: 'PSP/FIFA07'
+      ssl:
+        domain: 'pspfifa07.ea.com'
+      regions:
+        - name: 'US'
+          port: 10490
+          slus:
+            - 'ULUS-10029'
+    - vers: 'PSP/NHL07'
+      sdk: '4.3.2'
+      ssl:
+        domain: 'pspnhl07.ea.com'
+      regions:
+        - name: 'US'
+          port: 10390
+          slus:
+            - 'ULUS10131'
+    - vers: 'BUDDY'
+      aries: false
+      ssl:
+        enabled: false
+      regions:
+        - name: 'GLOBAL'
+          port: 5000 # Arbitrary buddy port, set anything you want
+
+    - vers: 'PSP/MOH07'
+      sdk: '4.7.0'
+      p2p: false
+      dedicated:
+        vers: 'PSP/MOHGPS071'
+        slus: 'MOHA10000'
+        port: 11190
+      ssl:
+        domain: 'pspmoh07.ea.com'
+      regions:
+        - name: "EU"
+          port: 11180
+          slus:
+            - 'ULES00557'
+            - 'ULES00558'
+            - 'ULES00559'
+            - 'ULES00560'
+            - 'ULES00561'
+            - 'ULES00562'
+        - name: "US"
+          port: 11190
+          slus:
+            - 'ULUS10141'
+
+    - vers: 'PSP/MOH08'
+      sdk: '5.6.2'
+      p2p: false
+      ssl:
+        domain: 'pspmoh08.ea.com'
+      regions:
+        - name: 'EU'
+          port: 21180
+          slus:
+            - 'ULES00955'
+            - 'ULES00956'
+            - 'ULES00988'
+        - name: 'US'
+          port: 21190
+          slus:
+            - 'ULUS10310'
+
+    - vers: 'WII/MOH08'
+      sdk: '5.6.2'
+      p2p: false
+      ssl:
+        domain: 'wiimoh08.ea.com'
+      regions:
+        - name: 'EU'
+          port: 21170
+          slus:
+            - 'RM2X'
+            - 'RM2P'
+        - name: 'US'
+          port: 21120
+          slus:
+            - 'RM2E'
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: dev
+  h2:
+    console:
+      enabled: true
+      path: /h2
+      settings:
+        web-allow-others: true
+  datasource:
+    url: jdbc:h2:mem:ea-nation_db;DB_CLOSE_DELAY=-1
+    username: sa
+    password: sa
+    driver-class-name: org.h2.Driver
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master-populate.yaml

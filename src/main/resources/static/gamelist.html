@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medal of Honor Heroes: Server List</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+</head>
+<body>
+<div class="container">
+    <header class="header">
+        <h1 id="medal-of-honor-heroes-server-list" class="title">
+            Medal of Honor: Heroes
+        </h1>
+
+        <nav>
+            <a href="/gamelist.html" class="active">Server List</a>
+            <a href="/leaderboard.html">Leaderboard</a>
+        </nav>
+
+        <div class="header-controls">
+            <div class="control-group">
+                <div class="auto-refresh">
+                    <label class="switch">
+                        <input type="checkbox" id="auto-refresh-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                    <span class="theme-label">Auto-refresh</span>
+                </div>
+    
+                <span id="last-update" class="theme-label">Last updated: Never</span>
+            </div>
+            <div class="control-group">
+                <div class="dark-mode-toggle">
+                    <label class="switch">
+                        <input type="checkbox" id="dark-mode-toggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="theme-label">Dark Mode</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div id="error-message" class="error-message">
+        Unable to fetch server data. Please try again later.
+    </div>
+
+    <div id="loading" class="loading">
+        <span class="loading-spinner">↻</span> Loading server data...
+    </div>
+
+    <div id="stats-grid" class="stats-grid">
+        <div class="stat-box">
+            <div id="active-games" class="stat-value">0</div>
+            <div class="stat-label">Active Games</div>
+        </div>
+
+        <div class="stat-box">
+            <div id="players-in-game" class="stat-value">0</div>
+            <div class="stat-label">Players In Game</div>
+        </div>
+
+        <div class="stat-box">
+            <div id="players-in-lobby" class="stat-value">0</div>
+            <div class="stat-label">Players In Lobby</div>
+        </div>
+
+        <div class="stat-box">
+            <div id="total-players" class="stat-value">0</div>
+            <div class="stat-label">Total Players</div>
+        </div>
+    </div>
+
+    <div id="games-container">
+        <div id="no-games" class="no-games">
+            No active games found.
+        </div>
+    </div>
+</div>
+
+<!-- Templates -->
+<template id="game-card-template">
+    <div class="game-card">
+        <div class="game-header">
+            <div>
+                <div class="game-title">
+                    <span class="game-name"></span><span> - </span>
+                    <span class="game-map"></span>
+                    <img id="game-password" class="icon-img" src="images/password.png" alt="Password">
+                    <img id="game-ranked" class="icon-img" src="images/ranked.png" alt="Ranked">
+                    <img id="game-friendly-fire" class="icon-img" src="images/friendly-fire.png" alt="Friendly Fire">
+                    <img id="game-reverse-friendly-fire" class="icon-img" src="images/reverse-friendly-fire.png" alt="Reverse Friendly Fire">
+                    <img id="game-aim-assist" class="icon-img" src="images/aim-assist.png" alt="Aim assist">
+                    <span class="game-version"></span>
+                </div>
+                <div class="game-meta">
+                    <span class="meta-item">Started: <span class="game-start-time"></span></span>
+                    <span class="meta-item">Players: <span class="player-count"></span></span>
+                    <span class="meta-item">Max Players: <span class="max-players"></span> (+host)</span>
+                </div>
+            </div>
+        </div>
+        <div class="player-list"></div>
+    </div>
+</template>
+
+<template id="player-item-template">
+    <div class="player-item">
+        <div class="player-info">
+            <span class="player-name"></span>
+            <span class="host-badge">Hosting user:</span>
+        </div>
+        <div class="player-time"></div>
+    </div>
+</template>
+
+<script src="gamelist.js"></script>
+</body>
+</html>

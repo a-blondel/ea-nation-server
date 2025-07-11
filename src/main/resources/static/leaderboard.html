@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medal of Honor Heroes: Leaderboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <style>
+        @media (max-width: 768px) {
+            .header-controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            td.username {
+                gap: 6px;
+                display: flex;
+                justify-content: space-between;
+            }
+            
+            .version-select, .theme-toggle {
+                width: 100%;
+            }
+            
+            table {
+                font-size: 14px;
+            }
+            
+            th, td {
+                padding: 4px 8px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Medal of Honor: Heroes</h1>
+            
+            <nav>
+                <a href="/gamelist.html">Server List</a>
+                <a href="/leaderboard.html" class="active">Leaderboard</a>
+            </nav>
+
+            <div class="header-controls">
+                <div class="control-group">
+                    <button id="reset-sort" class="reset-button">Reset Sort</button>
+                    <div class="version-select">
+                        <select id="version-select">
+                            <option value="PSP/MOH07">MOHH1 (PSP)</option>
+                            <option value="PSP/MOH08">MOHH2 (PSP)</option>
+                            <option value="WII/MOH08">MOHH2 (Wii)</option>
+                        </select>
+                    </div>
+                    <div class="search">
+                        <label>
+                            <strong>Search:</strong>
+                            <input type="text" id="UserSearch" placeholder="Username"/>
+                        </label>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="theme-toggle">
+                        <label class="switch">
+                            <input type="checkbox" id="theme-toggle">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="theme-label">Dark Mode</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="show-mobile">
+            <p><strong>Scroll the table to see more ➡️</strong><br /><small>or click <em>"Detailed Stats"</em> for more information.</small></p>
+        </div>
+
+        <div class="leaderboard-table">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Username</th>
+                            <th>Score</th>
+                            <th>Kills</th>
+                            <th>Deaths</th>
+                            <th>K/D Ratio</th>
+                            <th>Play Time</th>
+                            <th>Wins</th>
+                            <th>Losses</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <script src="leaderboard.js"></script>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="detailed-stats-modal" id="StatsModal">
+        <div class="backdrop"></div>
+        <div class="modal">
+            <div class="inner">
+                <a href="javascript:;" class="close-modal">Close</a>
+
+                <div class="leaderboard-table">
+                    <table>
+                        <thead>
+                            <th id="StatsModalHeader" colspan="2">Player:</th>
+                        </thead>
+                    </table>
+
+                    <div class="scroller">
+                        <table>
+                            <tbody id="StatsModalBody">
+                                
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
