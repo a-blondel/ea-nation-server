@@ -25,7 +25,6 @@ public class AuthService {
 
     private final Props props;
     private final PersonaService personaService;
-    private final GameService gameService;
     private final GameServerService gameServerService;
     private final SocketWriter socketWriter;
 
@@ -78,6 +77,7 @@ public class AuthService {
     public void sele(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         String stats = getValueFromSocket(socketData.getInputMessage(), "STATS");
         String inGame = getValueFromSocket(socketData.getInputMessage(), "INGAME");
+        String rooms = getValueFromSocket(socketData.getInputMessage(), "ROOMS", SPACE_CHAR); // Not the same separator
 
         Map<String, String> content;
         // Request separates attributes either by 0x20 or 0x0a...
@@ -99,7 +99,7 @@ public class AuthService {
 
             if ("1".equals(inGame)) {
                 String games = getValueFromSocket(socketData.getInputMessage(), "GAMES");
-                String rooms = getValueFromSocket(socketData.getInputMessage(), "ROOMS");
+                rooms = getValueFromSocket(socketData.getInputMessage(), "ROOMS");
                 String mesgs = getValueFromSocket(socketData.getInputMessage(), "MESGS");
                 String mesgTypes = getValueFromSocket(socketData.getInputMessage(), "MESGTYPES");
                 String users = getValueFromSocket(socketData.getInputMessage(), "USERS");
@@ -129,21 +129,6 @@ public class AuthService {
         if (null != stats || null != inGame) {
             personaService.who(socket, socketWrapper);
         }
-
-        if (socketWrapper != null && socketWrapper.getIsHost().get()) {
-            joinRoom(socket, socketData, socketWrapper);
-        }
-
-    }
-
-    private void joinRoom(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
-        personaService.who(socket, socketWrapper); // Used to set the room info
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        gameService.rom(socket, socketData);
     }
 
 }

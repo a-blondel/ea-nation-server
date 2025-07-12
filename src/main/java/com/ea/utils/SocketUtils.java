@@ -18,7 +18,8 @@ public class SocketUtils {
 
     /**
      * Calculate length of the content to parse
-     * @param buffer the request buffer (only efficient way to get the length)
+     *
+     * @param buffer  the request buffer (only efficient way to get the length)
      * @param lastPos the position to begin in the buffer (there can be multiple messages in a buffer)
      * @return int - the size of the content
      */
@@ -49,7 +50,7 @@ public class SocketUtils {
         String[] entries = data.split(splitter);
         for (String entry : entries) {
             String[] parts = entry.trim().split("=");
-            if(key.equals(parts[0])) {
+            if (key.equals(parts[0])) {
                 if (parts.length > 1) {
                     result = parts[1];
                 }
@@ -77,6 +78,7 @@ public class SocketUtils {
 
     /**
      * Handle localhost IP
+     *
      * @param socketIp
      * @return machine IP instead of 127.0.0.1, or socketIp if != 127.0.0.1
      */
@@ -93,6 +95,7 @@ public class SocketUtils {
 
     /**
      * Get player info from socket wrapper
+     *
      * @param socketWrapper
      * @return
      */
@@ -100,7 +103,7 @@ public class SocketUtils {
         String playerInfo = "";
         if (socketWrapper != null && socketWrapper.getPersonaEntity() != null) {
             String pers = socketWrapper.getPersonaEntity().getPers();
-            String role = socketWrapper.getIsHost().get() ? "host" : "client";
+            String role = socketWrapper.getIsDedicatedHost().get() ? "host" : "client";
             playerInfo = pers + " (" + role + ")";
         }
         return playerInfo;

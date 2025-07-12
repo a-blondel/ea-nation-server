@@ -31,7 +31,6 @@ public interface GameConnectionRepository extends JpaRepository<GameConnectionEn
                 JOIN gc.personaConnection pc
                 WHERE gc.game.id = :gameId
                 AND gc.isHost = true
-                AND pc.isHost = true
                 AND pc.endTime IS NULL
             """)
     List<String> findHostAddressByGameId(@Param("gameId") Long gameId);
@@ -69,7 +68,7 @@ public interface GameConnectionRepository extends JpaRepository<GameConnectionEn
                 SELECT COUNT(DISTINCT gc.personaConnection.id)
                 FROM GameConnectionEntity gc
                 WHERE gc.endTime IS NULL
-                AND gc.isHost = false
+                AND gc.personaConnection.isHost = false
                 AND gc.game.vers IN ( :vers )
             """)
     int countPlayersInGame(List<String> vers);

@@ -73,6 +73,20 @@ public class SocketManager {
                 .orElse(null);
     }
 
+    public SocketWrapper getSocketWrapperByPersonaConnectionId(Long personaConnectionId) {
+        return sockets.values().stream()
+                .filter(wrapper -> wrapper.getPersonaConnectionEntity() != null &&
+                        wrapper.getPersonaConnectionEntity().getId().equals(personaConnectionId))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public List<SocketWrapper> getSocketWrapperByVers(String vers) {
+        return sockets.values().stream()
+                .filter(wrapper -> wrapper.getPersonaConnectionEntity() != null &&
+                        wrapper.getPersonaConnectionEntity().getVers().equals(vers)).toList();
+    }
+
     public SocketWrapper getAvailableGps() {
         return sockets.values().stream()
                 .filter(wrapper -> wrapper.getIsGps().get() && !wrapper.getIsHosting().get())
@@ -90,14 +104,6 @@ public class SocketManager {
                         personaName.equals(wrapper.getPersonaEntity().getPers()))
                 .findFirst();
     }
-
-    public List<Socket> getHostSockets() {
-        return sockets.values().stream()
-                .filter(wrapper -> wrapper.getIsHost().get())
-                .map(SocketWrapper::getSocket)
-                .toList();
-    }
-
 
     public List<Socket> getSockets() {
         return sockets.values().stream()
