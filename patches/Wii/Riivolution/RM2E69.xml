@@ -1,0 +1,56 @@
+<wiidisc version="1">
+    <id game="RM2" developer="69">
+        <region type="E" />
+    </id>
+
+    <options>
+        <section name="Private Server">
+            <option name="WFC replacement" default="1">
+                <choice name="NoSSL">
+                    <patch id="nossl" />
+                </choice>
+                <choice name="Wiimmfi">
+                    <patch id="wiimmfi" />
+                </choice>
+            </option>
+			
+			<option name="Serverless" default="1">
+                <choice name="Enabled">
+                    <patch id="serverless" />
+                </choice>
+            </option>
+        </section>
+		
+		<section name="Mods">
+            <option name="Online Panzerschreck" default="1">
+                <choice name="Enabled">
+                    <patch id="panzerschreck" />
+                </choice>
+            </option>
+        </section>
+    </options>
+	
+	<!-- Use NoSSL -->
+    <patch id="nossl">
+        <file disc="/game.dol" external="mohh2/RM2E69/nossl-nas.bin" resize="false" offset="0x0065eea0" />
+    </patch>
+
+    <!-- Use Wiimmfi -->
+    <patch id="wiimmfi">
+        <file disc="/game.dol" external="mohh2/RM2E69/wiimmfi-nas.bin" resize="false" offset="0x0065eea0" />
+    </patch>
+	
+	<!-- Serverless -->
+    <patch id="serverless">
+        <file disc="/game.dol" external="mohh2/common/nop.bin" resize="false" offset="0x11A20" />
+        <file disc="/game.dol" external="mohh2/common/serverless.bin" resize="false" offset="0x59314C" />
+    </patch>
+	
+	<!-- Panzerschreck -->
+    <patch id="panzerschreck">
+        <!-- hash -->
+        <file disc="/game.dol" external="mohh2/common/panzerschreck-hash.bin" resize="false" offset="0x5E7618" />
+        <!-- label -->
+        <file disc="/game.dol" external="mohh2/generic/word_0x11.bin" resize="false" offset="0x5E7630" />
+    </patch>
+</wiidisc>

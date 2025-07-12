@@ -1,0 +1,187 @@
+<wiidisc version="1">
+    <id game="RM2" developer="69">
+        <region type="X" />
+    </id>
+
+    <options>
+        <section name="Private Server">
+            <option name="WFC replacement" default="1">
+                <choice name="NoSSL">
+                    <patch id="nossl" />
+                </choice>
+                <choice name="Wiimmfi">
+                    <patch id="wiimmfi" />
+                </choice>
+            </option>
+            
+            <option name="Serverless" default="1">
+                <choice name="Enabled">
+                    <patch id="serverless" />
+                </choice>
+            </option>
+        </section>
+        
+        <section name="Mods">
+            <option name="Online Panzerschreck" default="1">
+                <choice name="Enabled">
+                    <patch id="panzerschreck" />
+                </choice>
+            </option>
+        </section>
+        
+        <section name="Misc">
+            <option name="Menu theme" default="1">
+                <choice name="Border Town (default)">
+                    <patch id="border-town" />
+                </choice>
+				<choice name="Merker's Salt Mine">
+                    <patch id="merkers-salt-mine" />
+                </choice>
+				<choice name="Emmerich Station">
+                    <patch id="emmerich-station" />
+                </choice>
+				<choice name="Approaching The Tarmac">
+                    <patch id="approaching-the-tarmac" />
+                </choice>
+				<choice name="Ascent To The Castle">
+                    <patch id="ascent-to-the-castle" />
+                </choice>
+				<choice name="Nijmegen Bridge">
+                    <patch id="nijmegen-bridge" />
+                </choice>
+				<choice name="The Rowhouses">
+                    <patch id="the-rowhouses" />
+                </choice>
+				<choice name="Stopping The V2">
+                    <patch id="stopping-the-V2" />
+                </choice>
+				<choice name="The U-Boat">
+                    <patch id="the-u-boat" />
+                </choice>
+				<choice name="Taking Out The Railgun">
+                    <patch id="taking-out-the-railgun" />
+                </choice>
+				<choice name="Sturmgeist's Armored Train">
+                    <patch id="sturmgeists-armored-train" />
+                </choice>
+				<choice name="Clipping Their Wings">
+                    <patch id="clipping-their-wings" />
+                </choice>
+				<choice name="Tiger Tank">
+                    <patch id="tiger-tank" />
+                </choice>
+				<choice name="Returning To Paris">
+                    <patch id="returning-to-paris" />
+                </choice>
+				<choice name="The Radar Train">
+                    <patch id="the-radar-train" />
+                </choice>
+                <choice name="Medal Of Honor">
+                    <patch id="medal-of-honor" />
+                </choice>
+				<choice name="Arnhem">
+                    <patch id="arnhem" />
+                </choice>
+            </option>
+            
+            <option name="Skip startup screens" default="0">
+                <choice name="Enabled">
+                    <patch id="skip-startup-screens" />
+                </choice>
+            </option>
+            
+            <option name="Skip EA intro" default="0">
+                <choice name="Enabled">
+                    <patch id="skip-ea-intro" />
+                </choice>
+            </option>
+        </section>
+    </options>
+	
+	<!-- Use NoSSL -->
+    <patch id="nossl">
+        <file disc="/game.dol" external="mohh2/RM2X69/nossl-nas.bin" resize="false" offset="0x65eee0" />
+    </patch>
+
+    <!-- Use Wiimmfi -->
+    <patch id="wiimmfi">
+        <file disc="/game.dol" external="mohh2/RM2X69/wiimmfi-nas.bin" resize="false" offset="0x65eee0" />
+    </patch>
+    
+    <!-- Serverless -->
+    <patch id="serverless">
+        <file disc="/game.dol" external="mohh2/common/nop.bin" resize="false" offset="0x11A20" />
+        <file disc="/game.dol" external="mohh2/common/serverless.bin" resize="false" offset="0x59318C" />
+    </patch>
+    
+    <!-- Panzerschreck -->
+    <patch id="panzerschreck">
+        <!-- hash -->
+        <file disc="/game.dol" external="mohh2/common/panzerschreck-hash.bin" resize="false" offset="0x5E7658" />
+        <!-- label -->
+        <file disc="/game.dol" external="mohh2/generic/word_0x11.bin" resize="false" offset="0x5E7670" />
+    </patch>
+    
+    <!-- Alternative theme in the menu -->
+    <patch id="border-town">
+        <file disc="/game.dol" external="mohh2/generic/word_0x01.bin" resize="false" offset="0x626854" />
+    </patch>
+    <patch id="merkers-salt-mine">
+        <file disc="/game.dol" external="mohh2/generic/word_0x02.bin" resize="false" offset="0x626854" />
+    </patch>
+    <patch id="emmerich-station">
+        <file disc="/game.dol" external="mohh2/generic/word_0x03.bin" resize="false" offset="0x626854" />
+    </patch>
+    <patch id="approaching-the-tarmac">
+        <file disc="/game.dol" external="mohh2/generic/word_0x04.bin" resize="false" offset="0x626854" />
+    </patch>
+    <patch id="ascent-to-the-castle">
+        <file disc="/game.dol" external="mohh2/generic/word_0x05.bin" resize="false" offset="0x626854" />
+    </patch>
+    <patch id="nijmegen-bridge">
+        <file disc="/game.dol" external="mohh2/generic/word_0x06.bin" resize="false" offset="0x626854" />
+    </patch>
+    <patch id="the-rowhouses">
+        <file disc="/game.dol" external="mohh2/generic/word_0x07.bin" resize="false" offset="0x626854" />
+    </patch>
+    <patch id="stopping-the-V2">
+        <file disc="/game.dol" external="mohh2/generic/word_0x08.bin" resize="false" offset="0x626854" />
+    </patch>
+    <patch id="the-u-boat">
+        <file disc="/game.dol" external="mohh2/generic/word_0x09.bin" resize="false" offset="0x626854" />
+    </patch>
+    <patch id="taking-out-the-railgun">
+        <file disc="/game.dol" external="mohh2/generic/word_0x0a.bin" resize="false" offset="0x626854" />
+    </patch>
+    <patch id="sturmgeists-armored-train">
+        <file disc="/game.dol" external="mohh2/generic/word_0x0b.bin" resize="false" offset="0x626854" />
+    </patch>
+    <patch id="clipping-their-wings">
+        <file disc="/game.dol" external="mohh2/generic/word_0x0c.bin" resize="false" offset="0x626854" />
+    </patch>
+    <patch id="tiger-tank">
+        <file disc="/game.dol" external="mohh2/generic/word_0x0d.bin" resize="false" offset="0x626854" />
+    </patch>
+    <patch id="returning-to-paris">
+        <file disc="/game.dol" external="mohh2/generic/word_0x0e.bin" resize="false" offset="0x626854" />
+    </patch>
+    <patch id="the-radar-train">
+        <file disc="/game.dol" external="mohh2/generic/word_0x0f.bin" resize="false" offset="0x626854" />
+    </patch>
+    <patch id="medal-of-honor">
+        <file disc="/game.dol" external="mohh2/generic/word_0x10.bin" resize="false" offset="0x626854" />
+    </patch>
+    <patch id="arnhem">
+        <file disc="/game.dol" external="mohh2/generic/word_0x11.bin" resize="false" offset="0x626854" />
+    </patch>
+    
+    <!-- Skip startup screens -->
+    <patch id="skip-startup-screens">
+        <file disc="/game.dol" external="mohh2/RM2X69/skip-startup-screens.bin" resize="false" offset="0x24d5ac" />
+    </patch>
+    
+    <!-- Skip EA Intro -->
+    <patch id="skip-ea-intro">
+        <file disc="/game.dol" external="mohh2/RM2X69/skip-ea-intro.bin" resize="false" offset="0x24d650" />
+    </patch>
+</wiidisc>
