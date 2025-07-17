@@ -48,11 +48,12 @@ public interface GameConnectionRepository extends JpaRepository<GameConnectionEn
                     FROM MohhGameReportEntity gr
                     WHERE gr.gameConnection.id = gc.id
                 )
-                AND gc.isHost = false
+                AND (:includeHosts = true OR gc.isHost = false)
             """)
     List<GameConnectionEntity> findMatchingGameConnections(
             @Param("playerName") String playerName,
-            @Param("startTime") LocalDateTime startTime
+            @Param("startTime") LocalDateTime startTime,
+            @Param("includeHosts") boolean includeHosts
     );
 
     @Transactional

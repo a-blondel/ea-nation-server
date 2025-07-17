@@ -68,6 +68,8 @@ public class AuthService {
                 {"TOS_URL", tosUrl},
                 {"FAQ_URL", tosUrl},
                 {"EACONNECT_WEBOFFER_URL", tosUrl},
+                {"ROSTER_URL", tosUrl}, // Required by NHL 07 (roster download isn't implemented, but it is required by the game)
+                {"ROSTER_VER", "1.0"}, // Required by NHL 07 (allows to skip roster download)
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
         socketData.setOutputData(content);

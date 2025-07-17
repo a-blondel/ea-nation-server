@@ -71,9 +71,10 @@ game:
       ssl:
         domain: 'pspnhl07.ea.com'
       regions:
-        - name: 'US'
+        - name: 'GLOBAL'
           port: 10390
           slus:
+            - 'ULES00477'
             - 'ULUS10131'
     - vers: 'PSP/MOH07'
       sdk: '4.7.0'

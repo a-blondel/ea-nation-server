@@ -51,10 +51,9 @@ public class MohhStatsService {
     /**
      * Retrieve ranking categories
      *
-     * @param socket     The socket to write the response to
      * @param socketData The socket data
      */
-    public void cate(Socket socket, SocketData socketData) {
+    public void cate(SocketData socketData) {
         Map<String, String> content = Stream.of(new String[][]{
                 {"CC", "6"}, // <total # of categories in this view>
                 {"IC", "6"}, // <total # of indices in this view>
@@ -66,7 +65,6 @@ public class MohhStatsService {
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
         socketData.setOutputData(content);
-        socketWriter.write(socket, socketData);
     }
 
     /**
@@ -365,17 +363,16 @@ public class MohhStatsService {
     /**
      * Send ranking results.
      *
-     * @param socket     The socket to write the response to
      * @param socketData The socket data
      */
     @Transactional
-    public void rank(Socket socket, SocketData socketData) {
+    public void rank(SocketData socketData) {
         String playerName = getValueFromSocket(socketData.getInputMessage(), "REPT", TAB_CHAR);
         String startTime = getValueFromSocket(socketData.getInputMessage(), "WHEN", TAB_CHAR);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATETIME_FORMAT);
         LocalDateTime parsedStartTime = LocalDateTime.parse(startTime, formatter);
-        List<GameConnectionEntity> gameConnectionEntities = gameConnectionRepository.findMatchingGameConnections(playerName, parsedStartTime);
+        List<GameConnectionEntity> gameConnectionEntities = gameConnectionRepository.findMatchingGameConnections(playerName, parsedStartTime, false);
         if (!gameConnectionEntities.isEmpty()) {
             GameConnectionEntity gameConnectionEntity = gameConnectionEntities.get(0);
             MohhGameReportEntity mohhGameReportEntity = new MohhGameReportEntity();
@@ -385,12 +382,19 @@ public class MohhStatsService {
 
             // Update PersonaStats with the new game report (ranked only)
             if (mohhGameReportEntity.getRnk() == 1) {
+                GameConnectionEntity gameConnection = mohhGameReportEntity.getGameConnection();
                 MohhPersonaStatsEntity mohhPersonaStatsEntity = mohhPersonaStatsRepository.findByPersonaIdAndVersIn(
                         gameConnectionEntity.getPersonaConnection().getPersona().getId(), gameServerService.getRelatedVers(gameConnectionEntity.getGame().getVers()));
-                if (mohhPersonaStatsEntity != null) {
-                    updatePersonaStats(mohhPersonaStatsEntity, mohhGameReportEntity);
-                    mohhPersonaStatsRepository.save(mohhPersonaStatsEntity);
+
+                if (mohhPersonaStatsEntity == null) {
+                    mohhPersonaStatsEntity = new MohhPersonaStatsEntity();
+                    mohhPersonaStatsEntity.setPersona(gameConnection.getPersonaConnection().getPersona());
+                    mohhPersonaStatsEntity.setVers(gameConnection.getGame().getVers());
+                    mohhPersonaStatsEntity.setSlus(gameConnection.getGame().getSlus());
                 }
+
+                updatePersonaStats(mohhPersonaStatsEntity, mohhGameReportEntity);
+                mohhPersonaStatsRepository.save(mohhPersonaStatsEntity);
             }
 
             // This is to make sure the end time is set in case something goes wrong in 'gset'
@@ -407,7 +411,6 @@ public class MohhStatsService {
                     }
             );
         }
-        socketWriter.write(socket, socketData);
     }
 
     /**
@@ -677,22 +680,6 @@ public class MohhStatsService {
         result.put("stats", stats);
         result.put("rank", rank);
         return result;
-    }
-
-
-    /**
-     * Initialize persona stats for a new persona
-     *
-     * @param personaEntity The persona entity to initialize stats for
-     * @param vers          The version of the game
-     * @param slus          The SLUS code for the game
-     */
-    public void initPersonaStats(PersonaEntity personaEntity, String vers, String slus) {
-        MohhPersonaStatsEntity mohhPersonaStatsEntity = new MohhPersonaStatsEntity();
-        mohhPersonaStatsEntity.setPersona(personaEntity);
-        mohhPersonaStatsEntity.setVers(vers);
-        mohhPersonaStatsEntity.setSlus(slus);
-        mohhPersonaStatsRepository.save(mohhPersonaStatsEntity);
     }
 
 }

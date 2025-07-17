@@ -77,7 +77,7 @@ public class GameUtils {
                 // { "GAMEPORT", String.valueOf(props.getUdpPort())},
                 // { "VOIPPORT", "9667" },
                 // { "GAMEMODE", "0" }, // ???
-                {"AUTH", gameEntity.getSysflags().equals("262656") ? "098f6bcd4621d373cade4e832627b4f6" : ""}, // Required for ranked
+                {"AUTH", (Integer.parseInt(gameEntity.getSysflags()) & (1 << 18)) != 0 ? "098f6bcd4621d373cade4e832627b4f6" : ""}, // Required for ranked
 
                 // loop 0x80022058 only if COUNT>=0
 

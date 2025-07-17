@@ -13,8 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.net.Socket;
 
-import static com.ea.services.server.GameServerService.MOH07_OR_MOH08;
-import static com.ea.services.server.GameServerService.MOH07_OR_UHS;
+import static com.ea.services.server.GameServerService.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -24,6 +23,7 @@ public class StatsService {
     private final SocketWriter socketWriter;
     private final GameServerService gameServerService;
     private final MohhStatsService mohhStatsService;
+    private final NhlStatsService nhlStatsService;
     private final GameService gameService;
     private final RoomService roomService;
 
@@ -36,10 +36,11 @@ public class StatsService {
      */
     public void cate(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         if (MOH07_OR_MOH08.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
-            mohhStatsService.cate(socket, socketData);
-        } else {
-            socketWriter.write(socket, socketData);
+            mohhStatsService.cate(socketData);
+        } else if (PSP_NHL_07.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+            nhlStatsService.cate(socketData);
         }
+        socketWriter.write(socket, socketData);
     }
 
     /**
@@ -52,6 +53,8 @@ public class StatsService {
     public void snap(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         if (MOH07_OR_MOH08.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             mohhStatsService.snap(socket, socketData, socketWrapper);
+        } else if (PSP_NHL_07.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+            nhlStatsService.snap(socket, socketData, socketWrapper);
         } else {
             socketWriter.write(socket, socketData);
         }
@@ -68,17 +71,20 @@ public class StatsService {
     public void rank(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         String vers = socketWrapper.getPersonaConnectionEntity().getVers();
         if (MOH07_OR_UHS.contains(vers)) {
-            mohhStatsService.rank(socket, socketData);
+            mohhStatsService.rank(socketData);
         } else {
             if (gameServerService.isP2P(vers)) {
+                if (PSP_NHL_07.equals(vers)) {
+                    nhlStatsService.rank(socketData);
+                }
                 // Close the game and gameConnections if the game is P2P
                 gameService.endGame(socketWrapper);
 
                 // Remove the persona from the room (back to main menu)
                 roomService.removePersonaFromRoom(vers, socketWrapper);
             }
-            socketWriter.write(socket, socketData);
         }
+        socketWriter.write(socket, socketData);
     }
 
 }

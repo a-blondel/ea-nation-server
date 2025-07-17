@@ -11,13 +11,9 @@ import com.ea.entities.stats.MohhPersonaStatsEntity;
 import com.ea.repositories.buddy.FeedbackRepository;
 import com.ea.repositories.buddy.FeedbackTypeRepository;
 import com.ea.repositories.core.AccountRepository;
-import com.ea.repositories.core.GameConnectionRepository;
 import com.ea.repositories.core.PersonaConnectionRepository;
 import com.ea.repositories.core.PersonaRepository;
-import com.ea.repositories.stats.MohhPersonaStatsRepository;
-import com.ea.services.server.GameServerService;
 import com.ea.services.server.SocketManager;
-import com.ea.services.stats.MohhStatsService;
 import com.ea.steps.SocketWriter;
 import com.ea.utils.AccountUtils;
 import com.ea.utils.PersonaUtils;
@@ -39,7 +35,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.ea.services.server.GameServerService.GAMES_WITHOUT_ROOM;
-import static com.ea.services.server.GameServerService.MOH07_OR_MOH08;
 import static com.ea.utils.HexUtils.formatHexString;
 import static com.ea.utils.SocketUtils.getValueFromSocket;
 
@@ -53,15 +48,11 @@ public class PersonaService {
     private final AccountRepository accountRepository;
     private final PersonaRepository personaRepository;
     private final PersonaConnectionRepository personaConnectionRepository;
-    private final MohhPersonaStatsRepository mohhPersonaStatsRepository;
-    private final GameConnectionRepository gameConnectionRepository;
     private final SocketWriter socketWriter;
     private final SocketManager socketManager;
     private final FeedbackRepository feedbackRepository;
     private final FeedbackTypeRepository feedbackTypeRepository;
-    private final GameServerService gameServerService;
     private final RoomService roomService;
-    private final MohhStatsService mohhStatsService;
     private final PersonaUtils personaUtils;
 
     /**
@@ -199,12 +190,6 @@ public class PersonaService {
             socketWriter.write(socket, socketData);
 
             startPersonaConnection(socketWrapper);
-
-            // Check if the persona has stats for this game title ("VERS"), and create them if not
-            String vers = socketWrapper.getPersonaConnectionEntity().getVers();
-            if (MOH07_OR_MOH08.contains(vers) && mohhPersonaStatsRepository.findByPersonaIdAndVers(personaEntity.getId(), vers) == null) {
-                mohhStatsService.initPersonaStats(personaEntity, vers, socketWrapper.getPersonaConnectionEntity().getSlus());
-            }
 
             // Some games don't use pre-match rooms but requires a room ID in order to work so we add one by default,
             // even if we receive sele with ROOMS=0
