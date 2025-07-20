@@ -61,7 +61,7 @@ public class BuddyService {
         socketData.setOutputData(content);
         socketWriter.write(socket, socketData);
 
-        // Send pending messages to the user after authentication
+        // Send pending messages for the user
         sendPendingMessages(socket, buddySocketWrapper);
     }
 
@@ -730,6 +730,7 @@ public class BuddyService {
      * @param socket             the socket to write into
      * @param buddySocketWrapper the wrapper containing user data
      */
+    @Transactional
     private void sendPendingMessages(Socket socket, BuddySocketWrapper buddySocketWrapper) {
         PersonaEntity persona = buddySocketWrapper.getPersonaEntity();
         if (persona == null) {
@@ -738,14 +739,23 @@ public class BuddyService {
 
         // Find all unacknowledged messages for this persona
         List<MessageEntity> pendingMessages = messageRepository.findUnacknowledgedMessagesByToPersona(persona);
+        if (pendingMessages.isEmpty()) {
+            return;
+        }
 
+        // Get the IDs of the pending messages
+        List<Long> messageIds = pendingMessages.stream()
+                .map(MessageEntity::getId)
+                .toList();
+
+        // Send all pending messages
         for (MessageEntity message : pendingMessages) {
             sendRecvPacket(socket, message);
-
-            // Mark message as acknowledged
-            message.setAck(true);
-            messageRepository.save(message);
         }
+
+        // Mark all messages as acknowledged
+        int updatedCount = messageRepository.markMessagesAsAcknowledgedByIds(messageIds);
+        log.debug("Marked {} messages as acknowledged for {}", updatedCount, persona.getPers());
     }
 
     /**
