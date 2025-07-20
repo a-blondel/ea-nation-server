@@ -51,6 +51,13 @@ spring:
 
 game:
   servers:
+    - vers: 'BUDDY'
+      aries: false
+      ssl:
+        enabled: false
+      regions:
+        - name: 'GLOBAL'
+          port: 5000 # Arbitrary buddy port, set anything you want
     - vers: 'PSP/FIFA07'
       ssl:
         domain: 'pspfifa07.ea.com'
@@ -64,18 +71,11 @@ game:
       ssl:
         domain: 'pspnhl07.ea.com'
       regions:
-        - name: 'US'
+        - name: 'GLOBAL'
           port: 10390
           slus:
+            - 'ULES00477'
             - 'ULUS10131'
-    - vers: 'BUDDY'
-      aries: false
-      ssl:
-        enabled: false
-      regions:
-        - name: 'GLOBAL'
-          port: 5000 # Arbitrary buddy port, set anything you want
-
     - vers: 'PSP/MOH07'
       sdk: '4.7.0'
       p2p: false

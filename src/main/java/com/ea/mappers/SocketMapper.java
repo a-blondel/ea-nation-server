@@ -27,6 +27,21 @@ public class SocketMapper {
         gameEntity.setVers(vers);
         gameEntity.setSlus(slus);
         setFieldsFromSocket(gameEntity, socket, RETURN_CHAR);
+
+        // gpsc packets comes without a room, it doesn't matter as this entity is not saved to the database,
+        // we redirect the gpsc packet to the host which uses gcre with a room this time that is saved to the database
+        Integer roomId = 0;
+
+        // The game sends "ROOM" but the entity uses "roomId" for naming convention, so we handle it manually
+        String roomIdStr = SocketUtils.getValueFromSocket(socket, "ROOM", RETURN_CHAR);
+        if (roomIdStr != null && !roomIdStr.isEmpty()) {
+            try {
+                roomId = Integer.parseInt(roomIdStr);
+            } catch (NumberFormatException e) {
+                log.error("Invalid room ID format: {}", roomIdStr, e);
+            }
+        }
+        gameEntity.setRoomId(roomId);
         gameEntity.setStartTime(LocalDateTime.now());
         return gameEntity;
     }

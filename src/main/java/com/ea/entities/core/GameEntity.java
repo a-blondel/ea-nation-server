@@ -41,6 +41,10 @@ public class GameEntity {
 
     private LocalDateTime endTime;
 
+    private boolean isStarted;
+
+    private Integer roomId;
+
     @OneToMany(mappedBy = "game", fetch = FetchType.EAGER)
     private Set<GameConnectionEntity> gameConnections;
 

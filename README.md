@@ -23,7 +23,7 @@ Fell free to join !
 |-------------------------|-------------|-----------|-------------------------------|
 | Medal of Honor Heroes   | PSP         | EU, US    | Full support                  |
 | Medal of Honor Heroes 2 | PSP, Wii    | EU, US    | In progress, not playable yet |
-| NHL 07                  | PSP         | US        | Partial support, playable     |
+| NHL 07                  | PSP         | US        | Full support                  |
 | FIFA 07                 | PSP         | US        | Partial support, playable     |
 
 ## Development Status
@@ -57,5 +57,4 @@ following projects were inspiring in the development of this project:
     - https://github.com/HarpyWar/nfsuserver
     - https://github.com/VTSTech/VTSTech-SRVEmu
     - https://github.com/nleiten/ea-server-emu-startpoint
-- Buddy (EA Messenger) server emulator
     - https://gitlab.com/gh0stl1ne/eaps

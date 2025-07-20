@@ -50,6 +50,7 @@ public class TcpSocketThread implements Runnable {
             if (socketWrapper != null && socketWrapper.getPersonaEntity() != null) {
                 gameService.endGameConnection(socketWrapper);
                 personaService.endPersonaConnection(socketWrapper);
+                socketWrapper.cleanupOnSocketClose(socketWrapper);
                 socketManager.removeSocket(socketWrapper.getIdentifier());
             }
 

@@ -3,7 +3,6 @@ package com.ea.services.core;
 import com.ea.dto.SocketData;
 import com.ea.dto.SocketWrapper;
 import com.ea.entities.core.AccountEntity;
-import com.ea.entities.core.GameEntity;
 import com.ea.entities.core.PersonaConnectionEntity;
 import com.ea.entities.core.PersonaEntity;
 import com.ea.entities.social.FeedbackEntity;
@@ -11,12 +10,13 @@ import com.ea.entities.social.FeedbackTypeEntity;
 import com.ea.entities.stats.MohhPersonaStatsEntity;
 import com.ea.repositories.buddy.FeedbackRepository;
 import com.ea.repositories.buddy.FeedbackTypeRepository;
-import com.ea.repositories.core.*;
-import com.ea.repositories.stats.MohhPersonaStatsRepository;
-import com.ea.services.server.GameServerService;
+import com.ea.repositories.core.AccountRepository;
+import com.ea.repositories.core.PersonaConnectionRepository;
+import com.ea.repositories.core.PersonaRepository;
 import com.ea.services.server.SocketManager;
 import com.ea.steps.SocketWriter;
 import com.ea.utils.AccountUtils;
+import com.ea.utils.PersonaUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,11 +28,13 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.ea.services.server.GameServerService.PSP_MOH_07_UHS;
+import static com.ea.services.server.GameServerService.GAMES_WITHOUT_ROOM;
 import static com.ea.utils.HexUtils.formatHexString;
 import static com.ea.utils.SocketUtils.getValueFromSocket;
 
@@ -46,14 +48,12 @@ public class PersonaService {
     private final AccountRepository accountRepository;
     private final PersonaRepository personaRepository;
     private final PersonaConnectionRepository personaConnectionRepository;
-    private final MohhPersonaStatsRepository mohhPersonaStatsRepository;
-    private final GameRepository gameRepository;
-    private final GameConnectionRepository gameConnectionRepository;
     private final SocketWriter socketWriter;
     private final SocketManager socketManager;
     private final FeedbackRepository feedbackRepository;
     private final FeedbackTypeRepository feedbackTypeRepository;
-    private final GameServerService gameServerService;
+    private final RoomService roomService;
+    private final PersonaUtils personaUtils;
 
     /**
      * Persona creation
@@ -122,7 +122,7 @@ public class PersonaService {
     public void pers(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         String pers = getValueFromSocket(socketData.getInputMessage(), "PERS");
         if (pers.contains("@")) { // Remove @ from persona name (UHS naming convention)
-            socketWrapper.getIsHost().set(true);
+            socketWrapper.getIsDedicatedHost().set(true);
             pers = pers.split("@")[0] + pers.split("@")[1];
         }
 
@@ -191,15 +191,9 @@ public class PersonaService {
 
             startPersonaConnection(socketWrapper);
 
-            // Check if the persona has stats for this game title ("VERS"), and create them if not
-            String vers = socketWrapper.getPersonaConnectionEntity().getVers();
-            if (!vers.equals(PSP_MOH_07_UHS) && mohhPersonaStatsRepository.findByPersonaIdAndVers(personaEntity.getId(), vers) == null) {
-                MohhPersonaStatsEntity mohhPersonaStatsEntity = new MohhPersonaStatsEntity();
-                mohhPersonaStatsEntity.setPersona(personaEntity);
-                mohhPersonaStatsEntity.setVers(vers);
-                mohhPersonaStatsEntity.setSlus(socketWrapper.getPersonaConnectionEntity().getSlus());
-                mohhPersonaStatsRepository.save(mohhPersonaStatsEntity);
-            }
+            // Some games don't use pre-match rooms but requires a room ID in order to work so we add one by default,
+            // even if we receive sele with ROOMS=0
+            addRoomInfo(socket, socketData, socketWrapper);
         }
     }
 
@@ -212,7 +206,7 @@ public class PersonaService {
         PersonaEntity personaEntity = socketWrapper.getPersonaEntity();
         PersonaConnectionEntity personaConnectionEntity = socketWrapper.getPersonaConnectionEntity();
         personaConnectionEntity.setPersona(personaEntity);
-        personaConnectionEntity.setHost(socketWrapper.getIsHost().get());
+        personaConnectionEntity.setHost(socketWrapper.getIsDedicatedHost().get());
         personaConnectionEntity.setStartTime(LocalDateTime.now());
         personaConnectionRepository.save(personaConnectionEntity);
     }
@@ -225,6 +219,9 @@ public class PersonaService {
         if (personaConnectionEntity != null && personaConnectionEntity.getPersona() != null) {
             personaConnectionEntity.setEndTime(LocalDateTime.now());
             personaConnectionRepository.save(personaConnectionEntity);
+
+            // Remove from room
+            roomService.removePersonaFromRoom(personaConnectionEntity.getVers(), socketWrapper);
         }
     }
 
@@ -269,8 +266,8 @@ public class PersonaService {
 
     public void llvl(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         Map<String, String> content = Stream.of(new String[][]{
-                {"SKILL_PTS", "211"},
-                {"SKILL_LVL", "1049601"},
+                {"SKILL_PTS", "0"},
+                {"SKILL_LVL", "0"},
                 {"SKILL", ""},
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
@@ -280,19 +277,18 @@ public class PersonaService {
         who(socket, socketWrapper);
 
         if (socketWrapper != null && socketWrapper.getPersonaConnectionEntity() != null) {
-            List<String> vers = gameServerService.getRelatedVers(socketWrapper.getPersonaConnectionEntity().getVers());
-            int playersInLobby = personaConnectionRepository.countPlayersInLobby(vers);
-            int playersInGame = gameConnectionRepository.countPlayersInGame(vers);
-            content = Stream.of(new String[][]{
-                    {"UIL", String.valueOf(playersInLobby)},
-                    {"UIG", String.valueOf(playersInGame)},
-                    {"UIR", "0"},
-                    {"GIP", "0"},
-                    {"GCR", "0"},
-                    {"GCM", "0"},
-            }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
-            socketWriter.write(socket, new SocketData("+sst", null, content));
+            roomService.sst(socket, socketWrapper);
         }
+    }
+
+    /**
+     * Send user updates
+     *
+     * @param socket
+     * @param socketWrapper
+     */
+    public void usr(Socket socket, SocketWrapper socketWrapper) {
+        socketWriter.write(socket, new SocketData("+usr", null, personaUtils.getPersonaInfo(socket, socketWrapper)));
     }
 
     /**
@@ -302,66 +298,7 @@ public class PersonaService {
      * @param socketWrapper
      */
     public void who(Socket socket, SocketWrapper socketWrapper) {
-        PersonaEntity personaEntity = socketWrapper.getPersonaEntity();
-        AccountEntity accountEntity = socketWrapper.getAccountEntity();
-        String vers = socketWrapper.getPersonaConnectionEntity().getVers();
-
-        MohhPersonaStatsEntity mohhPersonaStatsEntity = mohhPersonaStatsRepository.findByPersonaIdAndVers(personaEntity.getId(), vers);
-        boolean hasStats = null != mohhPersonaStatsEntity;
-
-        List<GameEntity> gameIds = gameRepository.findCurrentGameOfPersona(socketWrapper.getPersonaConnectionEntity().getId());
-        if (gameIds.size() > 1) {
-            log.error("Multiple current games found for persona {}", personaEntity.getPers());
-        }
-
-        long gameId = gameIds
-                .stream()
-                .max(Comparator.comparing(GameEntity::getStartTime))
-                .map(gameEntity -> Optional.ofNullable(gameEntity.getOriginalId()).orElse(gameEntity.getId()))
-                .orElse(0L);
-        ;
-
-        String hostPrefix = socketWrapper.getIsHost().get() ? "@" : "";
-
-        Map<String, String> content = Stream.of(new String[][]{
-                {"I", String.valueOf(accountEntity.getId())},
-                {"M", hostPrefix + accountEntity.getName()},
-                {"N", hostPrefix + personaEntity.getPers()},
-                {"F", "U"},
-                {"P", "80"},
-                // Stats : kills (in hex) at 8th position, deaths (in hex) at 9th
-                {"S", ",,,,,,," +
-                        (hasStats ? Long.toHexString(mohhPersonaStatsEntity.getKill()) : "0") +
-                        "," +
-                        (hasStats ? Long.toHexString(mohhPersonaStatsEntity.getDeath()) : "0")},
-                {"X", "0"},
-                {"G", String.valueOf(gameId)},
-                {"AT", ""},
-                {"CL", "511"},
-                {"LV", "1049601"},
-                {"MD", "0"},
-                // Rank (in decimal)
-                {"R", hasStats ? String.valueOf(mohhPersonaStatsRepository.getRankByPersonaIdAndVers(mohhPersonaStatsEntity.getPersona().getId(), vers)) : ""},
-                {"US", "0"},
-                {"HW", "0"},
-                {"RP", String.valueOf(personaEntity.getRp())}, // Reputation (0 to 5 stars)
-                {"LO", accountEntity.getLoc()}, // Locale (used to display country flag)
-                {"CI", "0"},
-                {"CT", "0"},
-                // 0x800225E0
-                {"A", socket.getInetAddress().getHostAddress()},
-                {"LA", socket.getInetAddress().getHostAddress()},
-                // 0x80021384
-                {"C", "4000,,7,1,1,,1,1,5553"},
-                {"RI", "1"},
-                {"RT", "1"},
-                {"RG", "0"},
-                {"RGC", "0"},
-                // 0x80021468 if RI != ?? then read RM and RF
-                {"RM", "room"},
-                {"RF", "C"},
-        }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
-        socketWriter.write(socket, new SocketData("+who", null, content));
+        socketWriter.write(socket, new SocketData("+who", null, personaUtils.getPersonaInfo(socket, socketWrapper)));
     }
 
     /**
@@ -426,6 +363,22 @@ public class PersonaService {
         }
 
         socketWriter.write(socket, socketData);
+    }
+
+
+    public void addRoomInfo(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+        // Some games don't use pre-match rooms but requires a room ID in order to work so we add one by default
+        if (GAMES_WITHOUT_ROOM.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+            Long roomId = roomService.getRoomByVers(socketWrapper.getPersonaConnectionEntity().getVers()).getId();
+            roomService.addPersonaToRoom(roomId, socketWrapper);
+            who(socket, socketWrapper); // Used to set the room info
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        roomService.rom(socket, socketData);
     }
 
 }

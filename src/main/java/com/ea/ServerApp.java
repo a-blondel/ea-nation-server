@@ -3,6 +3,7 @@ package com.ea;
 import com.ea.config.*;
 import com.ea.services.core.GameService;
 import com.ea.services.core.PersonaService;
+import com.ea.services.core.RoomService;
 import com.ea.services.server.GameServerService;
 import com.ea.services.server.SocketManager;
 import com.ea.steps.SocketReader;
@@ -35,8 +36,6 @@ import java.util.function.Function;
 public class ServerApp implements CommandLineRunner {
 
     private final ScheduledExecutorService dataCleanupThread = Executors.newSingleThreadScheduledExecutor();
-    private ExecutorService clientHandlingExecutor = Executors.newFixedThreadPool(100);
-
     private final Props props;
     private final ServerConfig serverConfig;
     private final GameServerService gameServerService;
@@ -45,6 +44,8 @@ public class ServerApp implements CommandLineRunner {
     private final SocketWriter socketWriter;
     private final PersonaService personaService;
     private final GameService gameService;
+    private final RoomService roomService;
+    private ExecutorService clientHandlingExecutor = Executors.newFixedThreadPool(100);
 
     public static void main(String[] args) {
         SpringApplication.run(ServerApp.class, args);
@@ -66,6 +67,9 @@ public class ServerApp implements CommandLineRunner {
 
         // Data integrity
         startDataCleanupThread();
+
+        // Generate rooms
+        roomService.generateRooms();
 
         try {
             for (GameServerConfig.GameServer gameServer : gameServerService.getEnabledServers()) {

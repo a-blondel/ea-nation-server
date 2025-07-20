@@ -12,13 +12,16 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class GameServerService {
 
-    private final GameServerConfig gameServerConfig;
-
+    public static final String PSP_NHL_07 = "PSP/NHL07";
     public static final String PSP_MOH_07_UHS = "PSP/MOHGPS071";
     public static final String PSP_MOH_07 = "PSP/MOH07";
     public static final String PSP_MOH_08 = "PSP/MOH08";
     public static final String WII_MOH_08 = "WII/MOH08";
-    public static final List<String> VERS_MOHH_PSP = List.of(PSP_MOH_07, PSP_MOH_07_UHS);
+    public static final List<String> MOH07_OR_UHS = List.of(PSP_MOH_07, PSP_MOH_07_UHS);
+    public static final List<String> MOH07_OR_MOH08 = List.of(PSP_MOH_07, PSP_MOH_08, WII_MOH_08);
+    public static final List<String> GAMES_WITHOUT_ROOM = List.of(PSP_MOH_07_UHS, PSP_MOH_07, PSP_MOH_08, WII_MOH_08);
+    public static final List<String> MIDGAME_FORBIDDEN = List.of(PSP_NHL_07);
+    private final GameServerConfig gameServerConfig;
 
     /**
      * Get TCP port for a given VERS and SLUS
@@ -87,6 +90,19 @@ public class GameServerService {
                 .filter(GameServerConfig.GameServer::isEnabled)
                 .filter(server -> server.getVers().equals(vers))
                 .findFirst();
+    }
+
+    /**
+     * Check if a given version is P2P
+     *
+     * @param vers Version identifier
+     * @return true if the version is P2P, false otherwise
+     */
+    public boolean isP2P(String vers) {
+        return gameServerConfig.getServers().stream()
+                .filter(GameServerConfig.GameServer::isEnabled)
+                .filter(server -> server.getVers().equals(vers))
+                .anyMatch(GameServerConfig.GameServer::isP2p);
     }
 
     /**
