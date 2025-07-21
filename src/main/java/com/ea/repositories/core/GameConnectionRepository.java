@@ -102,9 +102,9 @@ public interface GameConnectionRepository extends JpaRepository<GameConnectionEn
                 FROM GameEntity g
                 LEFT JOIN GameConnectionEntity h ON h.game = g AND h.isHost = true AND h.endTime IS NULL
                 LEFT JOIN GameConnectionEntity p ON p.game = g AND p.isHost = false AND p.endTime IS NULL
-                WHERE g.endTime IS NULL
+                WHERE g.vers = :vers AND g.endTime IS NULL
                 GROUP BY g.id, g.name, g.vers, g.startTime, g.maxsize, h.personaConnection.persona.pers
             """)
-    List<DTO.GameStatusDTO> findAllActiveGamesWithStats();
+    List<DTO.GameStatusDTO> findAllActiveGamesWithStats(@Param("vers") String vers);
 
 }
