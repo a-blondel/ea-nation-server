@@ -79,7 +79,7 @@ public class SocketUtils {
     /**
      * Handle localhost IP
      *
-     * @param socketIp
+     * @param socketIp the socket IP address
      * @return machine IP instead of 127.0.0.1, or socketIp if != 127.0.0.1
      */
     public static String handleLocalhostIp(String socketIp) {
@@ -96,15 +96,17 @@ public class SocketUtils {
     /**
      * Get player info from socket wrapper
      *
-     * @param socketWrapper
-     * @return
+     * @param socketWrapper the socket wrapper
+     * @return a string containing the version and persona name
      */
     public static String getPlayerInfo(SocketWrapper socketWrapper) {
         String playerInfo = "";
-        if (socketWrapper != null && socketWrapper.getPersonaEntity() != null) {
+        if (socketWrapper != null &&
+                socketWrapper.getPersonaEntity() != null
+                && socketWrapper.getPersonaConnectionEntity() != null) {
+            String vers = socketWrapper.getPersonaConnectionEntity().getVers();
             String pers = socketWrapper.getPersonaEntity().getPers();
-            String role = socketWrapper.getIsDedicatedHost().get() ? "host" : "client";
-            playerInfo = pers + " (" + role + ")";
+            playerInfo = vers + " " + pers;
         }
         return playerInfo;
     }

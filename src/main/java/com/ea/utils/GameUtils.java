@@ -11,6 +11,7 @@ import com.ea.repositories.stats.MohhPersonaStatsRepository;
 import com.ea.services.server.GameServerService;
 import com.ea.services.server.SocketManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
@@ -24,6 +25,7 @@ import static com.ea.utils.SocketUtils.DATETIME_FORMAT;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class GameUtils {
 
     private final GameConnectionRepository gameConnectionRepository;
@@ -109,6 +111,10 @@ public class GameUtils {
                     PersonaConnectionEntity personaConnectionEntity = gameConnectionEntity.getPersonaConnection();
                     PersonaEntity personaEntity = personaConnectionEntity.getPersona();
                     SocketWrapper socketWrapper = socketManager.getSocketWrapperByPersonaConnectionId(personaConnectionEntity.getId());
+                    if (socketWrapper == null) {
+                        log.warn("SocketWrapper not found for PersonaConnectionEntity ID: {}", personaConnectionEntity.getId());
+                        return;
+                    }
                     String ipAddr = personaConnectionEntity.getAddress().replace("/", "").split(":")[0];
                     String hostPrefix = !isP2P && gameConnectionEntity.isHost() ? "@" : "";
                     content.putAll(Stream.of(new String[][]{
