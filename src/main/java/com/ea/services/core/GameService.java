@@ -170,10 +170,12 @@ public class GameService {
                         if (connectionSocketWrapper != null) {
                             ses(connectionSocketWrapper.getSocket(), gameEntity);
                         }
-                        connection.setStartTime(LocalDateTime.now());
-                        gameConnectionRepository.save(connection);
+                        // Do we really want to update start time here?
+                        // It is more accurate for the stats, but it will make the discord bot to send twice the game join event
+                        //connection.setStartTime(LocalDateTime.now());
+                        //gameConnectionRepository.save(connection);
                     }
-                    // Don't update start time here, the WHEN attribute of the 'rank' packet uses the first declared start time (and it's used as an identifier for the game)
+                    // Don't update game start time here, the WHEN attribute of the 'rank' packet uses the first declared start time (and it's used as an identifier for the game)
                     gameEntity.setStarted(true);
                     gameRepository.save(gameEntity);
                 }
@@ -191,12 +193,11 @@ public class GameService {
      * @param socketWrapper The socket wrapper of current connection
      */
     public void gset(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
-        socketWriter.write(socket, socketData);
-
         PersonaConnectionEntity personaConnectionEntity = socketWrapper.getPersonaConnectionEntity();
         if (gameServerService.isP2P(personaConnectionEntity.getVers())) {
             // On NHL, the value is 0 or 1 to know if the client is ready or not
             String userflags = getValueFromSocket(socketData.getInputMessage(), "USERFLAGS");
+            String sysflags = getValueFromSocket(socketData.getInputMessage(), "SYSFLAGS");
 
             if (userflags != null) {
                 synchronized (this) {
@@ -218,7 +219,23 @@ public class GameService {
                     }
                 }
             }
+            if (sysflags != null) {
+                // Update sysflags in the game entity
+                GameEntity gameEntity = gameConnectionRepository.findByPersonaConnectionIdAndEndTimeIsNull(personaConnectionEntity.getId())
+                        .map(GameConnectionEntity::getGame).orElse(null);
+                if (gameEntity != null) {
+                    gameEntity.setSysflags(sysflags);
+                    gameRepository.save(gameEntity);
+
+                    if (!sysflags.isEmpty()) {
+                        Map<String, String> content = gameUtils.getGameInfo(gameEntity);
+                        socketWriter.write(socketWrapper.getSocket(), new SocketData("gset", null, content));
+                        return;
+                    }
+                }
+            }
         }
+        socketWriter.write(socket, socketData);
 
         // For MoHH dedicated server, gset means a map rotation, but instead of just updating the game parameters,
         // we end the current game and create a new one with the new parameters.
@@ -617,7 +634,7 @@ public class GameService {
 
                 // Broadcast the game creation to people inside the room
                 socketManager.getSocketWrapperByVers(vers).stream()
-                        .filter(wrapper -> room.getPersonaIds().contains(wrapper.getPersonaEntity().getId()))
+                        .filter(wrapper -> null != wrapper.getPersonaEntity() && room.getPersonaIds().contains(wrapper.getPersonaEntity().getId()))
                         .forEach(wrapper -> {
                             socketWriter.write(wrapper.getSocket(), new SocketData("+agm", null, gameUtils.getGameInfo(gameEntity)));
                         });

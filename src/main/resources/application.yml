@@ -62,10 +62,10 @@ game:
       ssl:
         domain: 'pspfifa07.ea.com'
       regions:
-        - name: 'US'
+        - name: 'GLOBAL'
           port: 10490
           slus:
-            - 'ULUS-10029'
+            - 'ULUS-10029' # Actual SLUS used by the game (PSP/FIFA06)
     - vers: 'PSP/NHL07'
       sdk: '4.3.2'
       ssl:

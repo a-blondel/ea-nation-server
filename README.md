@@ -24,7 +24,7 @@ Fell free to join !
 | Medal of Honor Heroes   | PSP         | EU, US    | Full support                  |
 | Medal of Honor Heroes 2 | PSP, Wii    | EU, US    | In progress, not playable yet |
 | NHL 07                  | PSP         | US        | Full support                  |
-| FIFA 07                 | PSP         | US        | Partial support, playable     |
+| FIFA 07                 | PSP         | EU, US    | Full support                  |
 
 ## Development Status
 

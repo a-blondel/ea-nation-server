@@ -39,12 +39,6 @@ public class SocketWriter {
      * @param socketData the object to use to write the message
      */
     public void write(Socket socket, SocketData socketData, String joiner) {
-        if (socket == null || socket.isClosed() || !socket.isConnected() || socket.isOutputShutdown()) {
-            log.warn("Trying to write in a closed socket: {}",
-                    socket != null ? socket.getRemoteSocketAddress() : "null");
-            return;
-        }
-
         try (ByteArrayOutputStream buffer = new ByteArrayOutputStream();
              DataOutputStream writer = new DataOutputStream(buffer)) {
 
@@ -77,7 +71,11 @@ public class SocketWriter {
                         props.isTcpDebugEnabled() ? "\n" + HexUtils.formatHexDump(bufferBytes) : playerInfo);
             }
 
-            synchronized (socket) {
+            synchronized (this) {
+                if (socket.isClosed() || !socket.isConnected() || socket.isOutputShutdown()) {
+                    log.warn("Trying to write in a closed socket: {}", socket.getRemoteSocketAddress());
+                    return;
+                }
                 socket.getOutputStream().write(bufferBytes);
             }
 
