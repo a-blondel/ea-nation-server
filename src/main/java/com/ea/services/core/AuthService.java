@@ -59,6 +59,7 @@ public class AuthService {
 
     public void news(Socket socket, SocketData socketData) {
         String tosUrl = props.getDnsName() + "/legalapp/webterms/us/fr/pc/";
+        String rosterUrl = props.getDnsName() + "/roster";
         Map<String, String> content = Stream.of(new String[][]{
                 {"BUDDY_SERVER", props.getTcpHost()},
                 {"BUDDY_PORT", String.valueOf(props.getTcpBuddyPort())},
@@ -68,8 +69,8 @@ public class AuthService {
                 {"TOS_URL", tosUrl},
                 {"FAQ_URL", tosUrl},
                 {"EACONNECT_WEBOFFER_URL", tosUrl},
-                {"ROSTER_URL", tosUrl}, // Required by NHL 07 (roster download isn't implemented, but it is required by the game)
-                {"ROSTER_VER", "1.0"}, // Required by NHL 07 (allows to skip roster download)
+                {"ROSTER_URL", rosterUrl}, // Required by NHL/FIFA 07 (roster download isn't implemented, but it is required by the game)
+                {"ROSTER_VER", "1.0"}, // Trick to skip roster download for NHL 07
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
         socketData.setOutputData(content);

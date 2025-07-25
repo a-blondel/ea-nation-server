@@ -11,7 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 @RestController
-public class TosController {
+public class GameFilesController {
 
     /**
      * Handles HTTP GET requests for retrieving the EA terms of service (TOS).
@@ -24,4 +24,18 @@ public class TosController {
         Resource resource = new ClassPathResource("tosa.en.txt");
         return ResponseEntity.ok(Files.readString(Path.of(resource.getURI())));
     }
+
+
+    /**
+     * Handles HTTP GET requests for retrieving the roster.
+     *
+     * @return ResponseEntity containing the roster text as a String.
+     */
+    @GetMapping(value = "roster", produces = "text/plain;charset=UTF-8")
+    public ResponseEntity<byte[]> getRoster() {
+        byte[] rosterContent = new byte[1]; // Dummy content
+        return ResponseEntity.ok()
+                .body(rosterContent);
+    }
+
 }

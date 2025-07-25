@@ -125,6 +125,13 @@ public class RoomService {
      * @param wrapper The socket wrapper of the client that triggered the update
      */
     public void pop(SocketWrapper wrapper) {
+        // Wait a bit because it is fired when a user disconnects, and we don't want to send the update to him
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
         String vers = wrapper.getPersonaConnectionEntity().getVers();
         Room room = getRoomByVers(vers);
         for (SocketWrapper clientWrapper : socketManager.getSocketWrapperByVers(vers)) {

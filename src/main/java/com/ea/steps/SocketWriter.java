@@ -80,7 +80,7 @@ public class SocketWriter {
             }
 
         } catch (IOException e) {
-            log.error("Error writing to socket", e);
+            log.error("Error: writing to closed socket");
         }
     }
 

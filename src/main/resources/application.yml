@@ -58,12 +58,27 @@ game:
       regions:
         - name: 'GLOBAL'
           port: 5000 # Arbitrary buddy port, set anything you want
+    - vers: 'PSP/NFS09'
+      sdk: '4.3.2'
+      ssl:
+        domain: 'pspnfs09.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 30990
+          slus:
+            - 'ULES01145'
+            - 'ULUS10376'
     - vers: 'PSP/FIFA07'
+      sdk: '4.3.2'
       ssl:
         domain: 'pspfifa07.ea.com'
       regions:
-        - name: 'GLOBAL'
+        - name: 'EU'
           port: 10490
+          slus:
+            - 'ULUS-10029' # Actual SLUS used by the game (PSP/FIFA06)
+        - name: 'US'
+          port: 10480
           slus:
             - 'ULUS-10029' # Actual SLUS used by the game (PSP/FIFA06)
     - vers: 'PSP/NHL07'
