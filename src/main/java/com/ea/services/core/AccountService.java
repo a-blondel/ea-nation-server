@@ -47,6 +47,15 @@ public class AccountService {
      */
     public void acct(Socket socket, SocketData socketData) {
         String name = getValueFromSocket(socketData.getInputMessage(), "NAME");
+        if (name == null) {
+            // FIFA 10 uses 'MAIL' instead of 'NAME', while other games use 'NAME'
+            // This is a huge problem as when the player tries to connect to another game, his name is null
+            // We could set the name to the email address, but the max length is 16 characters for the name
+            // So, we just return an error and make the player create an account in a game that uses 'NAME'
+            socketData.setIdMessage("acctimst"); // Invalid error (EC_INV_MASTER)
+            socketWriter.write(socket, socketData);
+            return;
+        }
 
         Optional<AccountEntity> accountEntityOpt = accountRepository.findByName(name);
         if (accountEntityOpt.isPresent()) {
@@ -128,11 +137,29 @@ public class AccountService {
         String vers = getValueFromSocket(socketData.getInputMessage(), "VERS");
         String slus = getValueFromSocket(socketData.getInputMessage(), "SLUS");
 
-        if (name.contains("@")) {
-            name = name.split("@")[0] + name.split("@")[1];
+
+        Optional<AccountEntity> accountEntityOpt;
+        if (name == null) {
+            // FIFA 10 uses 'MAIL' instead of 'NAME'
+            String mail = getValueFromSocket(socketData.getInputMessage(), "MAIL");
+            List<AccountEntity> accounts = accountRepository.findByMail(mail);
+            if (accounts.isEmpty()) {
+                socketData.setIdMessage("authimst"); // Inexisting error (EC_INV_MASTER)
+                socketWriter.write(socket, socketData);
+                return;
+            } else {
+                accountEntityOpt = accounts.stream()
+                        .filter(a -> a.getMail().equalsIgnoreCase(mail)
+                                && !a.isBanned())
+                        .findFirst();
+            }
+        } else {
+            if (name.contains("@")) {
+                name = name.split("@")[0] + name.split("@")[1];
+            }
+            accountEntityOpt = accountRepository.findByName(name);
         }
 
-        Optional<AccountEntity> accountEntityOpt = accountRepository.findByName(name);
         if (accountEntityOpt.isPresent()) {
             AccountEntity accountEntity = accountEntityOpt.get();
 

@@ -22,8 +22,11 @@ Fell free to join !
 | Game                       | Platform(s) | Region(s) | Status                        |
 |----------------------------|-------------|-----------|-------------------------------|
 | FIFA 07                    | PSP         | EU, US    | Full support                  |
+| FIFA 10                    | PSP         | EU, US    | Full support                  |
 | Medal of Honor: Heroes     | PSP         | EU, US    | Full support                  |
 | Medal of Honor: Heroes 2   | PSP, Wii    | EU, US    | In progress, not playable yet |
+| Need for Speed Carbon: OTC | PSP         | EU, US    | Full support                  |
+| Need for Speed: ProStreet  | PSP         | EU, US    | Full support                  |
 | Need for Speed: Undercover | PSP         | EU, US    | Full support                  |
 | NHL 07                     | PSP         | EU, US    | Full support                  |
 

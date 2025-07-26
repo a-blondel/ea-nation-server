@@ -121,6 +121,12 @@ public class PersonaService {
      */
     public void pers(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         String pers = getValueFromSocket(socketData.getInputMessage(), "PERS");
+        if (pers == null) {
+            // FIFA 10 doesn't send PERS in the packet after a cper, so we force it to reconnect
+            socketData.setIdMessage("persmaut"); // Error making the user to reconnect
+            socketWriter.write(socket, socketData);
+            return;
+        }
         if (pers.contains("@")) { // Remove @ from persona name (UHS naming convention)
             socketWrapper.getIsDedicatedHost().set(true);
             pers = pers.split("@")[0] + pers.split("@")[1];
