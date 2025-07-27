@@ -107,6 +107,24 @@ game:
           port: 10480
           slus:
             - 'ULUS-10029' # Actual SLUS used by the game (PSP/FIFA06)
+    - vers: 'PSP/FIFA08'
+      sdk: '5.5.0.0'
+      ssl:
+        domain: 'pspfifa08.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 20490
+          slus:
+            - 'ULUS-10293'
+    - vers: 'PSP/FIFA09'
+      sdk: '6.3.1.0'
+      ssl:
+        domain: 'pspfifa09.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 30490
+          slus:
+            - 'ULUX-80340'
     - vers: 'PSP/FIFA10'
       sdk: '5.3.0'
       ssl:
@@ -116,6 +134,59 @@ game:
           port: 25490
           slus:
             - 'ULUS-10464'
+    - vers: 'PSP/NCAA07'
+      sdk: '4.2.2.0'
+      ssl:
+        domain: 'pspncaa07.ea.com'
+      regions:
+        - name: 'US'
+          port: 10580
+          slus:
+            - 'ULUS10116'
+    - vers: 'PSP/MADDEN07'
+      sdk: '4.3.2.0'
+      ssl:
+        domain: 'pspmadden07.ea.com'
+      regions:
+        - name: 'US'
+          port: 10090
+          slus:
+            - 'SLUS-ULUS10117'
+    - vers: 'PSP/MADDEN-2008'
+      sdk: '5.3.2.1'
+      ssl:
+        domain: 'pspmadden08.ea.com'
+      regions:
+        - name: 'EU'
+          port: 20080
+          slus:
+            - 'SLUS-ULES00867'
+        - name: 'US'
+          port: 20090
+          slus:
+            - 'SLUS-ULUS10275'
+    - vers: 'PSP/MADDEN-2009'
+      sdk: '5.6.5.7'
+      ssl:
+        domain: 'pspmadden09.ea.com'
+      regions:
+        - name: 'EU'
+          port: 30080
+          slus:
+            - 'SLUS-ULES01093'
+        - name: 'US'
+          port: 30090
+          slus:
+            - 'SLUS-ULUS10352'
+    - vers: 'PSP/MADDEN-2010'
+      sdk: '7.3.1.1'
+      ssl:
+        domain: 'pspmadden10.ea.com'
+      regions:
+        - name: 'US'
+          port: 25090
+          slus:
+            - 'SLUS-ULUS10441'
     - vers: 'PSP/NHL07'
       sdk: '4.3.2'
       ssl:
