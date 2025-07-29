@@ -198,6 +198,7 @@ public class GameService {
             // On NHL, the value is 0 or 1 to know if the client is ready or not
             String userflags = getValueFromSocket(socketData.getInputMessage(), "USERFLAGS");
             String sysflags = getValueFromSocket(socketData.getInputMessage(), "SYSFLAGS");
+            String params = getValueFromSocket(socketData.getInputMessage(), "PARAMS");
 
             if (userflags != null) {
                 synchronized (this) {
@@ -210,11 +211,11 @@ public class GameService {
                     GameConnectionEntity gameConnectionEntity = gameConnectionOpt.get();
                     GameEntity gameEntity = gameConnectionEntity.getGame();
                     List<GameConnectionEntity> gameConnections = gameConnectionRepository.findByGameIdAndEndTimeIsNull(gameEntity.getId());
-                    for (GameConnectionEntity firstLevelConnection : gameConnections) { // For each player in the game, send +agm and +mgm
-                        SocketWrapper firstLevelSocketWrapper = socketManager.getSocketWrapperByPersonaConnectionId(firstLevelConnection.getPersonaConnection().getId());
-                        if (firstLevelSocketWrapper != null) {
-                            agm(firstLevelSocketWrapper.getSocket(), gameEntity);
-                            mgm(firstLevelSocketWrapper.getSocket(), gameEntity);
+                    for (GameConnectionEntity gameConnection : gameConnections) { // For each player in the game, send +agm and +mgm
+                        SocketWrapper gameConnectionSocketWrapper = socketManager.getSocketWrapperByPersonaConnectionId(gameConnection.getPersonaConnection().getId());
+                        if (gameConnectionSocketWrapper != null) {
+                            agm(gameConnectionSocketWrapper.getSocket(), gameEntity);
+                            mgm(gameConnectionSocketWrapper.getSocket(), gameEntity);
                         }
                     }
                 }
@@ -232,6 +233,16 @@ public class GameService {
                         socketWriter.write(socketWrapper.getSocket(), new SocketData("gset", null, content));
                         return;
                     }
+                }
+            }
+            if (params != null) {
+                // Update params in the game entity
+                GameEntity gameEntity = gameConnectionRepository.findByPersonaConnectionIdAndEndTimeIsNull(personaConnectionEntity.getId())
+                        .map(GameConnectionEntity::getGame).orElse(null);
+                if (gameEntity != null) {
+                    gameEntity.setParams(params);
+                    gameRepository.save(gameEntity);
+                    // Should we broadcast the game update to all players in the room but not in a game ?
                 }
             }
         }
@@ -813,7 +824,9 @@ public class GameService {
                             .forEach(wrapper -> {
                                 Socket socket = wrapper.getSocket();
                                 agm(socket, gameEntity);
-                                mgm(socket, gameEntity);
+                                if (!wrapper.getPersonaConnectionEntity().getId().equals(socketWrapper.getPersonaConnectionEntity().getId())) {
+                                    mgm(socket, gameEntity);
+                                }
                             });
                 }
             } else {
@@ -848,7 +861,7 @@ public class GameService {
 
             // For P2P games, remove the game from the room and broadcast the game deletion
             if (gameServerService.isP2P(game.getVers())) {
-                roomService.removeGameFromRoom(game);
+                roomService.removeGameFromRoom(game, socketWrapper);
             }
         }
     }

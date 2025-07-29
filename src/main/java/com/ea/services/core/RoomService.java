@@ -244,15 +244,15 @@ public class RoomService {
         }
     }
 
-    public void removeGameFromRoom(GameEntity game) {
+    public void removeGameFromRoom(GameEntity game, SocketWrapper socketWrapper) {
         Room room = getRoomByVers(game.getVers());
         if (room != null) {
             room.getGameIds().remove(game.getId());
-            broadcastGameRemoval(game);
+            broadcastGameRemoval(game, socketWrapper);
         }
     }
 
-    public void broadcastGameRemoval(GameEntity game) {
+    public void broadcastGameRemoval(GameEntity game, SocketWrapper socketWrapper) {
         socketManager.getSocketWrapperByVers(game.getVers())
                 .forEach(wrapper -> {
                     try {
@@ -263,8 +263,10 @@ public class RoomService {
                     Socket gameSocket = wrapper.getSocket();
                     socketWriter.write(gameSocket, new SocketData("+agmugam", null,
                             Collections.singletonMap("IDENT", String.valueOf(game.getId()))));
-                    socketWriter.write(gameSocket, new SocketData("+mgmugam", null,
-                            Collections.singletonMap("IDENT", String.valueOf(game.getId()))));
+                    if (!wrapper.getPersonaConnectionEntity().getId().equals(socketWrapper.getPersonaConnectionEntity().getId())) {
+                        socketWriter.write(gameSocket, new SocketData("+mgmugam", null,
+                                Collections.singletonMap("IDENT", String.valueOf(game.getId()))));
+                    }
                 });
     }
 

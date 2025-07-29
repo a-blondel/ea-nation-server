@@ -58,6 +58,17 @@ game:
       regions:
         - name: 'GLOBAL'
           port: 5000 # Arbitrary buddy port, set anything you want
+    - vers: 'PSP/NFS06'
+      sdk: '3.7.2.0'
+      ssl:
+        enabled: false # PSP/NFS06 SSL is bypassed as it uses SSLv2
+        domain: 'pspnfs06.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 30980 # default is 30990 for EU, but as it's duplicating PSP/NFS09 then it's patched to 30980 to match US version
+          slus:
+            - 'ULES00196'
+            - 'ULUS10036'
     - vers: 'PSP/NFS07'
       sdk: '4.3.2'
       ssl:
