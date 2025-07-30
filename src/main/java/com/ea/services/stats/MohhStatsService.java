@@ -389,8 +389,8 @@ public class MohhStatsService {
                 if (mohhPersonaStatsEntity == null) {
                     mohhPersonaStatsEntity = new MohhPersonaStatsEntity();
                     mohhPersonaStatsEntity.setPersona(gameConnection.getPersonaConnection().getPersona());
-                    mohhPersonaStatsEntity.setVers(gameConnection.getGame().getVers());
-                    mohhPersonaStatsEntity.setSlus(gameConnection.getGame().getSlus());
+                    mohhPersonaStatsEntity.setVers(gameConnection.getPersonaConnection().getVers());
+                    mohhPersonaStatsEntity.setSlus(gameConnection.getPersonaConnection().getSlus());
                 }
 
                 updatePersonaStats(mohhPersonaStatsEntity, mohhGameReportEntity);

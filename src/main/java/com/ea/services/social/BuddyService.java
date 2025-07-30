@@ -646,7 +646,7 @@ public class BuddyService {
      */
     public void disc(BuddySocketWrapper buddySocketWrapper) {
         // Broadcast disconnect presence update to all buddies
-        if (buddySocketWrapper.getPersonaEntity() != null) {
+        if (buddySocketWrapper != null && buddySocketWrapper.getPersonaEntity() != null) {
             broadcastPresenceUpdate(buddySocketWrapper.getPersonaEntity().getPers(), "DISC");
         }
     }

@@ -7,7 +7,6 @@ import com.ea.entities.core.PersonaConnectionEntity;
 import com.ea.entities.core.PersonaEntity;
 import com.ea.entities.social.FeedbackEntity;
 import com.ea.entities.social.FeedbackTypeEntity;
-import com.ea.entities.stats.MohhPersonaStatsEntity;
 import com.ea.repositories.buddy.FeedbackRepository;
 import com.ea.repositories.buddy.FeedbackTypeRepository;
 import com.ea.repositories.core.AccountRepository;
@@ -98,14 +97,6 @@ public class PersonaService {
             personaEntity.setPers(normalizedPers);
             personaEntity.setRp(5);
             personaEntity.setCreatedOn(LocalDateTime.now());
-
-            MohhPersonaStatsEntity mohhPersonaStatsEntity = new MohhPersonaStatsEntity();
-            mohhPersonaStatsEntity.setPersona(personaEntity);
-            mohhPersonaStatsEntity.setVers(socketWrapper.getPersonaConnectionEntity().getVers());
-            mohhPersonaStatsEntity.setSlus(socketWrapper.getPersonaConnectionEntity().getSlus());
-            Set<MohhPersonaStatsEntity> personaStatsEntities = Set.of(mohhPersonaStatsEntity);
-            personaEntity.setPersonaStats(personaStatsEntities);
-
             personaRepository.save(personaEntity);
         }
 

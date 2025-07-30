@@ -175,6 +175,11 @@ public class RoomService {
     public void mesg(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         socketWriter.write(socket, socketData);
 
+        if (socketWrapper.getPersonaEntity() == null) {
+            // If the persona is not set, we cannot send a message (seen in logs)
+            return;
+        }
+
         String text = getValueFromSocket(socketData.getInputMessage(), "TEXT");
         String attr = getValueFromSocket(socketData.getInputMessage(), "ATTR");
 
@@ -205,8 +210,10 @@ public class RoomService {
             }
         } else { // User is in a Lobby Room, broadcast the message to all clients in the lobby except if they are in a game room or in-game
             for (SocketWrapper clientWrapper : socketManager.getSocketWrapperByVers(socketWrapper.getPersonaConnectionEntity().getVers())) {
-                if (gameRepository.findCurrentGameOfPersona(clientWrapper.getPersonaConnectionEntity().getId()).isEmpty()) {
-                    socketWriter.write(clientWrapper.getSocket(), socketData, TAB_CHAR);
+                if (clientWrapper.getPersonaConnectionEntity() != null) { // In case someone is connected without a persona yet
+                    if (gameRepository.findCurrentGameOfPersona(clientWrapper.getPersonaConnectionEntity().getId()).isEmpty()) {
+                        socketWriter.write(clientWrapper.getSocket(), socketData, TAB_CHAR);
+                    }
                 }
             }
         }

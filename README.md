@@ -32,8 +32,8 @@ Fell free to join !
 | NCAA 07                           | PSP         | US        | Playable, partial support     |
 | NHL 07                            | PSP         | EU, US    | Playable, partial support     |
 
-* : Requires a SSL bypass patch to connect,
-  see [patches](https://github.com/a-blondel/ea-nation-server/tree/main/patches)
+Playable* : Requires a SSL bypass patch to connect,
+see [patches](https://github.com/a-blondel/ea-nation-server/tree/main/patches)
 
 Partial support means that some features are not implemented yet, like:
 

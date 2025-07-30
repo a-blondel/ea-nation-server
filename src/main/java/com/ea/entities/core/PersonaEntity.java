@@ -36,7 +36,7 @@ public class PersonaEntity {
     private LocalDateTime deletedOn;
 
     @OneToMany(mappedBy = "persona", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<MohhPersonaStatsEntity> personaStats;
+    private Set<MohhPersonaStatsEntity> mohhPersonaStats;
 
     @OneToMany(mappedBy = "persona", fetch = FetchType.EAGER)
     private Set<PersonaConnectionEntity> personaConnections;
