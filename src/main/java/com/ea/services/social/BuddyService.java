@@ -591,27 +591,26 @@ public class BuddyService {
 
         PersonaEntity toPersona = toPersonaOpt.get();
 
-        // Create and save the message
-        MessageEntity messageEntity = new MessageEntity();
-        messageEntity.setFromPersona(fromPersona);
-        messageEntity.setToPersona(toPersona);
-        messageEntity.setBody(body);
-        messageEntity.setAck(false); // Initially unacknowledged
-        messageEntity.setCreatedOn(LocalDateTime.now());
-        messageRepository.save(messageEntity);
+        // Save message using persona IDs instead of full entities to avoid memory issues
+        boolean isTargetOnline = false;
+        Long fromPersonaId = fromPersona.getId();
+        Long toPersonaId = toPersona.getId();
+        LocalDateTime createdOn = LocalDateTime.now();
 
         // Check if target user is online
         Optional<BuddySocketWrapper> targetWrapperOpt = socketManager.getBuddySocketWrapperByPersona(targetUsername);
 
         if (targetWrapperOpt.isPresent()) {
-            // Target is online - send RECV packet immediately and mark as acknowledged
+            // Target is online - send RECV packet immediately
             BuddySocketWrapper targetWrapper = targetWrapperOpt.get();
-            sendRecvPacket(targetWrapper.getSocket(), messageEntity);
 
-            // Mark as acknowledged since it was delivered
-            messageEntity.setAck(true);
-            messageRepository.save(messageEntity);
+            // Send packet to the target user
+            sendRecvPacket(targetWrapper.getSocket(), fromPersona.getPers(), body, createdOn);
+            isTargetOnline = true; // Mark the message as acknowledged since it was delivered
         }
+
+        // Save message using optimized method with persona IDs only
+        messageRepository.saveMessageByPersonaIds(fromPersonaId, toPersonaId, body, isTargetOnline, createdOn);
 
         socketWriter.write(socket, socketData);
     }
@@ -619,15 +618,14 @@ public class BuddyService {
     /**
      * RECV - Deliver a message
      *
-     * @param socket  the socket to send to
-     * @param message the message to deliver
+     * @param socket    the socket to send to
+     * @param fromUser  the username of the sender
+     * @param body      the message body
+     * @param createdOn the message creation time
      */
-    private void sendRecvPacket(Socket socket, MessageEntity message) {
-        String fromUser = message.getFromPersona().getPers();
-        String body = message.getBody();
-
+    private void sendRecvPacket(Socket socket, String fromUser, String body, LocalDateTime createdOn) {
         // Convert LocalDateTime to epoch seconds
-        long timeSeconds = message.getCreatedOn().atZone(ZoneOffset.UTC).toEpochSecond();
+        long timeSeconds = createdOn.atZone(ZoneOffset.UTC).toEpochSecond();
 
         Map<String, String> recvContent = Stream.of(new String[][]{
                 {"USER", fromUser},
@@ -750,7 +748,7 @@ public class BuddyService {
 
         // Send all pending messages
         for (MessageEntity message : pendingMessages) {
-            sendRecvPacket(socket, message);
+            sendRecvPacket(socket, message.getFromPersona().getPers(), message.getBody(), message.getCreatedOn());
         }
 
         // Mark all messages as acknowledged

@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface PersonaConnectionRepository extends JpaRepository<PersonaConnectionEntity, Long> {
@@ -24,7 +23,7 @@ public interface PersonaConnectionRepository extends JpaRepository<PersonaConnec
      */
     List<PersonaConnectionEntity> findByEndTimeIsNullAndAddressNotIn(Collection<String> addresses);
 
-    Optional<PersonaConnectionEntity> findByVersAndSlusAndPersonaPersAndIsHostFalseAndEndTimeIsNull(
+    List<PersonaConnectionEntity> findByVersAndSlusAndPersonaPersAndIsHostFalseAndEndTimeIsNull(
             String vers,
             String slus,
             String pers

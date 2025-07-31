@@ -38,7 +38,7 @@ public class PersonaEntity {
     @OneToMany(mappedBy = "persona", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<MohhPersonaStatsEntity> mohhPersonaStats;
 
-    @OneToMany(mappedBy = "persona", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "persona", fetch = FetchType.LAZY)
     private Set<PersonaConnectionEntity> personaConnections;
 
     @OneToMany(mappedBy = "fromPersona", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

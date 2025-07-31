@@ -56,6 +56,32 @@ public class SocketManager {
         return sockets.get(identifier);
     }
 
+    /**
+     * Finds a SocketWrapper by exact Socket object match.
+     *
+     * @param socket The exact Socket object to find
+     * @return The SocketWrapper containing this exact socket, or null if not found
+     */
+    public SocketWrapper getSocketWrapperByExactSocket(Socket socket) {
+        return sockets.values().stream()
+                .filter(wrapper -> wrapper.getSocket() == socket)
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * Finds a BuddySocketWrapper by exact Socket object match.
+     *
+     * @param socket The exact Socket object to find
+     * @return The BuddySocketWrapper containing this exact socket, or null if not found
+     */
+    public BuddySocketWrapper getBuddySocketWrapperByExactSocket(Socket socket) {
+        return buddySockets.values().stream()
+                .filter(wrapper -> wrapper.getSocket() == socket)
+                .findFirst()
+                .orElse(null);
+    }
+
     public SocketWrapper getAriesSocketWrapperByLkey(String lkey) {
         return sockets.values().stream()
                 .filter(wrapper -> lkey.equals(wrapper.getLkey()))

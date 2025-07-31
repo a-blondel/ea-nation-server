@@ -27,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -124,17 +125,16 @@ public class PersonaService {
         }
 
         // Check if the persona is already connected (allowed for host only)
-        Optional<PersonaConnectionEntity> personaConnectionEntityOpt =
+        List<PersonaConnectionEntity> existingPersonaConnections =
                 personaConnectionRepository.findByVersAndSlusAndPersonaPersAndIsHostFalseAndEndTimeIsNull(
                         socketWrapper.getPersonaConnectionEntity().getVers(),
                         socketWrapper.getPersonaConnectionEntity().getSlus(),
                         pers);
-        if (personaConnectionEntityOpt.isPresent()) {
+        for (PersonaConnectionEntity personaConnectionEntity : existingPersonaConnections) {
 //            socketData.setIdMessage("perspset");
 //            socketWriter.write(socket, socketData);
 //            return;
             log.warn("Persona {} already connected, ending old session", pers);
-            PersonaConnectionEntity personaConnectionEntity = personaConnectionEntityOpt.get();
             Socket socketToClose = socketManager.getSocketWrapper(personaConnectionEntity.getAddress()).getSocket();
             if (socketToClose != null) {
                 log.info("Closing old socket {}", socketToClose.getRemoteSocketAddress());

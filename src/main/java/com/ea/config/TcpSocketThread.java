@@ -45,16 +45,23 @@ public class TcpSocketThread implements Runnable {
             if (pingExecutor != null && !pingExecutor.isShutdown()) {
                 pingExecutor.shutdownNow();
             }
-            SocketWrapper socketWrapper = socketManager.getSocketWrapper(clientSocket);
+
+            // Find socket wrapper using exact Socket object match - this is safe for cleanup
+            SocketWrapper socketWrapper = socketManager.getSocketWrapperByExactSocket(clientSocket);
+
             String playerInfo = SocketUtils.getPlayerInfo(socketWrapper);
-            if (socketWrapper != null && socketWrapper.getPersonaEntity() != null) {
-                gameService.endGameConnection(socketWrapper);
-                personaService.endPersonaConnection(socketWrapper);
-                socketWrapper.cleanupOnSocketClose(socketWrapper);
+            if (socketWrapper != null) {
+                if (socketWrapper.getPersonaEntity() != null) {
+                    gameService.endGameConnection(socketWrapper);
+                    personaService.endPersonaConnection(socketWrapper);
+                    socketWrapper.cleanupOnSocketClose(socketWrapper);
+                }
                 socketManager.removeSocket(socketWrapper.getIdentifier());
             }
 
-            BuddySocketWrapper buddySocketWrapper = socketManager.getBuddySocketWrapper(clientSocket);
+            // Find buddy socket wrapper using exact Socket object match
+            BuddySocketWrapper buddySocketWrapper = socketManager.getBuddySocketWrapperByExactSocket(clientSocket);
+
             if (buddySocketWrapper != null) {
                 socketManager.removeBuddySocket(buddySocketWrapper.getIdentifier());
             }
