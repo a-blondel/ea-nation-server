@@ -642,13 +642,12 @@ public class GameService {
                 // Add the game to the room
                 Room room = roomService.getRoomByVers(vers);
                 room.getGameIds().add(gameEntity.getId());
+                log.info("Added game {} to room {}", gameEntity.getName(), room.getId());
 
                 // Broadcast the game creation to people inside the room
                 socketManager.getSocketWrapperByVers(vers).stream()
                         .filter(wrapper -> null != wrapper.getPersonaEntity() && room.getPersonaIds().contains(wrapper.getPersonaEntity().getId()))
-                        .forEach(wrapper -> {
-                            socketWriter.write(wrapper.getSocket(), new SocketData("+agm", null, gameUtils.getGameInfo(gameEntity)));
-                        });
+                        .forEach(wrapper -> socketWriter.write(wrapper.getSocket(), new SocketData("+agm", null, gameUtils.getGameInfo(gameEntity))));
             }
 
             try {
@@ -668,8 +667,12 @@ public class GameService {
      * @param socketWrapper The socket wrapper of current connection
      */
     public void glea(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
-        endGameConnection(socketWrapper);
         socketWriter.write(socket, socketData);
+        if (socketWrapper != null) {
+            endGameConnection(socketWrapper);
+        } else {
+            log.warn("Socket wrapper is null for socket: {}", socket.getRemoteSocketAddress());
+        }
     }
 
     /**
@@ -685,7 +688,7 @@ public class GameService {
 
         String status = getValueFromSocket(socketData.getInputMessage(), "STATUS");
 
-        SocketWrapper socketWrapper = socketManager.getSocketWrapper(socket);
+        SocketWrapper socketWrapper = socketManager.getSocketWrapperBySocket(socket);
         // Add a flag to indicate that the game is hosted
         if (("A").equals(status)) {
             socketWrapper.getIsGps().set(true);

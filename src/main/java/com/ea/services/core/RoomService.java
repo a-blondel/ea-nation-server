@@ -14,6 +14,7 @@ import com.ea.services.server.SocketManager;
 import com.ea.steps.SocketWriter;
 import com.ea.utils.GameUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.net.Socket;
@@ -24,6 +25,7 @@ import java.util.stream.Stream;
 import static com.ea.utils.SocketUtils.TAB_CHAR;
 import static com.ea.utils.SocketUtils.getValueFromSocket;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RoomService {
@@ -44,7 +46,7 @@ public class RoomService {
      * @param socketData The socket data
      */
     public void rom(Socket socket, SocketData socketData) {
-        String vers = socketManager.getSocketWrapper(socket).getPersonaConnectionEntity().getVers();
+        String vers = socketManager.getSocketWrapperBySocket(socket).getPersonaConnectionEntity().getVers();
         Room room = getRoomByVers(vers);
 
         if (room != null) {
@@ -125,13 +127,6 @@ public class RoomService {
      * @param wrapper The socket wrapper of the client that triggered the update
      */
     public void pop(SocketWrapper wrapper) {
-        // Wait a bit because it is fired when a user disconnects, and we don't want to send the update to him
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         String vers = wrapper.getPersonaConnectionEntity().getVers();
         Room room = getRoomByVers(vers);
         for (SocketWrapper clientWrapper : socketManager.getSocketWrapperByVers(vers)) {
@@ -235,7 +230,8 @@ public class RoomService {
             Long personaId = wrapper.getPersonaEntity().getId();
             rooms.stream()
                     .filter(r -> r.getId().equals(roomId))
-                    .findFirst().ifPresent(newRoom -> newRoom.getPersonaIds().add(personaId));
+                    .findFirst().ifPresent(room -> room.getPersonaIds().add(personaId));
+            log.info("Added persona {} to room {}", wrapper.getPersonaEntity().getPers(), roomId);
         }
         pop(wrapper);
     }
@@ -246,6 +242,7 @@ public class RoomService {
             Long personaId = wrapper.getPersonaEntity().getId();
             if (room.getPersonaIds().contains(personaId)) {
                 room.getPersonaIds().remove(personaId);
+                log.info("Removed persona {} from room {}", wrapper.getPersonaEntity().getPers(), room.getId());
                 pop(wrapper);
             }
         }
@@ -255,6 +252,7 @@ public class RoomService {
         Room room = getRoomByVers(game.getVers());
         if (room != null) {
             room.getGameIds().remove(game.getId());
+            log.info("Removed game {} from room {}", game.getName(), room.getId());
             broadcastGameRemoval(game, socketWrapper);
         }
     }
@@ -262,11 +260,6 @@ public class RoomService {
     public void broadcastGameRemoval(GameEntity game, SocketWrapper socketWrapper) {
         socketManager.getSocketWrapperByVers(game.getVers())
                 .forEach(wrapper -> {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
                     Socket gameSocket = wrapper.getSocket();
                     socketWriter.write(gameSocket, new SocketData("+agmugam", null,
                             Collections.singletonMap("IDENT", String.valueOf(game.getId()))));

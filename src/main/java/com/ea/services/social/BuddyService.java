@@ -213,6 +213,12 @@ public class BuddyService {
      */
     public void pset(Socket socket, SocketData socketData, BuddySocketWrapper buddySocketWrapper) {
         String show = getValueFromSocket(socketData.getInputMessage(), "SHOW"); // CHAT, PASS (in-game), AWAY
+        socketWriter.write(socket, socketData);
+
+        if (buddySocketWrapper == null) {
+            log.warn("BuddySocketWrapper is null for socket: {}", socket.getRemoteSocketAddress());
+            return;
+        }
 
         // Update presence in the socket wrapper
         synchronized (this) {
@@ -223,8 +229,6 @@ public class BuddyService {
         if (buddySocketWrapper.getPersonaEntity() != null) {
             broadcastPresenceUpdate(buddySocketWrapper.getPersonaEntity().getPers(), show);
         }
-
-        socketWriter.write(socket, socketData);
     }
 
     /**

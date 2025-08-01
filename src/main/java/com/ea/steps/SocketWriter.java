@@ -1,5 +1,6 @@
 package com.ea.steps;
 
+import com.ea.dto.BuddySocketWrapper;
 import com.ea.dto.SocketData;
 import com.ea.dto.SocketWrapper;
 import com.ea.services.server.SocketManager;
@@ -62,8 +63,17 @@ public class SocketWriter {
             }
 
             byte[] bufferBytes = buffer.toByteArray();
-            SocketWrapper socketWrapper = socketManager.getSocketWrapper(socket);
-            String playerInfo = SocketUtils.getPlayerInfo(socketWrapper);
+
+            String playerInfo = "";
+            SocketWrapper socketWrapper = socketManager.getSocketWrapperBySocket(socket);
+            if (socketWrapper != null) {
+                playerInfo = SocketUtils.getPlayerInfo(socketWrapper);
+            } else {
+                BuddySocketWrapper buddySocketWrapper = socketManager.getBuddySocketWrapperBySocket(socket);
+                if (buddySocketWrapper != null) {
+                    playerInfo = SocketUtils.getBuddyPlayerInfo(buddySocketWrapper);
+                }
+            }
             if (!props.getTcpDebugExclusions().contains(socketData.getIdMessage())) {
                 log.info("--> {} {} {}",
                         socket.getRemoteSocketAddress().toString(),
@@ -72,15 +82,11 @@ public class SocketWriter {
             }
 
             synchronized (this) {
-                if (socket.isClosed() || !socket.isConnected() || socket.isOutputShutdown()) {
-                    log.warn("Trying to write in a closed socket: {}", socket.getRemoteSocketAddress());
-                    return;
-                }
                 socket.getOutputStream().write(bufferBytes);
             }
 
         } catch (IOException e) {
-            log.error("Error: writing to closed socket", e);
+            log.error("Error: writing to closed socket");
         }
     }
 

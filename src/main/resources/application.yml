@@ -137,7 +137,7 @@ game:
           slus:
             - 'ULUX-80340'
     - vers: 'PSP/FIFA10'
-      sdk: '5.3.0'
+      sdk: '7.5.3.0'
       ssl:
         domain: 'pspfifa10.ea.com'
       regions:
@@ -150,8 +150,12 @@ game:
       ssl:
         domain: 'pspncaa07.ea.com'
       regions:
-        - name: 'US'
+        - name: 'US-1'
           port: 10580
+          slus:
+            - 'ULUS10116'
+        - name: 'US-2'
+          port: 10590
           slus:
             - 'ULUS10116'
     - vers: 'PSP/MADDEN07'

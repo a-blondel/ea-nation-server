@@ -46,24 +46,26 @@ public class TcpSocketThread implements Runnable {
                 pingExecutor.shutdownNow();
             }
 
-            // Find socket wrapper using exact Socket object match - this is safe for cleanup
-            SocketWrapper socketWrapper = socketManager.getSocketWrapperByExactSocket(clientSocket);
-
-            String playerInfo = SocketUtils.getPlayerInfo(socketWrapper);
+            String playerInfo = "";
+            // Find socket wrapper using exact Socket object match
+            SocketWrapper socketWrapper = socketManager.getSocketWrapperBySocket(clientSocket);
             if (socketWrapper != null) {
+                playerInfo = SocketUtils.getPlayerInfo(socketWrapper);
+                socketManager.removeSocket(socketWrapper.getIdentifier());
                 if (socketWrapper.getPersonaEntity() != null) {
                     gameService.endGameConnection(socketWrapper);
                     personaService.endPersonaConnection(socketWrapper);
                     socketWrapper.cleanupOnSocketClose(socketWrapper);
                 }
-                socketManager.removeSocket(socketWrapper.getIdentifier());
-            }
-
-            // Find buddy socket wrapper using exact Socket object match
-            BuddySocketWrapper buddySocketWrapper = socketManager.getBuddySocketWrapperByExactSocket(clientSocket);
-
-            if (buddySocketWrapper != null) {
-                socketManager.removeBuddySocket(buddySocketWrapper.getIdentifier());
+            } else {
+                // Find buddy socket wrapper using exact Socket object match
+                BuddySocketWrapper buddySocketWrapper = socketManager.getBuddySocketWrapperBySocket(clientSocket);
+                if (buddySocketWrapper != null) {
+                    playerInfo = SocketUtils.getBuddyPlayerInfo(buddySocketWrapper);
+                    socketManager.removeBuddySocket(buddySocketWrapper.getIdentifier());
+                } else {
+                    log.warn("No SocketWrapper found for socket: {}", clientSocket.getRemoteSocketAddress());
+                }
             }
             log.info("TCP client session ended: {} {}", clientSocket.getRemoteSocketAddress(), playerInfo);
         }
