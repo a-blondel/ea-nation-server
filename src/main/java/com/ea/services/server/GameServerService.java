@@ -78,7 +78,18 @@ public class GameServerService {
                         server.getDedicated().getVers().equals(vers) &&
                         server.getDedicated().getSlus() != null &&
                         server.getDedicated().getSlus().equals(slus))
-                .map(server -> server.getDedicated().getPort())
+                .map(server -> {
+                    // If dedicated server has explicit port, use it
+                    if (server.getDedicated().getPort() != null) {
+                        return server.getDedicated().getPort();
+                    }
+                    // Otherwise, fall back to main server's first region port (shared port for multi-VERS games)
+                    // Note: dedicated SLUS is different from region SLUS, so we can't filter by SLUS here
+                    return server.getRegions().stream()
+                            .findFirst()
+                            .map(GameServerConfig.RegionConfig::getPort)
+                            .orElse(-1);
+                })
                 .findFirst()
                 .orElse(-1));
     }
@@ -135,7 +146,8 @@ public class GameServerService {
     public Optional<GameServerConfig.GameServer> getServerByVers(String vers) {
         return gameServerConfig.getServers().stream()
                 .filter(GameServerConfig.GameServer::isEnabled)
-                .filter(server -> server.getVers().equals(vers))
+                .filter(server -> server.getVers().equals(vers) ||
+                        (server.getDedicated() != null && server.getDedicated().getVers() != null && server.getDedicated().getVers().equals(vers)))
                 .findFirst();
     }
 

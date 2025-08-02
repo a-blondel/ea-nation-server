@@ -58,6 +58,21 @@ game:
       regions:
         - name: 'GLOBAL'
           port: 5000 # Arbitrary buddy port, set anything you want
+    - vers: 'PSP/BURNOUT07' # Burnout Dominator (login & register)
+      sdk: '4.9.0.0'
+      # Not a real dedicated server - this is a technique to support multiple VERS for the same game
+      dedicated:
+        vers: 'FLM/A1' # Burnout Dominator (view leaderboards, upload stats, download tracks)
+        slus: 'SLUS-FLAME'
+        # No port specified - shares the main server's region ports
+        # sdk is 4.8.1.0
+      ssl:
+        domain: 'pspburnout07.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 11890
+          slus:
+            - 'ULES00703'
     - vers: 'PSP/UEFA07' # UEFA Champions League 2006-2007
       sdk: '4.3.2.0'
       ssl:

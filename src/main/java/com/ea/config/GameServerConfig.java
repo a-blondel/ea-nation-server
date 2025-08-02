@@ -24,11 +24,16 @@ public class GameServerConfig {
         private List<RegionConfig> regions;
     }
 
+    /**
+     * Dedicated server configuration.
+     * Used for games requiring multiple VERS identifiers.
+     * If port is null, the dedicated VERS shares the main server's region ports.
+     */
     @Data
     public static class DedicatedConfig {
         private String vers;
         private String slus;
-        private int port;
+        private Integer port; // Nullable: if null, shares main server's ports
     }
 
     @Data

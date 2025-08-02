@@ -84,10 +84,16 @@ public class ServerApp implements CommandLineRunner {
 
     private void startGameServer(GameServerConfig.GameServer gameServer) throws Exception {
         for (GameServerConfig.RegionConfig region : gameServer.getRegions()) {
+            // Build VERS display string (include dedicated VERS if present)
+            String versDisplay = gameServer.getVers();
+            if (gameServer.getDedicated() != null && gameServer.getDedicated().getVers() != null) {
+                versDisplay += ", " + gameServer.getDedicated().getVers();
+            }
+
             // TCP server
             ServerSocket tcpServerSocket = serverConfig.createTcpServerSocket(region.getPort());
             startServerThread(tcpServerSocket, this::createTcpSocketThread, gameServer.isAries());
-            log.info("Started TCP server for {} {} on port {}", gameServer.getVers(), region.getName(), region.getPort());
+            log.info("Started TCP server for {} {} on port {}", versDisplay, region.getName(), region.getPort());
 
             // SSL server
             if (gameServer.getSsl() != null && gameServer.getSsl().isEnabled() && gameServer.getSsl().getDomain() != null) {
@@ -97,7 +103,7 @@ public class ServerApp implements CommandLineRunner {
 
                 SSLServerSocket sslServerSocket = serverConfig.createSslServerSocket(sslPort, subject, issuer, gameServer.getVers());
                 startServerThread(sslServerSocket, this::createSslSocketThread, true);
-                log.info("Started SSL server for {} {} on port {}", gameServer.getVers(), region.getName(), sslPort);
+                log.info("Started SSL server for {} {} on port {}", versDisplay, region.getName(), sslPort);
             }
         }
     }
