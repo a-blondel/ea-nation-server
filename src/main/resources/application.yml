@@ -58,6 +58,15 @@ game:
       regions:
         - name: 'GLOBAL'
           port: 5000 # Arbitrary buddy port, set anything you want
+    - vers: 'PSP/UEFA07' # UEFA Champions League 2006-2007
+      sdk: '4.3.2.0'
+      ssl:
+        domain: 'pspuefa07.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 11270
+          slus:
+            - 'ULUS-10221'
     - vers: 'PSP/FIFA07'
       sdk: '4.3.2'
       ssl:
@@ -98,6 +107,29 @@ game:
           port: 25490
           slus:
             - 'ULUS-10464'
+    - vers: 'FLM' # FIFA World Cup Germany 2006
+      sdk: '3.9.5.1'
+      ssl:
+        enabled: false # SSL is bypassed as it uses SSLv2
+        domain: 'pspuefa06.ea.com' # Yes, uefa06 for world cup 2006
+      regions:
+        - name: 'US'
+          port: 31280
+          slus:
+            - 'ULUS-10029'
+        - name: 'EU'
+          port: 31290
+          slus:
+            - 'ULUS-10029'
+    - vers: 'PSP/WORLDCUP10' # FIFA World Cup South Africa 2010
+      sdk: '7.5.3.0'
+      ssl:
+        domain: 'pspworldcup10.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 28390
+          slus:
+            - 'ULUS-10504'
     - vers: 'PSP/KOK06' # Fight Night Round 3
       sdk: '3.9.5.1'
       ssl:

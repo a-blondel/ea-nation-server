@@ -21,7 +21,10 @@ Fell free to join !
 
 | Game                              | Platform(s) | Region(s) | Status                        |
 |-----------------------------------|-------------|-----------|-------------------------------|
+| UEFA Champions League 2006-2007   | PSP         | EU, US    | Playable, partial support     |
 | FIFA 07, 08, 09, 10               | PSP         | EU, US    | Playable, partial support     |
+| FIFA World Cup Germany 2006       | PSP         | EU, US    | Playable*, partial support    |
+| FIFA World Cup South Africa 2010  | PSP         | EU, US    | Playable, partial support     |
 | Fight Night Round 3               | PSP         | EU, US    | Playable*, partial support    |
 | MADDEN 07, 08, 09, 10             | PSP         | EU, US    | Playable, partial support     |
 | Medal of Honor: Heroes            | PSP         | EU, US    | Full support                  |
