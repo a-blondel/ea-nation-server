@@ -35,6 +35,7 @@ Fell free to join !
 | Need for Speed: Undercover        | PSP         | EU, US    | Playable, partial support     |
 | NCAA 07                           | PSP         | US        | Playable, partial support     |
 | NHL 07                            | PSP         | EU, US    | Playable, partial support     |
+| Tiger Woods PGA Tour 07, 08, 10   | PSP         | EU, US    | Playable, partial support     |
 
 Playable* : Requires a SSL bypass patch to connect,
 see [patches](https://github.com/a-blondel/ea-nation-server/tree/main/patches)

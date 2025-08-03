@@ -312,6 +312,41 @@ game:
           port: 21120
           slus:
             - 'RM2E'
+    - vers: 'PSP/TW07'
+      sdk: '4.3.2.0'
+      ssl:
+        domain: 'psptw07.ea.com'
+      regions:
+        - name: 'EU'
+          port: 10280
+          slus:
+            - 'ULES00455'
+        - name: 'US'
+          port: 10290
+          slus:
+            - 'ULUS10115'
+    - vers: 'PSP/TW08'
+      sdk: '5.4.1.0'
+      ssl:
+        domain: 'psptw08.ea.com'
+      regions:
+        - name: 'EU'
+          port: 20280
+          slus:
+            - 'ULES00845'
+        - name: 'US'
+          port: 20290
+          slus:
+            - 'ULUS10276'
+    - vers: 'PSP/TEST10' # Tiger woods PGA Tour 10
+      sdk: '7.0.0.0'
+      ssl:
+        domain: 'psptw10.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 25290
+          slus:
+            - 'SLUS-FLAME'
 
 ---
 
