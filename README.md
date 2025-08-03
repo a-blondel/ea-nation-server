@@ -22,6 +22,7 @@ Fell free to join !
 | Game                              | Platform(s) | Region(s) | Status                        |
 |-----------------------------------|-------------|-----------|-------------------------------|
 | FIFA 07, 08, 09, 10               | PSP         | EU, US    | Playable, partial support     |
+| Fight Night Round 3               | PSP         | EU, US    | Playable*, partial support    |
 | MADDEN 07, 08, 09, 10             | PSP         | EU, US    | Playable, partial support     |
 | Medal of Honor: Heroes            | PSP         | EU, US    | Full support                  |
 | Medal of Honor: Heroes 2          | PSP, Wii    | EU, US    | In progress, not playable yet |

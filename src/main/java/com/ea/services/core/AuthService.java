@@ -120,9 +120,19 @@ public class AuthService {
                         {"STATS", stats},
                 }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
             } else {
-                content = Stream.of(new String[][]{
-                        {"INGAME", inGame},
-                }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+                if (inGame != null) {
+                    content = Stream.of(new String[][]{
+                            {"INGAME", inGame},
+                    }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+                } else if (myGame != null) {
+                    content = Stream.of(new String[][]{
+                            {"MYGAME", myGame},
+                            {"STATS", stats},
+                    }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+                } else {
+                    content = Collections.emptyMap();
+                }
+
             }
         }
 

@@ -61,7 +61,7 @@ game:
     - vers: 'PSP/NFS06'
       sdk: '3.7.2.0'
       ssl:
-        enabled: false # PSP/NFS06 SSL is bypassed as it uses SSLv2
+        enabled: false # SSL is bypassed as it uses SSLv2
         domain: 'pspnfs06.ea.com'
       regions:
         - name: 'GLOBAL'
@@ -268,6 +268,20 @@ game:
           port: 21120
           slus:
             - 'RM2E'
+    - vers: 'PSP/KOK06' # Fight Night Round 3
+      sdk: '3.9.5.1'
+      ssl:
+        enabled: false # SSL is bypassed as it uses SSLv2
+        domain: 'pspkok06.ea.com'
+      regions:
+        - name: 'EU'
+          port: 31570
+          slus:
+            - 'ULES00270'
+        - name: 'US'
+          port: 31590
+          slus:
+            - 'ULUS10066'
 
 ---
 
