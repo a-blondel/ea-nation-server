@@ -58,53 +58,6 @@ game:
       regions:
         - name: 'GLOBAL'
           port: 5000 # Arbitrary buddy port, set anything you want
-    - vers: 'PSP/NFS06'
-      sdk: '3.7.2.0'
-      ssl:
-        enabled: false # SSL is bypassed as it uses SSLv2
-        domain: 'pspnfs06.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 30980 # default is 30990 for EU, but as it's duplicating PSP/NFS09 then it's patched to 30980 to match US version
-          slus:
-            - 'ULES00196'
-            - 'ULUS10036'
-    - vers: 'PSP/NFS07'
-      sdk: '4.3.2'
-      ssl:
-        domain: 'pspnfs07.ea.com'
-      regions:
-        - name: 'EU'
-          port: 10980
-          slus:
-            - 'ULES00577'
-        - name: 'US'
-          port: 10990
-          slus:
-            - 'ULUS10114'
-    - vers: 'PSP/NFS08'
-      sdk: '4.3.2'
-      ssl:
-        domain: 'pspnfs08.ea.com'
-      regions:
-        - name: 'EU'
-          port: 20980
-          slus:
-            - 'SLUS-80296'
-        - name: 'US'
-          port: 20990
-          slus:
-            - 'SLUS-80296'
-    - vers: 'PSP/NFS09'
-      sdk: '4.3.2'
-      ssl:
-        domain: 'pspnfs09.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 30990
-          slus:
-            - 'ULES01145'
-            - 'ULUS10376'
     - vers: 'PSP/FIFA07'
       sdk: '4.3.2'
       ssl:
@@ -145,19 +98,20 @@ game:
           port: 25490
           slus:
             - 'ULUS-10464'
-    - vers: 'PSP/NCAA07'
-      sdk: '4.2.2.0'
+    - vers: 'PSP/KOK06' # Fight Night Round 3
+      sdk: '3.9.5.1'
       ssl:
-        domain: 'pspncaa07.ea.com'
+        enabled: false # SSL is bypassed as it uses SSLv2
+        domain: 'pspkok06.ea.com'
       regions:
-        - name: 'US-1'
-          port: 10580
+        - name: 'EU'
+          port: 31570
           slus:
-            - 'ULUS10116'
-        - name: 'US-2'
-          port: 10590
+            - 'ULES00270'
+        - name: 'US'
+          port: 31590
           slus:
-            - 'ULUS10116'
+            - 'ULUS10066'
     - vers: 'PSP/MADDEN07'
       sdk: '4.3.2.0'
       ssl:
@@ -202,6 +156,66 @@ game:
           port: 25090
           slus:
             - 'SLUS-ULUS10441'
+    - vers: 'PSP/NCAA07'
+      sdk: '4.2.2.0'
+      ssl:
+        domain: 'pspncaa07.ea.com'
+      regions:
+        - name: 'US-1'
+          port: 10580
+          slus:
+            - 'ULUS10116'
+        - name: 'US-2'
+          port: 10590
+          slus:
+            - 'ULUS10116'
+    - vers: 'PSP/NFS06' # Need for Speed: Most Wanted 5-1-0
+      sdk: '3.7.2.0'
+      ssl:
+        enabled: false # SSL is bypassed as it uses SSLv2
+        domain: 'pspnfs06.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 30980 # default is 30990 for EU, but as it's duplicating PSP/NFS09 then it's patched to 30980 to match US version
+          slus:
+            - 'ULES00196'
+            - 'ULUS10036'
+    - vers: 'PSP/NFS07' # Need for Speed: Carbon - Own the City
+      sdk: '4.3.2'
+      ssl:
+        domain: 'pspnfs07.ea.com'
+      regions:
+        - name: 'EU'
+          port: 10980
+          slus:
+            - 'ULES00577'
+        - name: 'US'
+          port: 10990
+          slus:
+            - 'ULUS10114'
+    - vers: 'PSP/NFS08' # Need for Speed: ProStreet
+      sdk: '4.3.2'
+      ssl:
+        domain: 'pspnfs08.ea.com'
+      regions:
+        - name: 'EU'
+          port: 20980
+          slus:
+            - 'SLUS-80296'
+        - name: 'US'
+          port: 20990
+          slus:
+            - 'SLUS-80296'
+    - vers: 'PSP/NFS09' # Need for Speed: Undercover
+      sdk: '4.3.2'
+      ssl:
+        domain: 'pspnfs09.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 30990
+          slus:
+            - 'ULES01145'
+            - 'ULUS10376'
     - vers: 'PSP/NHL07'
       sdk: '4.3.2'
       ssl:
@@ -212,7 +226,7 @@ game:
           slus:
             - 'ULES00477'
             - 'ULUS10131'
-    - vers: 'PSP/MOH07'
+    - vers: 'PSP/MOH07' # Medal of Honor: Heroes
       sdk: '4.7.0'
       p2p: false
       dedicated:
@@ -235,8 +249,7 @@ game:
           port: 11190
           slus:
             - 'ULUS10141'
-
-    - vers: 'PSP/MOH08'
+    - vers: 'PSP/MOH08' # Medal of Honor: Heroes 2
       sdk: '5.6.2'
       p2p: false
       ssl:
@@ -252,8 +265,7 @@ game:
           port: 21190
           slus:
             - 'ULUS10310'
-
-    - vers: 'WII/MOH08'
+    - vers: 'WII/MOH08' # Medal of Honor: Heroes 2
       sdk: '5.6.2'
       p2p: false
       ssl:
@@ -268,20 +280,6 @@ game:
           port: 21120
           slus:
             - 'RM2E'
-    - vers: 'PSP/KOK06' # Fight Night Round 3
-      sdk: '3.9.5.1'
-      ssl:
-        enabled: false # SSL is bypassed as it uses SSLv2
-        domain: 'pspkok06.ea.com'
-      regions:
-        - name: 'EU'
-          port: 31570
-          slus:
-            - 'ULES00270'
-        - name: 'US'
-          port: 31590
-          slus:
-            - 'ULUS10066'
 
 ---
 
