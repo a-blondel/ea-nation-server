@@ -68,7 +68,7 @@ game:
           slus:
             - 'ULUS-10221'
     - vers: 'PSP/FIFA07'
-      sdk: '4.3.2'
+      sdk: '4.3.2.0'
       ssl:
         domain: 'pspfifa07.ea.com'
       regions:
@@ -213,7 +213,7 @@ game:
             - 'ULES00196'
             - 'ULUS10036'
     - vers: 'PSP/NFS07' # Need for Speed: Carbon - Own the City
-      sdk: '4.3.2'
+      sdk: '4.3.2.0'
       ssl:
         domain: 'pspnfs07.ea.com'
       regions:
@@ -226,7 +226,7 @@ game:
           slus:
             - 'ULUS10114'
     - vers: 'PSP/NFS08' # Need for Speed: ProStreet
-      sdk: '4.3.2'
+      sdk: '5.6.3.1'
       ssl:
         domain: 'pspnfs08.ea.com'
       regions:
@@ -239,7 +239,7 @@ game:
           slus:
             - 'SLUS-80296'
     - vers: 'PSP/NFS09' # Need for Speed: Undercover
-      sdk: '4.3.2'
+      sdk: '4.3.2.0' # Yes, outdated SDK
       ssl:
         domain: 'pspnfs09.ea.com'
       regions:
@@ -249,7 +249,7 @@ game:
             - 'ULES01145'
             - 'ULUS10376'
     - vers: 'PSP/NHL07'
-      sdk: '4.3.2'
+      sdk: '4.3.2.0'
       ssl:
         domain: 'pspnhl07.ea.com'
       regions:
@@ -259,7 +259,7 @@ game:
             - 'ULES00477'
             - 'ULUS10131'
     - vers: 'PSP/MOH07' # Medal of Honor: Heroes
-      sdk: '4.7.0'
+      sdk: '4.7.0.0'
       p2p: false
       dedicated:
         vers: 'PSP/MOHGPS071'
@@ -282,7 +282,7 @@ game:
           slus:
             - 'ULUS10141'
     - vers: 'PSP/MOH08' # Medal of Honor: Heroes 2
-      sdk: '5.6.2'
+      sdk: '5.6.2.0'
       p2p: false
       ssl:
         domain: 'pspmoh08.ea.com'
@@ -298,7 +298,7 @@ game:
           slus:
             - 'ULUS10310'
     - vers: 'WII/MOH08' # Medal of Honor: Heroes 2
-      sdk: '5.6.2'
+      sdk: '5.6.2.0'
       p2p: false
       ssl:
         domain: 'wiimoh08.ea.com'
