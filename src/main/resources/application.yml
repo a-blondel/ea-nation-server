@@ -347,6 +347,15 @@ game:
           port: 25290
           slus:
             - 'SLUS-FLAME'
+    - vers: 'WII/FIFA08'
+      sdk: '5.5.0.0'
+      ssl:
+        domain: 'wiififa08.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 20420
+          slus:
+            - 'ULUS-10293'
     - vers: 'WII/TENNIS-2010' # Grand Slam Tennis
       sdk: '7.0.0.0'
       ssl:
