@@ -347,6 +347,15 @@ game:
           port: 25290
           slus:
             - 'SLUS-FLAME'
+    - vers: 'WII/TENNIS-2010' # Grand Slam Tennis
+      sdk: '7.0.0.0'
+      ssl:
+        domain: 'wiitennis10.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 13220
+          slus:
+            - 'SLUS-TENNIS2010'
 
 ---
 
