@@ -1,5 +1,6 @@
 package com.ea.steps;
 
+import com.ea.dto.BuddySocketWrapper;
 import com.ea.dto.SocketData;
 import com.ea.dto.SocketWrapper;
 import com.ea.services.server.SocketManager;
@@ -66,12 +67,22 @@ public class SocketParser {
         String content = new String(message, 12, messageSize - 12);
         SocketData socketData = new SocketData(id, content, null);
 
-        SocketWrapper socketWrapper = socketManager.getSocketWrapper(socket);
-        String playerInfo = SocketUtils.getPlayerInfo(socketWrapper);
+        String playerInfo = "";
+        SocketWrapper socketWrapper = socketManager.getSocketWrapperBySocket(socket);
+        if (socketWrapper != null) {
+            playerInfo = SocketUtils.getPlayerInfo(socketWrapper);
+        } else {
+            BuddySocketWrapper buddySocketWrapper = socketManager.getBuddySocketWrapperBySocket(socket);
+            if (buddySocketWrapper != null) {
+                playerInfo = SocketUtils.getBuddyPlayerInfo(buddySocketWrapper);
+            }
+        }
+
+        // TODO : Remove rank debug display when stats are fully implemented
         if (!props.getTcpDebugExclusions().contains(socketData.getIdMessage())) {
             log.info("<-- {} {} {}", socket.getRemoteSocketAddress().toString(),
-                    props.isTcpDebugEnabled() ? playerInfo : socketData.getIdMessage(),
-                    props.isTcpDebugEnabled() ? "\n" + HexUtils.formatHexDump(message) : playerInfo);
+                    props.isTcpDebugEnabled() || "rank".equals(socketData.getIdMessage()) ? playerInfo : socketData.getIdMessage(),
+                    props.isTcpDebugEnabled() || "rank".equals(socketData.getIdMessage()) ? "\n" + HexUtils.formatHexDump(message) : playerInfo);
         }
         socketProcessor.process(socket, socketData);
     }

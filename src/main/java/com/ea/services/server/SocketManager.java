@@ -4,6 +4,7 @@ import com.ea.dto.BuddySocketWrapper;
 import com.ea.dto.SocketWrapper;
 import com.ea.repositories.core.GameConnectionRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.net.Socket;
@@ -14,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @RequiredArgsConstructor
 @Component
+@Slf4j
 public class SocketManager {
 
     private final GameConnectionRepository gameConnectionRepository;
@@ -42,16 +44,34 @@ public class SocketManager {
         buddySockets.remove(identifier);
     }
 
-    public SocketWrapper getSocketWrapper(Socket socket) {
-        return getSocketWrapper(socket.getRemoteSocketAddress().toString());
-    }
-
-    public BuddySocketWrapper getBuddySocketWrapper(Socket socket) {
-        return buddySockets.get(socket.getRemoteSocketAddress().toString());
-    }
-
     public SocketWrapper getSocketWrapper(String identifier) {
         return sockets.get(identifier);
+    }
+
+    /**
+     * Finds a SocketWrapper by exact Socket object match.
+     *
+     * @param socket The exact Socket object to find
+     * @return The SocketWrapper containing this exact socket, or null if not found
+     */
+    public SocketWrapper getSocketWrapperBySocket(Socket socket) {
+        return sockets.values().stream()
+                .filter(wrapper -> wrapper.getSocket() == socket)
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * Finds a BuddySocketWrapper by exact Socket object match.
+     *
+     * @param socket The exact Socket object to find
+     * @return The BuddySocketWrapper containing this exact socket, or null if not found
+     */
+    public BuddySocketWrapper getBuddySocketWrapperBySocket(Socket socket) {
+        return buddySockets.values().stream()
+                .filter(wrapper -> wrapper.getSocket() == socket)
+                .findFirst()
+                .orElse(null);
     }
 
     public SocketWrapper getAriesSocketWrapperByLkey(String lkey) {
@@ -73,6 +93,38 @@ public class SocketManager {
                 .orElse(null);
     }
 
+    public SocketWrapper getSocketWrapperByPersonaConnectionId(Long personaConnectionId) {
+        return sockets.values().stream()
+                .filter(wrapper -> wrapper.getPersonaConnectionEntity() != null &&
+                        wrapper.getPersonaConnectionEntity().getId() != null &&
+                        wrapper.getPersonaConnectionEntity().getId().equals(personaConnectionId))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public List<SocketWrapper> getSocketWrapperByVers(String vers) {
+        cleanupClosedSockets();
+
+        return sockets.values().stream()
+                .filter(wrapper -> wrapper.getPersonaConnectionEntity() != null &&
+                        wrapper.getPersonaConnectionEntity().getVers().equals(vers)).toList();
+    }
+
+    /**
+     * Cleans up closed sockets from the manager.
+     * This is to ensure that we do not keep references to sockets that are no longer valid.
+     */
+    private void cleanupClosedSockets() {
+        sockets.entrySet().removeIf(entry -> {
+            Socket socket = entry.getValue().getSocket();
+            if (socket == null || socket.isClosed() || !socket.isConnected() || socket.isOutputShutdown()) {
+                log.info("Removing closed socket: {}", entry.getKey());
+                return true;
+            }
+            return false;
+        });
+    }
+
     public SocketWrapper getAvailableGps() {
         return sockets.values().stream()
                 .filter(wrapper -> wrapper.getIsGps().get() && !wrapper.getIsHosting().get())
@@ -90,14 +142,6 @@ public class SocketManager {
                         personaName.equals(wrapper.getPersonaEntity().getPers()))
                 .findFirst();
     }
-
-    public List<Socket> getHostSockets() {
-        return sockets.values().stream()
-                .filter(wrapper -> wrapper.getIsHost().get())
-                .map(SocketWrapper::getSocket)
-                .toList();
-    }
-
 
     public List<Socket> getSockets() {
         return sockets.values().stream()

@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.Instant;
 import java.util.List;
 
+import static com.ea.services.server.GameServerService.PSP_MOH_07_UHS;
+
 @RestController
 @RequiredArgsConstructor
 public class ServerStatusAPI {
@@ -22,7 +24,7 @@ public class ServerStatusAPI {
 
     @GetMapping("/api/games")
     public ResponseEntity<DTO.MonitorResponse> getGameMonitorJson() {
-        List<DTO.GameStatusDTO> gameStats = gameConnectionRepository.findAllActiveGamesWithStats();
+        List<DTO.GameStatusDTO> gameStats = gameConnectionRepository.findAllActiveGamesWithStats(PSP_MOH_07_UHS);
 
         int playersInGame = api.getPlayersInGame();
         int playersInLobby = api.getPlayersInLobby();
@@ -44,11 +46,16 @@ public class ServerStatusAPI {
     }
 
     private DTO.GameInfo convertToGameInfo(DTO.GameStatusDTO game) {
+        String[] paramsParts = game.params().split(",");
+        String mapName = paramsParts.length > 1 ?
+                MohhMap.getMapNameByHexId(paramsParts[1]) :
+                "Unknown";
+
         return new DTO.GameInfo(
                 game.id(),
                 game.name().replaceAll("\"", ""),
                 game.version(),
-                MohhMap.getMapNameByHexId(game.params().split(",")[1]),
+                mapName,
                 game.params(),
                 game.pass() != null,
                 api.toUTCInstant(game.startTime()),

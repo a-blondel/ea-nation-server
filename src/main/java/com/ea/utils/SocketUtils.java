@@ -1,5 +1,6 @@
 package com.ea.utils;
 
+import com.ea.dto.BuddySocketWrapper;
 import com.ea.dto.SocketWrapper;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,7 +19,8 @@ public class SocketUtils {
 
     /**
      * Calculate length of the content to parse
-     * @param buffer the request buffer (only efficient way to get the length)
+     *
+     * @param buffer  the request buffer (only efficient way to get the length)
      * @param lastPos the position to begin in the buffer (there can be multiple messages in a buffer)
      * @return int - the size of the content
      */
@@ -49,7 +51,7 @@ public class SocketUtils {
         String[] entries = data.split(splitter);
         for (String entry : entries) {
             String[] parts = entry.trim().split("=");
-            if(key.equals(parts[0])) {
+            if (key.equals(parts[0])) {
                 if (parts.length > 1) {
                     result = parts[1];
                 }
@@ -77,7 +79,8 @@ public class SocketUtils {
 
     /**
      * Handle localhost IP
-     * @param socketIp
+     *
+     * @param socketIp the socket IP address
      * @return machine IP instead of 127.0.0.1, or socketIp if != 127.0.0.1
      */
     public static String handleLocalhostIp(String socketIp) {
@@ -93,15 +96,33 @@ public class SocketUtils {
 
     /**
      * Get player info from socket wrapper
-     * @param socketWrapper
-     * @return
+     *
+     * @param socketWrapper the socket wrapper
+     * @return a string containing the version and persona name
      */
     public static String getPlayerInfo(SocketWrapper socketWrapper) {
         String playerInfo = "";
-        if (socketWrapper != null && socketWrapper.getPersonaEntity() != null) {
+        if (socketWrapper.getPersonaEntity() != null
+                && socketWrapper.getPersonaConnectionEntity() != null) {
+            String vers = socketWrapper.getPersonaConnectionEntity().getVers();
             String pers = socketWrapper.getPersonaEntity().getPers();
-            String role = socketWrapper.getIsHost().get() ? "host" : "client";
-            playerInfo = pers + " (" + role + ")";
+            playerInfo = vers + " " + pers;
+        }
+        return playerInfo;
+    }
+
+    /**
+     * Get player info from buddy socket wrapper
+     *
+     * @param buddySocketWrapper the buddy socket wrapper
+     * @return a string containing the version and persona name
+     */
+    public static String getBuddyPlayerInfo(BuddySocketWrapper buddySocketWrapper) {
+        String playerInfo = "";
+        if (buddySocketWrapper.getPersonaEntity() != null) {
+            String vers = buddySocketWrapper.getVers();
+            String pers = buddySocketWrapper.getPersonaEntity().getPers();
+            playerInfo = vers + " (buddy) " + pers;
         }
         return playerInfo;
     }

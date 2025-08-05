@@ -31,7 +31,6 @@ public interface GameConnectionRepository extends JpaRepository<GameConnectionEn
                 JOIN gc.personaConnection pc
                 WHERE gc.game.id = :gameId
                 AND gc.isHost = true
-                AND pc.isHost = true
                 AND pc.endTime IS NULL
             """)
     List<String> findHostAddressByGameId(@Param("gameId") Long gameId);
@@ -49,11 +48,12 @@ public interface GameConnectionRepository extends JpaRepository<GameConnectionEn
                     FROM MohhGameReportEntity gr
                     WHERE gr.gameConnection.id = gc.id
                 )
-                AND gc.isHost = false
+                AND (:includeHosts = true OR gc.isHost = false)
             """)
     List<GameConnectionEntity> findMatchingGameConnections(
             @Param("playerName") String playerName,
-            @Param("startTime") LocalDateTime startTime
+            @Param("startTime") LocalDateTime startTime,
+            @Param("includeHosts") boolean includeHosts
     );
 
     @Transactional
@@ -69,7 +69,7 @@ public interface GameConnectionRepository extends JpaRepository<GameConnectionEn
                 SELECT COUNT(DISTINCT gc.personaConnection.id)
                 FROM GameConnectionEntity gc
                 WHERE gc.endTime IS NULL
-                AND gc.isHost = false
+                AND gc.personaConnection.isHost = false
                 AND gc.game.vers IN ( :vers )
             """)
     int countPlayersInGame(List<String> vers);
@@ -102,9 +102,9 @@ public interface GameConnectionRepository extends JpaRepository<GameConnectionEn
                 FROM GameEntity g
                 LEFT JOIN GameConnectionEntity h ON h.game = g AND h.isHost = true AND h.endTime IS NULL
                 LEFT JOIN GameConnectionEntity p ON p.game = g AND p.isHost = false AND p.endTime IS NULL
-                WHERE g.endTime IS NULL
+                WHERE g.vers = :vers AND g.endTime IS NULL
                 GROUP BY g.id, g.name, g.vers, g.startTime, g.maxsize, h.personaConnection.persona.pers
             """)
-    List<DTO.GameStatusDTO> findAllActiveGamesWithStats();
+    List<DTO.GameStatusDTO> findAllActiveGamesWithStats(@Param("vers") String vers);
 
 }

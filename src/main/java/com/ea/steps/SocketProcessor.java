@@ -3,10 +3,7 @@ package com.ea.steps;
 import com.ea.dto.BuddySocketWrapper;
 import com.ea.dto.SocketData;
 import com.ea.dto.SocketWrapper;
-import com.ea.services.core.AccountService;
-import com.ea.services.core.AuthService;
-import com.ea.services.core.GameService;
-import com.ea.services.core.PersonaService;
+import com.ea.services.core.*;
 import com.ea.services.server.SocketManager;
 import com.ea.services.social.BuddyService;
 import com.ea.services.stats.StatsService;
@@ -28,6 +25,7 @@ public class SocketProcessor {
     private final SocketWriter socketWriter;
     private final SocketManager socketManager;
     private final BuddyService buddyService;
+    private final RoomService roomService;
 
     /**
      * Dispatch to appropriate service based on request type
@@ -36,8 +34,8 @@ public class SocketProcessor {
      * @param socketData the object to process
      */
     public void process(Socket socket, SocketData socketData) {
-        SocketWrapper socketWrapper = socketManager.getSocketWrapper(socket);
-        BuddySocketWrapper buddySocketWrapper = socketManager.getBuddySocketWrapper(socket);
+        SocketWrapper socketWrapper = socketManager.getSocketWrapperBySocket(socket);
+        BuddySocketWrapper buddySocketWrapper = socketManager.getBuddySocketWrapperBySocket(socket);
         switch (socketData.getIdMessage()) {
             case ("~png"):
                 break;
@@ -128,14 +126,26 @@ public class SocketProcessor {
             case ("rept"):
                 personaService.rept(socket, socketData, socketWrapper);
                 break;
+            case ("rcat"):
+                roomService.rcat(socket, socketData, socketWrapper);
+                break;
+            case ("move"):
+                roomService.move(socket, socketData, socketWrapper);
+                break;
+            case ("mesg"):
+                roomService.mesg(socket, socketData, socketWrapper);
+                break;
             case ("cate"):
-                statsService.cate(socket, socketData);
+                statsService.cate(socket, socketData, socketWrapper);
                 break;
             case ("snap"):
                 statsService.snap(socket, socketData, socketWrapper);
                 break;
             case ("rank"):
-                statsService.rank(socket, socketData);
+                statsService.rank(socket, socketData, socketWrapper);
+                break;
+            case ("gqwk"):
+                gameService.gqwk(socket, socketData, socketWrapper);
                 break;
             case ("gsea"):
                 gameService.gsea(socket, socketData, socketWrapper);
@@ -159,7 +169,7 @@ public class SocketProcessor {
                 gameService.gpss(socket, socketData);
                 break;
             case ("gsta"):
-                gameService.gsta(socket, socketData);
+                gameService.gsta(socket, socketData, socketWrapper);
                 break;
             case ("gset"):
                 gameService.gset(socket, socketData, socketWrapper);

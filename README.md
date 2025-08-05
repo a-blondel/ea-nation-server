@@ -19,12 +19,32 @@ Fell free to join !
 
 ## Supported games
 
-| Game                    | Platform(s) | Region(s) | Status                        |
-|-------------------------|-------------|-----------|-------------------------------|
-| Medal of Honor Heroes   | PSP         | EU, US    | Full support                  |
-| Medal of Honor Heroes 2 | PSP, Wii    | EU, US    | In progress, not playable yet |
-| NHL 07                  | PSP         | US        | Partial support, playable     |
-| FIFA 07                 | PSP         | US        | Partial support, playable     |
+| Game                              | Platform(s) | Region(s) | Status                        |
+|-----------------------------------|-------------|-----------|-------------------------------|
+| UEFA Champions League 2006-2007   | PSP         | EU, US    | Playable, partial support     |
+| FIFA 07, 08, 09, 10               | PSP         | EU, US    | Playable, partial support     |
+| FIFA World Cup Germany 2006       | PSP         | EU, US    | Playable*, partial support    |
+| FIFA World Cup South Africa 2010  | PSP         | EU, US    | Playable, partial support     |
+| Fight Night Round 3               | PSP         | EU, US    | Playable*, partial support    |
+| MADDEN 07, 08, 09, 10             | PSP         | EU, US    | Playable, partial support     |
+| Medal of Honor: Heroes            | PSP         | EU, US    | Full support                  |
+| Medal of Honor: Heroes 2          | PSP, Wii    | EU, US    | In progress, not playable yet |
+| Need for Speed: Most Wanted 5-1-0 | PSP         | EU, US    | Playable*, partial support    |
+| Need for Speed Carbon: OTC        | PSP         | EU, US    | Playable, partial support     |
+| Need for Speed: ProStreet         | PSP         | EU, US    | Playable, partial support     |
+| Need for Speed: Undercover        | PSP         | EU, US    | Playable, partial support     |
+| NCAA 07                           | PSP         | US        | Playable, partial support     |
+| NHL 07                            | PSP         | EU, US    | Playable, partial support     |
+| Tiger Woods PGA Tour 07, 08, 10   | PSP         | EU, US    | Playable, partial support     |
+
+Playable* : Requires a SSL bypass patch to connect,
+see [patches](https://github.com/a-blondel/ea-nation-server/tree/main/patches)
+
+Partial support means that some features are not implemented yet, like:
+
+- Leaderboards
+- Roster download
+- Interactive league
 
 ## Development Status
 
@@ -57,5 +77,4 @@ following projects were inspiring in the development of this project:
     - https://github.com/HarpyWar/nfsuserver
     - https://github.com/VTSTech/VTSTech-SRVEmu
     - https://github.com/nleiten/ea-server-emu-startpoint
-- Buddy (EA Messenger) server emulator
     - https://gitlab.com/gh0stl1ne/eaps
