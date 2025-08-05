@@ -1,11 +1,10 @@
 ﻿ %{START CMD=news TITLE="Welcome" BTN1="OK" BTN1-GOTO="$quit" TELE=TOSVVIEWen %}
 This server is a fan-made preservation project that is not affiliated nor endorsed by EA.
-
 Join our Discord server(s) to stay updated on the latest news and events.
 
-Medal Of Honor: Heroes - https://discord.gg/fwrQHHxrQQ
-NHL 07 - https://discord.gg/aUdr5qXzrH
+EA Nation Hub - https://discord.gg/fwrQHHxrQQ
 PSP Online - https://discord.gg/wxeGVkM
+NHL Playoff Edition - https://discord.gg/aUdr5qXzrH
 
 Please be respectful and have fun !
 %{%}

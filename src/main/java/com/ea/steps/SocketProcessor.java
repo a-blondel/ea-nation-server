@@ -34,8 +34,8 @@ public class SocketProcessor {
      * @param socketData the object to process
      */
     public void process(Socket socket, SocketData socketData) {
-        SocketWrapper socketWrapper = socketManager.getSocketWrapper(socket);
-        BuddySocketWrapper buddySocketWrapper = socketManager.getBuddySocketWrapper(socket);
+        SocketWrapper socketWrapper = socketManager.getSocketWrapperBySocket(socket);
+        BuddySocketWrapper buddySocketWrapper = socketManager.getBuddySocketWrapperBySocket(socket);
         switch (socketData.getIdMessage()) {
             case ("~png"):
                 break;

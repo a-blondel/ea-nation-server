@@ -58,16 +58,198 @@ game:
       regions:
         - name: 'GLOBAL'
           port: 5000 # Arbitrary buddy port, set anything you want
+    - vers: 'PSP/UEFA07' # UEFA Champions League 2006-2007
+      sdk: '4.3.2.0'
+      ssl:
+        domain: 'pspuefa07.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 11270
+          slus:
+            - 'ULUS-10221'
     - vers: 'PSP/FIFA07'
+      sdk: '4.3.2.0'
       ssl:
         domain: 'pspfifa07.ea.com'
       regions:
-        - name: 'US'
+        - name: 'EU'
           port: 10490
           slus:
+            - 'ULUS-10029' # Actual SLUS used by the game (PSP/FIFA06)
+        - name: 'US'
+          port: 10480
+          slus:
+            - 'ULUS-10029' # Actual SLUS used by the game (PSP/FIFA06)
+    - vers: 'PSP/FIFA08'
+      sdk: '5.5.0.0'
+      ssl:
+        domain: 'pspfifa08.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 20490
+          slus:
+            - 'ULUS-10293'
+    - vers: 'PSP/FIFA09'
+      sdk: '6.3.1.0'
+      ssl:
+        domain: 'pspfifa09.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 30490
+          slus:
+            - 'ULUX-80340'
+    - vers: 'PSP/FIFA10'
+      sdk: '7.5.3.0'
+      ssl:
+        domain: 'pspfifa10.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 25490
+          slus:
+            - 'ULUS-10464'
+    - vers: 'FLM' # FIFA World Cup Germany 2006
+      sdk: '3.9.5.1'
+      ssl:
+        enabled: false # SSL is bypassed as it uses SSLv2
+        domain: 'pspuefa06.ea.com' # Yes, uefa06 for world cup 2006
+      regions:
+        - name: 'US'
+          port: 31280
+          slus:
             - 'ULUS-10029'
+        - name: 'EU'
+          port: 31290
+          slus:
+            - 'ULUS-10029'
+    - vers: 'PSP/WORLDCUP10' # FIFA World Cup South Africa 2010
+      sdk: '7.5.3.0'
+      ssl:
+        domain: 'pspworldcup10.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 28390
+          slus:
+            - 'ULUS-10504'
+    - vers: 'PSP/KOK06' # Fight Night Round 3
+      sdk: '3.9.5.1'
+      ssl:
+        enabled: false # SSL is bypassed as it uses SSLv2
+        domain: 'pspkok06.ea.com'
+      regions:
+        - name: 'EU'
+          port: 31570
+          slus:
+            - 'ULES00270'
+        - name: 'US'
+          port: 31590
+          slus:
+            - 'ULUS10066'
+    - vers: 'PSP/MADDEN07'
+      sdk: '4.3.2.0'
+      ssl:
+        domain: 'pspmadden07.ea.com'
+      regions:
+        - name: 'US'
+          port: 10090
+          slus:
+            - 'SLUS-ULUS10117'
+    - vers: 'PSP/MADDEN-2008'
+      sdk: '5.3.2.1'
+      ssl:
+        domain: 'pspmadden08.ea.com'
+      regions:
+        - name: 'EU'
+          port: 20080
+          slus:
+            - 'SLUS-ULES00867'
+        - name: 'US'
+          port: 20090
+          slus:
+            - 'SLUS-ULUS10275'
+    - vers: 'PSP/MADDEN-2009'
+      sdk: '5.6.5.7'
+      ssl:
+        domain: 'pspmadden09.ea.com'
+      regions:
+        - name: 'EU'
+          port: 30080
+          slus:
+            - 'SLUS-ULES01093'
+        - name: 'US'
+          port: 30090
+          slus:
+            - 'SLUS-ULUS10352'
+    - vers: 'PSP/MADDEN-2010'
+      sdk: '7.3.1.1'
+      ssl:
+        domain: 'pspmadden10.ea.com'
+      regions:
+        - name: 'US'
+          port: 25090
+          slus:
+            - 'SLUS-ULUS10441'
+    - vers: 'PSP/NCAA07'
+      sdk: '4.2.2.0'
+      ssl:
+        domain: 'pspncaa07.ea.com'
+      regions:
+        - name: 'US-1'
+          port: 10580
+          slus:
+            - 'ULUS10116'
+        - name: 'US-2'
+          port: 10590
+          slus:
+            - 'ULUS10116'
+    - vers: 'PSP/NFS06' # Need for Speed: Most Wanted 5-1-0
+      sdk: '3.7.2.0'
+      ssl:
+        enabled: false # SSL is bypassed as it uses SSLv2
+        domain: 'pspnfs06.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 30980 # default is 30990 for EU, but as it's duplicating PSP/NFS09 then it's patched to 30980 to match US version
+          slus:
+            - 'ULES00196'
+            - 'ULUS10036'
+    - vers: 'PSP/NFS07' # Need for Speed: Carbon - Own the City
+      sdk: '4.3.2.0'
+      ssl:
+        domain: 'pspnfs07.ea.com'
+      regions:
+        - name: 'EU'
+          port: 10980
+          slus:
+            - 'ULES00577'
+        - name: 'US'
+          port: 10990
+          slus:
+            - 'ULUS10114'
+    - vers: 'PSP/NFS08' # Need for Speed: ProStreet
+      sdk: '5.6.3.1'
+      ssl:
+        domain: 'pspnfs08.ea.com'
+      regions:
+        - name: 'EU'
+          port: 20980
+          slus:
+            - 'SLUS-80296'
+        - name: 'US'
+          port: 20990
+          slus:
+            - 'SLUS-80296'
+    - vers: 'PSP/NFS09' # Need for Speed: Undercover
+      sdk: '4.3.2.0' # Yes, outdated SDK
+      ssl:
+        domain: 'pspnfs09.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 30990
+          slus:
+            - 'ULES01145'
+            - 'ULUS10376'
     - vers: 'PSP/NHL07'
-      sdk: '4.3.2'
+      sdk: '4.3.2.0'
       ssl:
         domain: 'pspnhl07.ea.com'
       regions:
@@ -76,8 +258,8 @@ game:
           slus:
             - 'ULES00477'
             - 'ULUS10131'
-    - vers: 'PSP/MOH07'
-      sdk: '4.7.0'
+    - vers: 'PSP/MOH07' # Medal of Honor: Heroes
+      sdk: '4.7.0.0'
       p2p: false
       dedicated:
         vers: 'PSP/MOHGPS071'
@@ -99,9 +281,8 @@ game:
           port: 11190
           slus:
             - 'ULUS10141'
-
-    - vers: 'PSP/MOH08'
-      sdk: '5.6.2'
+    - vers: 'PSP/MOH08' # Medal of Honor: Heroes 2
+      sdk: '5.6.2.0'
       p2p: false
       ssl:
         domain: 'pspmoh08.ea.com'
@@ -116,9 +297,8 @@ game:
           port: 21190
           slus:
             - 'ULUS10310'
-
-    - vers: 'WII/MOH08'
-      sdk: '5.6.2'
+    - vers: 'WII/MOH08' # Medal of Honor: Heroes 2
+      sdk: '5.6.2.0'
       p2p: false
       ssl:
         domain: 'wiimoh08.ea.com'
@@ -132,6 +312,41 @@ game:
           port: 21120
           slus:
             - 'RM2E'
+    - vers: 'PSP/TW07'
+      sdk: '4.3.2.0'
+      ssl:
+        domain: 'psptw07.ea.com'
+      regions:
+        - name: 'EU'
+          port: 10280
+          slus:
+            - 'ULES00455'
+        - name: 'US'
+          port: 10290
+          slus:
+            - 'ULUS10115'
+    - vers: 'PSP/TW08'
+      sdk: '5.4.1.0'
+      ssl:
+        domain: 'psptw08.ea.com'
+      regions:
+        - name: 'EU'
+          port: 20280
+          slus:
+            - 'ULES00845'
+        - name: 'US'
+          port: 20290
+          slus:
+            - 'ULUS10276'
+    - vers: 'PSP/TEST10' # Tiger woods PGA Tour 10
+      sdk: '7.0.0.0'
+      ssl:
+        domain: 'psptw10.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 25290
+          slus:
+            - 'SLUS-FLAME'
 
 ---
 

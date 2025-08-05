@@ -69,6 +69,12 @@ public class StatsService {
      */
     @Transactional
     public void rank(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+        socketWriter.write(socket, socketData);
+        if (socketWrapper == null) {
+            log.warn("SocketWrapper is null for socket: {}", socket);
+            return;
+        }
+
         String vers = socketWrapper.getPersonaConnectionEntity().getVers();
         if (MOH07_OR_UHS.contains(vers)) {
             mohhStatsService.rank(socketData);
@@ -84,7 +90,6 @@ public class StatsService {
                 roomService.removePersonaFromRoom(vers, socketWrapper);
             }
         }
-        socketWriter.write(socket, socketData);
     }
 
 }

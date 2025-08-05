@@ -1,5 +1,6 @@
 package com.ea.steps;
 
+import com.ea.dto.BuddySocketWrapper;
 import com.ea.dto.SocketData;
 import com.ea.dto.SocketWrapper;
 import com.ea.services.server.SocketManager;
@@ -39,12 +40,6 @@ public class SocketWriter {
      * @param socketData the object to use to write the message
      */
     public void write(Socket socket, SocketData socketData, String joiner) {
-        if (socket == null || socket.isClosed() || !socket.isConnected() || socket.isOutputShutdown()) {
-            log.warn("Trying to write in a closed socket: {}",
-                    socket != null ? socket.getRemoteSocketAddress() : "null");
-            return;
-        }
-
         try (ByteArrayOutputStream buffer = new ByteArrayOutputStream();
              DataOutputStream writer = new DataOutputStream(buffer)) {
 
@@ -68,8 +63,17 @@ public class SocketWriter {
             }
 
             byte[] bufferBytes = buffer.toByteArray();
-            SocketWrapper socketWrapper = socketManager.getSocketWrapper(socket);
-            String playerInfo = SocketUtils.getPlayerInfo(socketWrapper);
+
+            String playerInfo = "";
+            SocketWrapper socketWrapper = socketManager.getSocketWrapperBySocket(socket);
+            if (socketWrapper != null) {
+                playerInfo = SocketUtils.getPlayerInfo(socketWrapper);
+            } else {
+                BuddySocketWrapper buddySocketWrapper = socketManager.getBuddySocketWrapperBySocket(socket);
+                if (buddySocketWrapper != null) {
+                    playerInfo = SocketUtils.getBuddyPlayerInfo(buddySocketWrapper);
+                }
+            }
             if (!props.getTcpDebugExclusions().contains(socketData.getIdMessage())) {
                 log.info("--> {} {} {}",
                         socket.getRemoteSocketAddress().toString(),
@@ -77,12 +81,12 @@ public class SocketWriter {
                         props.isTcpDebugEnabled() ? "\n" + HexUtils.formatHexDump(bufferBytes) : playerInfo);
             }
 
-            synchronized (socket) {
+            synchronized (this) {
                 socket.getOutputStream().write(bufferBytes);
             }
 
         } catch (IOException e) {
-            log.error("Error writing to socket", e);
+            log.error("Error: writing to closed socket");
         }
     }
 

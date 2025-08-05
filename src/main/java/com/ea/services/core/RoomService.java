@@ -14,6 +14,7 @@ import com.ea.services.server.SocketManager;
 import com.ea.steps.SocketWriter;
 import com.ea.utils.GameUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.net.Socket;
@@ -24,6 +25,7 @@ import java.util.stream.Stream;
 import static com.ea.utils.SocketUtils.TAB_CHAR;
 import static com.ea.utils.SocketUtils.getValueFromSocket;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RoomService {
@@ -44,7 +46,7 @@ public class RoomService {
      * @param socketData The socket data
      */
     public void rom(Socket socket, SocketData socketData) {
-        String vers = socketManager.getSocketWrapper(socket).getPersonaConnectionEntity().getVers();
+        String vers = socketManager.getSocketWrapperBySocket(socket).getPersonaConnectionEntity().getVers();
         Room room = getRoomByVers(vers);
 
         if (room != null) {
@@ -168,6 +170,11 @@ public class RoomService {
     public void mesg(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         socketWriter.write(socket, socketData);
 
+        if (socketWrapper.getPersonaEntity() == null) {
+            // If the persona is not set, we cannot send a message (seen in logs)
+            return;
+        }
+
         String text = getValueFromSocket(socketData.getInputMessage(), "TEXT");
         String attr = getValueFromSocket(socketData.getInputMessage(), "ATTR");
 
@@ -198,8 +205,10 @@ public class RoomService {
             }
         } else { // User is in a Lobby Room, broadcast the message to all clients in the lobby except if they are in a game room or in-game
             for (SocketWrapper clientWrapper : socketManager.getSocketWrapperByVers(socketWrapper.getPersonaConnectionEntity().getVers())) {
-                if (gameRepository.findCurrentGameOfPersona(clientWrapper.getPersonaConnectionEntity().getId()).isEmpty()) {
-                    socketWriter.write(clientWrapper.getSocket(), socketData, TAB_CHAR);
+                if (clientWrapper.getPersonaConnectionEntity() != null) { // In case someone is connected without a persona yet
+                    if (gameRepository.findCurrentGameOfPersona(clientWrapper.getPersonaConnectionEntity().getId()).isEmpty()) {
+                        socketWriter.write(clientWrapper.getSocket(), socketData, TAB_CHAR);
+                    }
                 }
             }
         }
@@ -221,7 +230,8 @@ public class RoomService {
             Long personaId = wrapper.getPersonaEntity().getId();
             rooms.stream()
                     .filter(r -> r.getId().equals(roomId))
-                    .findFirst().ifPresent(newRoom -> newRoom.getPersonaIds().add(personaId));
+                    .findFirst().ifPresent(room -> room.getPersonaIds().add(personaId));
+            log.info("Added persona {} to room {}", wrapper.getPersonaEntity().getPers(), roomId);
         }
         pop(wrapper);
     }
@@ -232,32 +242,31 @@ public class RoomService {
             Long personaId = wrapper.getPersonaEntity().getId();
             if (room.getPersonaIds().contains(personaId)) {
                 room.getPersonaIds().remove(personaId);
+                log.info("Removed persona {} from room {}", wrapper.getPersonaEntity().getPers(), room.getId());
                 pop(wrapper);
             }
         }
     }
 
-    public void removeGameFromRoom(GameEntity game) {
+    public void removeGameFromRoom(GameEntity game, SocketWrapper socketWrapper) {
         Room room = getRoomByVers(game.getVers());
         if (room != null) {
             room.getGameIds().remove(game.getId());
-            broadcastGameRemoval(game);
+            log.info("Removed game {} from room {}", game.getName(), room.getId());
+            broadcastGameRemoval(game, socketWrapper);
         }
     }
 
-    public void broadcastGameRemoval(GameEntity game) {
+    public void broadcastGameRemoval(GameEntity game, SocketWrapper socketWrapper) {
         socketManager.getSocketWrapperByVers(game.getVers())
                 .forEach(wrapper -> {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
                     Socket gameSocket = wrapper.getSocket();
                     socketWriter.write(gameSocket, new SocketData("+agmugam", null,
                             Collections.singletonMap("IDENT", String.valueOf(game.getId()))));
-                    socketWriter.write(gameSocket, new SocketData("+mgmugam", null,
-                            Collections.singletonMap("IDENT", String.valueOf(game.getId()))));
+                    if (!wrapper.getPersonaConnectionEntity().getId().equals(socketWrapper.getPersonaConnectionEntity().getId())) {
+                        socketWriter.write(gameSocket, new SocketData("+mgmugam", null,
+                                Collections.singletonMap("IDENT", String.valueOf(game.getId()))));
+                    }
                 });
     }
 

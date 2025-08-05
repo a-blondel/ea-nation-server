@@ -1,5 +1,6 @@
 package com.ea.utils;
 
+import com.ea.dto.BuddySocketWrapper;
 import com.ea.dto.SocketWrapper;
 import lombok.extern.slf4j.Slf4j;
 
@@ -101,12 +102,27 @@ public class SocketUtils {
      */
     public static String getPlayerInfo(SocketWrapper socketWrapper) {
         String playerInfo = "";
-        if (socketWrapper != null &&
-                socketWrapper.getPersonaEntity() != null
+        if (socketWrapper.getPersonaEntity() != null
                 && socketWrapper.getPersonaConnectionEntity() != null) {
             String vers = socketWrapper.getPersonaConnectionEntity().getVers();
             String pers = socketWrapper.getPersonaEntity().getPers();
             playerInfo = vers + " " + pers;
+        }
+        return playerInfo;
+    }
+
+    /**
+     * Get player info from buddy socket wrapper
+     *
+     * @param buddySocketWrapper the buddy socket wrapper
+     * @return a string containing the version and persona name
+     */
+    public static String getBuddyPlayerInfo(BuddySocketWrapper buddySocketWrapper) {
+        String playerInfo = "";
+        if (buddySocketWrapper.getPersonaEntity() != null) {
+            String vers = buddySocketWrapper.getVers();
+            String pers = buddySocketWrapper.getPersonaEntity().getPers();
+            playerInfo = vers + " (buddy) " + pers;
         }
         return playerInfo;
     }

@@ -44,16 +44,34 @@ public class SocketManager {
         buddySockets.remove(identifier);
     }
 
-    public SocketWrapper getSocketWrapper(Socket socket) {
-        return getSocketWrapper(socket.getRemoteSocketAddress().toString());
-    }
-
-    public BuddySocketWrapper getBuddySocketWrapper(Socket socket) {
-        return buddySockets.get(socket.getRemoteSocketAddress().toString());
-    }
-
     public SocketWrapper getSocketWrapper(String identifier) {
         return sockets.get(identifier);
+    }
+
+    /**
+     * Finds a SocketWrapper by exact Socket object match.
+     *
+     * @param socket The exact Socket object to find
+     * @return The SocketWrapper containing this exact socket, or null if not found
+     */
+    public SocketWrapper getSocketWrapperBySocket(Socket socket) {
+        return sockets.values().stream()
+                .filter(wrapper -> wrapper.getSocket() == socket)
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * Finds a BuddySocketWrapper by exact Socket object match.
+     *
+     * @param socket The exact Socket object to find
+     * @return The BuddySocketWrapper containing this exact socket, or null if not found
+     */
+    public BuddySocketWrapper getBuddySocketWrapperBySocket(Socket socket) {
+        return buddySockets.values().stream()
+                .filter(wrapper -> wrapper.getSocket() == socket)
+                .findFirst()
+                .orElse(null);
     }
 
     public SocketWrapper getAriesSocketWrapperByLkey(String lkey) {

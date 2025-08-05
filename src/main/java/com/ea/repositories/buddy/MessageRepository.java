@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -24,4 +25,14 @@ public interface MessageRepository extends JpaRepository<MessageEntity, Long> {
     @Transactional
     @Query("UPDATE MessageEntity m SET m.ack = true WHERE m.id IN :messageIds")
     int markMessagesAsAcknowledgedByIds(@Param("messageIds") List<Long> messageIds);
+
+    @Modifying
+    @Transactional
+    @Query(value = "INSERT INTO social.MESSAGE (FROM_PERSONA_ID, TO_PERSONA_ID, BODY, ACK, CREATED_ON) " +
+            "VALUES (:fromPersonaId, :toPersonaId, :body, :ack, :createdOn)", nativeQuery = true)
+    void saveMessageByPersonaIds(@Param("fromPersonaId") Long fromPersonaId,
+                                 @Param("toPersonaId") Long toPersonaId,
+                                 @Param("body") String body,
+                                 @Param("ack") Boolean ack,
+                                 @Param("createdOn") LocalDateTime createdOn);
 }

@@ -7,7 +7,6 @@ import com.ea.entities.core.PersonaConnectionEntity;
 import com.ea.entities.core.PersonaEntity;
 import com.ea.entities.social.FeedbackEntity;
 import com.ea.entities.social.FeedbackTypeEntity;
-import com.ea.entities.stats.MohhPersonaStatsEntity;
 import com.ea.repositories.buddy.FeedbackRepository;
 import com.ea.repositories.buddy.FeedbackTypeRepository;
 import com.ea.repositories.core.AccountRepository;
@@ -28,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -98,14 +98,6 @@ public class PersonaService {
             personaEntity.setPers(normalizedPers);
             personaEntity.setRp(5);
             personaEntity.setCreatedOn(LocalDateTime.now());
-
-            MohhPersonaStatsEntity mohhPersonaStatsEntity = new MohhPersonaStatsEntity();
-            mohhPersonaStatsEntity.setPersona(personaEntity);
-            mohhPersonaStatsEntity.setVers(socketWrapper.getPersonaConnectionEntity().getVers());
-            mohhPersonaStatsEntity.setSlus(socketWrapper.getPersonaConnectionEntity().getSlus());
-            Set<MohhPersonaStatsEntity> personaStatsEntities = Set.of(mohhPersonaStatsEntity);
-            personaEntity.setPersonaStats(personaStatsEntities);
-
             personaRepository.save(personaEntity);
         }
 
@@ -121,23 +113,28 @@ public class PersonaService {
      */
     public void pers(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         String pers = getValueFromSocket(socketData.getInputMessage(), "PERS");
+        if (pers == null) {
+            // FIFA 10 doesn't send PERS in the packet after a cper, so we force it to reconnect
+            socketData.setIdMessage("persmaut"); // Error making the user to reconnect
+            socketWriter.write(socket, socketData);
+            return;
+        }
         if (pers.contains("@")) { // Remove @ from persona name (UHS naming convention)
             socketWrapper.getIsDedicatedHost().set(true);
             pers = pers.split("@")[0] + pers.split("@")[1];
         }
 
         // Check if the persona is already connected (allowed for host only)
-        Optional<PersonaConnectionEntity> personaConnectionEntityOpt =
+        List<PersonaConnectionEntity> existingPersonaConnections =
                 personaConnectionRepository.findByVersAndSlusAndPersonaPersAndIsHostFalseAndEndTimeIsNull(
                         socketWrapper.getPersonaConnectionEntity().getVers(),
                         socketWrapper.getPersonaConnectionEntity().getSlus(),
                         pers);
-        if (personaConnectionEntityOpt.isPresent()) {
+        for (PersonaConnectionEntity personaConnectionEntity : existingPersonaConnections) {
 //            socketData.setIdMessage("perspset");
 //            socketWriter.write(socket, socketData);
 //            return;
             log.warn("Persona {} already connected, ending old session", pers);
-            PersonaConnectionEntity personaConnectionEntity = personaConnectionEntityOpt.get();
             Socket socketToClose = socketManager.getSocketWrapper(personaConnectionEntity.getAddress()).getSocket();
             if (socketToClose != null) {
                 log.info("Closing old socket {}", socketToClose.getRemoteSocketAddress());

@@ -45,7 +45,7 @@ public class ServerApp implements CommandLineRunner {
     private final PersonaService personaService;
     private final GameService gameService;
     private final RoomService roomService;
-    private ExecutorService clientHandlingExecutor = Executors.newFixedThreadPool(100);
+    private ExecutorService clientHandlingExecutor = Executors.newFixedThreadPool(500);
 
     public static void main(String[] args) {
         SpringApplication.run(ServerApp.class, args);
@@ -186,8 +186,8 @@ public class ServerApp implements CommandLineRunner {
     }
 
     private void setupThreadPool() {
-        int poolSize = 200;
-        BlockingQueue<Runnable> queue = new LinkedBlockingQueue<>(300);
+        int poolSize = 500;
+        BlockingQueue<Runnable> queue = new LinkedBlockingQueue<>(600);
         ThreadFactory threadFactory = Executors.defaultThreadFactory();
         RejectedExecutionHandler handler = new ThreadPoolExecutor.CallerRunsPolicy();
 

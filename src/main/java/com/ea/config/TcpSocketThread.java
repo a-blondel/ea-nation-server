@@ -45,18 +45,27 @@ public class TcpSocketThread implements Runnable {
             if (pingExecutor != null && !pingExecutor.isShutdown()) {
                 pingExecutor.shutdownNow();
             }
-            SocketWrapper socketWrapper = socketManager.getSocketWrapper(clientSocket);
-            String playerInfo = SocketUtils.getPlayerInfo(socketWrapper);
-            if (socketWrapper != null && socketWrapper.getPersonaEntity() != null) {
-                gameService.endGameConnection(socketWrapper);
-                personaService.endPersonaConnection(socketWrapper);
-                socketWrapper.cleanupOnSocketClose(socketWrapper);
-                socketManager.removeSocket(socketWrapper.getIdentifier());
-            }
 
-            BuddySocketWrapper buddySocketWrapper = socketManager.getBuddySocketWrapper(clientSocket);
-            if (buddySocketWrapper != null) {
-                socketManager.removeBuddySocket(buddySocketWrapper.getIdentifier());
+            String playerInfo = "";
+            // Find socket wrapper using exact Socket object match
+            SocketWrapper socketWrapper = socketManager.getSocketWrapperBySocket(clientSocket);
+            if (socketWrapper != null) {
+                playerInfo = SocketUtils.getPlayerInfo(socketWrapper);
+                socketManager.removeSocket(socketWrapper.getIdentifier());
+                if (socketWrapper.getPersonaEntity() != null) {
+                    gameService.endGameConnection(socketWrapper);
+                    personaService.endPersonaConnection(socketWrapper);
+                    socketWrapper.cleanupOnSocketClose(socketWrapper);
+                }
+            } else {
+                // Find buddy socket wrapper using exact Socket object match
+                BuddySocketWrapper buddySocketWrapper = socketManager.getBuddySocketWrapperBySocket(clientSocket);
+                if (buddySocketWrapper != null) {
+                    playerInfo = SocketUtils.getBuddyPlayerInfo(buddySocketWrapper);
+                    socketManager.removeBuddySocket(buddySocketWrapper.getIdentifier());
+                } else {
+                    log.warn("No SocketWrapper found for socket: {}", clientSocket.getRemoteSocketAddress());
+                }
             }
             log.info("TCP client session ended: {} {}", clientSocket.getRemoteSocketAddress(), playerInfo);
         }
