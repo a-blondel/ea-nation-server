@@ -443,7 +443,7 @@ public class GameService {
         }
         if (gameEntity.getEndTime() == null) {
             // Check if game allows joining mid-game
-            if (gameEntity.isStarted() && MIDGAME_FORBIDDEN.contains(gameEntity.getVers())) {
+            if (gameEntity.isStarted() && !PSP_MOH_07_UHS.equals(gameEntity.getVers())) {
                 socketWriter.write(socket, new SocketData("gjoiasta", null, null)); // Game already started
                 return;
             }

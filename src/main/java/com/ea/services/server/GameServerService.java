@@ -20,7 +20,6 @@ public class GameServerService {
     public static final List<String> MOH07_OR_UHS = List.of(PSP_MOH_07, PSP_MOH_07_UHS);
     public static final List<String> MOH07_OR_MOH08 = List.of(PSP_MOH_07, PSP_MOH_08, WII_MOH_08);
     public static final List<String> GAMES_WITHOUT_ROOM = List.of(PSP_MOH_07_UHS, PSP_MOH_07, PSP_MOH_08, WII_MOH_08);
-    public static final List<String> MIDGAME_FORBIDDEN = List.of(PSP_NHL_07);
     private final GameServerConfig gameServerConfig;
 
     /**
