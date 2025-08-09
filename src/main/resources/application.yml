@@ -321,6 +321,7 @@ game:
           port: 10280
           slus:
             - 'ULES00455'
+            - 'ULES00456'
         - name: 'US'
           port: 10290
           slus:
@@ -334,6 +335,7 @@ game:
           port: 20280
           slus:
             - 'ULES00845'
+            - 'ULES00846'
         - name: 'US'
           port: 20290
           slus:

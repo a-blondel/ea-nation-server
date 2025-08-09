@@ -57,10 +57,12 @@ public class PersonaService {
 
     /**
      * Persona creation
+     * As FIFA 10/Madden 10/TW 10 account creation doesn't contain a name,
+     * it's the opportunity to create one based on the persona name.
      *
-     * @param socket
-     * @param socketData
-     * @param socketWrapper
+     * @param socket        The socket to write the response to
+     * @param socketData    The socket data
+     * @param socketWrapper The wrapper containing user data
      */
     public void cper(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         String pers = getValueFromSocket(socketData.getInputMessage(), "PERS");
@@ -76,6 +78,27 @@ public class PersonaService {
             return;
         }
 
+        // Opportunity to create an account name if it doesn't exist (FIFA 10/Madden 10/TW 10)
+        // Account name is created based on the persona name
+        // If the account name already exists, we return an error
+        // Note: Account name max length is 16 chars, while persona name max length is 12 chars,
+        // so we can safely use the persona name as the account name without exceeding the limit.
+        boolean updateAccount = false;
+        AccountEntity accountEntity = socketWrapper.getAccountEntity();
+        if (accountEntity.getName() == null) {
+            String accountName = normalizedPers.replaceAll(" ", "");
+            Optional<AccountEntity> existingAccountOpt = accountRepository.findByName(accountName);
+            if (existingAccountOpt.isPresent()) {
+                // Even if the persona name is not duplicated, the account name is
+                handleDuplicatePersona(socketData, normalizedPers);
+                socketWriter.write(socket, socketData);
+                return;
+            } else {
+                accountEntity.setName(accountName);
+                updateAccount = true;
+            }
+        }
+
         if (normalizedPers.contains(" ")) {
             // Readd the quotes around the persona name if it contains spaces
             normalizedPers = "\"" + normalizedPers + "\"";
@@ -83,41 +106,63 @@ public class PersonaService {
 
         Optional<PersonaEntity> personaEntityOpt = personaRepository.findByPers(normalizedPers);
         if (personaEntityOpt.isPresent()) {
-            socketData.setIdMessage("cperdupl");
-            int alts = Integer.parseInt(getValueFromSocket(socketData.getInputMessage(), "ALTS"));
-            if (alts > 0) {
-                String opts = AccountUtils.suggestNames(alts, normalizedPers);
-                Map<String, String> content = Stream.of(new String[][]{
-                        {"OPTS", opts}
-                }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
-                socketData.setOutputData(content);
-            }
+            handleDuplicatePersona(socketData, normalizedPers);
         } else {
+            if (updateAccount) {
+                accountRepository.save(accountEntity);
+            }
             PersonaEntity personaEntity = new PersonaEntity();
             personaEntity.setAccount(socketWrapper.getAccountEntity());
             personaEntity.setPers(normalizedPers);
             personaEntity.setRp(5);
             personaEntity.setCreatedOn(LocalDateTime.now());
             personaRepository.save(personaEntity);
+
+            synchronized (this) {
+                socketWrapper.setPersonaEntity(personaEntity);
+            }
         }
 
         socketWriter.write(socket, socketData);
     }
 
     /**
+     * Handle duplicate persona
+     * If the persona name is already taken, we suggest alternative names.
+     *
+     * @param socketData The socket data containing the input message
+     * @param name       The persona name to check for duplicates
+     */
+    private void handleDuplicatePersona(SocketData socketData, String name) {
+        socketData.setIdMessage("cperdupl");
+        int alts = Integer.parseInt(getValueFromSocket(socketData.getInputMessage(), "ALTS"));
+        if (alts > 0) {
+            String opts = AccountUtils.suggestNames(alts, name);
+            Map<String, String> content = Stream.of(new String[][]{
+                    {"OPTS", opts}
+            }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+            socketData.setOutputData(content);
+        }
+    }
+
+    /**
      * Get persona
      *
-     * @param socket
-     * @param socketData
-     * @param socketWrapper
+     * @param socket        the socket to write into
+     * @param socketData    The socket data
+     * @param socketWrapper the wrapper containing user data
      */
     public void pers(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         String pers = getValueFromSocket(socketData.getInputMessage(), "PERS");
         if (pers == null) {
-            // FIFA 10 doesn't send PERS in the packet after a cper, so we force it to reconnect
-            socketData.setIdMessage("persmaut"); // Error making the user to reconnect
-            socketWriter.write(socket, socketData);
-            return;
+            // FIFA 10 doesn't send PERS in the packet after a cper, so we store the persona during cper
+            if (socketWrapper.getPersonaEntity() != null) {
+                pers = socketWrapper.getPersonaEntity().getPers();
+            } else {
+                socketData.setIdMessage("persmaut"); // Error making the user to reconnect
+                socketWriter.write(socket, socketData);
+                return;
+            }
         }
         if (pers.contains("@")) { // Remove @ from persona name (UHS naming convention)
             socketWrapper.getIsDedicatedHost().set(true);
@@ -197,7 +242,7 @@ public class PersonaService {
     /**
      * Registers a connection of the persona
      *
-     * @param socketWrapper
+     * @param socketWrapper the wrapper containing user data
      */
     private void startPersonaConnection(SocketWrapper socketWrapper) {
         PersonaEntity personaEntity = socketWrapper.getPersonaEntity();
@@ -225,9 +270,9 @@ public class PersonaService {
     /**
      * Delete persona
      *
-     * @param socket
-     * @param socketData
-     * @param socketWrapper
+     * @param socket        the socket to write into
+     * @param socketData    the socket data
+     * @param socketWrapper the wrapper containing user data
      */
     public void dper(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         String pers = getValueFromSocket(socketData.getInputMessage(), "PERS");
@@ -281,8 +326,8 @@ public class PersonaService {
     /**
      * Send user updates
      *
-     * @param socket
-     * @param socketWrapper
+     * @param socket        the socket to write into
+     * @param socketWrapper the wrapper containing user data
      */
     public void usr(Socket socket, SocketWrapper socketWrapper) {
         socketWriter.write(socket, new SocketData("+usr", null, personaUtils.getPersonaInfo(socket, socketWrapper)));
@@ -291,8 +336,8 @@ public class PersonaService {
     /**
      * Send a user update record for the current logged in user.
      *
-     * @param socket
-     * @param socketWrapper
+     * @param socket        the socket to write into
+     * @param socketWrapper the wrapper containing user data
      */
     public void who(Socket socket, SocketWrapper socketWrapper) {
         socketWriter.write(socket, new SocketData("+who", null, personaUtils.getPersonaInfo(socket, socketWrapper)));
@@ -322,7 +367,7 @@ public class PersonaService {
 
             // Find the feedback type by number
             Optional<FeedbackTypeEntity> feedbackTypeOpt = feedbackTypeRepository.findByNumber(typeNumber);
-            if (!feedbackTypeOpt.isPresent()) {
+            if (feedbackTypeOpt.isEmpty()) {
                 log.warn("Unknown feedback type: {}", typeNumber);
                 socketWriter.write(socket, socketData);
                 return;
@@ -330,7 +375,7 @@ public class PersonaService {
 
             // Find the target persona
             Optional<PersonaEntity> targetPersonaOpt = personaRepository.findByPers(pers);
-            if (!targetPersonaOpt.isPresent()) {
+            if (targetPersonaOpt.isEmpty()) {
                 log.warn("Target persona not found: {}", pers);
                 socketWriter.write(socket, socketData);
                 return;
