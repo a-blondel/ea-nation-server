@@ -95,11 +95,11 @@ public class MohhStatsService {
         long offset = 0;
         String vers = socketWrapper.getPersonaConnectionEntity().getVers();
         if (MY_LEADERBOARD.mohh2Id.equals(rankingCategory)) {
-            mohhPersonaStatsEntityList = mohhPersonaStatsRepository.getLeaderboardByVers(vers, 100, offset);
-        } else if (TOP_100.mohh2Id.equals(rankingCategory)) {
             Long rank = mohhPersonaStatsRepository.getRankByPersonaIdAndVers(socketWrapper.getPersonaEntity().getId(), vers);
             offset = (rank != null) ? rank : 0;
             offset = Math.max(offset - 50, 0);
+            mohhPersonaStatsEntityList = mohhPersonaStatsRepository.getLeaderboardByVers(vers, 100, offset);
+        } else if (TOP_100.mohh2Id.equals(rankingCategory)) {
             mohhPersonaStatsEntityList = mohhPersonaStatsRepository.getLeaderboardByVers(vers, 100, offset);
         } else if (WEAPON_LEADERS.mohh2Id.equals(rankingCategory)) {
             mohhPersonaStatsEntityList = mohhPersonaStatsRepository.getWeaponLeaderboardByVers(vers, 100, offset);
