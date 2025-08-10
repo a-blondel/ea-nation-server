@@ -188,6 +188,24 @@ game:
           port: 25090
           slus:
             - 'SLUS-ULUS10441'
+    - vers: 'PSP/NBA07'
+      sdk: '4.3.2.0'
+      ssl:
+        domain: 'pspnba07.ea.com'
+      regions:
+        - name: 'US'
+          port: 10190
+          slus:
+            - 'ULUS10113'
+    - vers: 'PSP/NBA08'
+      sdk: '5.5.0.0'
+      ssl:
+        domain: 'pspnba08.ea.com'
+      regions:
+        - name: 'US'
+          port: 20190
+          slus:
+            - 'ULUS10294'
     - vers: 'PSP/NCAA07'
       sdk: '4.2.2.0'
       ssl:
