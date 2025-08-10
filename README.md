@@ -33,6 +33,7 @@ Fell free to join !
 | Need for Speed Carbon: OTC        | PSP         | EU, US    | Playable, partial support     |
 | Need for Speed: ProStreet         | PSP         | EU, US    | Playable, partial support     |
 | Need for Speed: Undercover        | PSP         | EU, US    | Playable, partial support     |
+| NBA Live 07, 08                   | PSP         | US        | Playable, partial support     |
 | NCAA 07                           | PSP         | US        | Playable, partial support     |
 | NHL 07                            | PSP         | EU, US    | Playable, partial support     |
 | Tiger Woods PGA Tour 07, 08, 10   | PSP         | EU, US    | Playable, partial support     |
