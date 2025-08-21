@@ -722,8 +722,8 @@ public class GameService {
      * @param socketWrapper The socket wrapper of current connection
      */
     public void gdel(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
-        endGame(socketWrapper);
         socketWriter.write(socket, socketData);
+        endGame(socketWrapper);
     }
 
     /**

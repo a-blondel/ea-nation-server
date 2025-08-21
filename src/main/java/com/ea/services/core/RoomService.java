@@ -263,9 +263,14 @@ public class RoomService {
                     Socket gameSocket = wrapper.getSocket();
                     socketWriter.write(gameSocket, new SocketData("+agmugam", null,
                             Collections.singletonMap("IDENT", String.valueOf(game.getId()))));
+                    // If the socket is not the one that initiated the game removal, send the game update
                     if (!wrapper.getPersonaConnectionEntity().getId().equals(socketWrapper.getPersonaConnectionEntity().getId())) {
-                        socketWriter.write(gameSocket, new SocketData("+mgmugam", null,
-                                Collections.singletonMap("IDENT", String.valueOf(game.getId()))));
+                        // Only send to players that are not in a game (or if the game ID is identical to the one being removed)
+                        List<GameEntity> currentGames = gameRepository.findCurrentGameOfPersona(wrapper.getPersonaConnectionEntity().getId());
+                        if (currentGames.isEmpty() || currentGames.stream().anyMatch(g -> g.getId().equals(game.getId()))) {
+                            socketWriter.write(gameSocket, new SocketData("+mgmugam", null,
+                                    Collections.singletonMap("IDENT", String.valueOf(game.getId()))));
+                        }
                     }
                 });
     }
