@@ -1,5 +1,6 @@
 package com.ea.services.core;
 
+import com.ea.dto.Room;
 import com.ea.dto.SocketData;
 import com.ea.dto.SocketWrapper;
 import com.ea.entities.core.AccountEntity;
@@ -330,7 +331,8 @@ public class PersonaService {
      * @param socketWrapper the wrapper containing user data
      */
     public void usr(Socket socket, SocketWrapper socketWrapper) {
-        socketWriter.write(socket, new SocketData("+usr", null, personaUtils.getPersonaInfo(socket, socketWrapper)));
+        Room room = roomService.getRoomByPersonaId(socketWrapper.getPersonaEntity().getId());
+        socketWriter.write(socket, new SocketData("+usr", null, personaUtils.getPersonaInfo(socket, socketWrapper, room)));
     }
 
     /**
@@ -340,7 +342,8 @@ public class PersonaService {
      * @param socketWrapper the wrapper containing user data
      */
     public void who(Socket socket, SocketWrapper socketWrapper) {
-        socketWriter.write(socket, new SocketData("+who", null, personaUtils.getPersonaInfo(socket, socketWrapper)));
+        Room room = roomService.getRoomByPersonaId(socketWrapper.getPersonaEntity().getId());
+        socketWriter.write(socket, new SocketData("+who", null, personaUtils.getPersonaInfo(socket, socketWrapper, room)));
     }
 
     /**
