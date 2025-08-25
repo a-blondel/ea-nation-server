@@ -13,6 +13,7 @@ import com.ea.services.server.GameServerService;
 import com.ea.services.server.SocketManager;
 import com.ea.steps.SocketWriter;
 import com.ea.utils.GameUtils;
+import com.ea.utils.PersonaUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ public class RoomService {
     private final GameRepository gameRepository;
     private final GameServerService gameServerService;
     private final GameUtils gameUtils;
+    private final PersonaUtils personaUtils;
     private final SocketManager socketManager;
     private final SocketWriter socketWriter;
     private final List<Room> rooms = new ArrayList<>();
@@ -98,6 +100,19 @@ public class RoomService {
             for (Long gameId : room.getGameIds()) {
                 Optional<GameEntity> gameEntityOpt = gameRepository.findById(gameId);
                 gameEntityOpt.ifPresent(gameEntity -> socketWriter.write(socket, new SocketData("+agm", null, gameUtils.getGameInfo(gameEntity))));
+            }
+            // Notify about all players in the room
+            for (SocketWrapper clientWrapper : socketManager.getSocketWrapperByVers(socketWrapper.getPersonaConnectionEntity().getVers())) {
+                if (clientWrapper.getPersonaEntity() != null) {
+                    Room clientRoom = getRoomByPersonaId(clientWrapper.getPersonaEntity().getId());
+                    if (clientRoom != null && clientRoom.getId().equals(roomId)) {
+                        socketWriter.write(socket, new SocketData("+usr", null, personaUtils.getPersonaInfo(clientWrapper.getSocket(), clientWrapper, room)));
+                        // Also notify each client in the room about the new user
+                        if (!clientWrapper.getSocket().equals(socket)) {
+                            socketWriter.write(clientWrapper.getSocket(), new SocketData("+usr", null, personaUtils.getPersonaInfo(socket, socketWrapper, room)));
+                        }
+                    }
+                }
             }
         } else {
             socketWriter.write(socket, socketData);
@@ -231,7 +246,6 @@ public class RoomService {
             rooms.stream()
                     .filter(r -> r.getId().equals(roomId))
                     .findFirst().ifPresent(room -> room.getPersonaIds().add(personaId));
-            log.info("Added persona {} to room {}", wrapper.getPersonaEntity().getPers(), roomId);
         }
         pop(wrapper);
     }
@@ -242,7 +256,6 @@ public class RoomService {
             Long personaId = wrapper.getPersonaEntity().getId();
             if (room.getPersonaIds().contains(personaId)) {
                 room.getPersonaIds().remove(personaId);
-                log.info("Removed persona {} from room {}", wrapper.getPersonaEntity().getPers(), room.getId());
                 pop(wrapper);
             }
         }
@@ -252,7 +265,6 @@ public class RoomService {
         Room room = getRoomByVers(game.getVers());
         if (room != null) {
             room.getGameIds().remove(game.getId());
-            log.info("Removed game {} from room {}", game.getName(), room.getId());
             broadcastGameRemoval(game, socketWrapper);
         }
     }

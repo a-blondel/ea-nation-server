@@ -6,7 +6,6 @@ import com.ea.entities.core.AccountEntity;
 import com.ea.entities.core.GameEntity;
 import com.ea.entities.core.PersonaEntity;
 import com.ea.repositories.core.GameRepository;
-import com.ea.services.core.RoomService;
 import com.ea.services.stats.MohhStatsService;
 import com.ea.services.stats.NhlStatsService;
 import lombok.RequiredArgsConstructor;
@@ -30,11 +29,10 @@ import static com.ea.services.server.GameServerService.PSP_NHL_07;
 public class PersonaUtils {
 
     private final GameRepository gameRepository;
-    private final RoomService roomService;
     private final MohhStatsService mohhStatsService;
     private final NhlStatsService nhlStatsService;
 
-    public Map<String, String> getPersonaInfo(Socket socket, SocketWrapper socketWrapper) {
+    public Map<String, String> getPersonaInfo(Socket socket, SocketWrapper socketWrapper, Room room) {
         PersonaEntity personaEntity = socketWrapper.getPersonaEntity();
         AccountEntity accountEntity = socketWrapper.getAccountEntity();
         String vers = socketWrapper.getPersonaConnectionEntity().getVers();
@@ -65,8 +63,6 @@ public class PersonaUtils {
                 .orElse(0L);
 
         String hostPrefix = socketWrapper.getIsDedicatedHost().get() ? "@" : "";
-
-        Room room = roomService.getRoomByPersonaId(personaEntity.getId());
 
         return Stream.of(new String[][]{
                 {"I", String.valueOf(accountEntity.getId())},
