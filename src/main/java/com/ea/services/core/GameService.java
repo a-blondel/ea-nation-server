@@ -642,7 +642,6 @@ public class GameService {
                 // Add the game to the room
                 Room room = roomService.getRoomByVers(vers);
                 room.getGameIds().add(gameEntity.getId());
-                log.info("Added game {} to room {}", gameEntity.getName(), room.getId());
 
                 // Broadcast the game creation to people inside the room
                 socketManager.getSocketWrapperByVers(vers).stream()
