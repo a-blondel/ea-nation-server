@@ -55,13 +55,9 @@ public class RoomService {
             Map<String, String> content = Stream.of(new String[][]{
                     {"I", String.valueOf(room.getId())}, // Room identifier
                     {"N", room.getName()}, // Room name
-//                { "H", socketManager.getSocketWrapper(socket.getRemoteSocketAddress().toString()).getPers() }, // Room Host
-                    {"D", room.getName()}, // Room description
-//                { "F", "CK" }, // Attribute flags
+                    {"DN", room.getName()}, // Actual room name displayed
                     {"T", String.valueOf(room.getPersonaIds().size())}, // Current room population
                     {"L", "50"}, // Max users allowed in room
-//                { "P", "0" }, // Room ping
-//                { "A", props.getTcpHost() }, // Room address
             }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
             socketData.setOutputData(content);
