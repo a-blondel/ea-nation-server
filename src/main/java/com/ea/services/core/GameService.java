@@ -443,7 +443,7 @@ public class GameService {
         }
         if (gameEntity.getEndTime() == null) {
             // Check if game allows joining mid-game
-            if (gameEntity.isStarted() && MIDGAME_FORBIDDEN.contains(gameEntity.getVers())) {
+            if (gameEntity.isStarted() && !PSP_MOH_07_UHS.equals(gameEntity.getVers())) {
                 socketWriter.write(socket, new SocketData("gjoiasta", null, null)); // Game already started
                 return;
             }
@@ -642,7 +642,6 @@ public class GameService {
                 // Add the game to the room
                 Room room = roomService.getRoomByVers(vers);
                 room.getGameIds().add(gameEntity.getId());
-                log.info("Added game {} to room {}", gameEntity.getName(), room.getId());
 
                 // Broadcast the game creation to people inside the room
                 socketManager.getSocketWrapperByVers(vers).stream()
@@ -722,8 +721,8 @@ public class GameService {
      * @param socketWrapper The socket wrapper of current connection
      */
     public void gdel(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
-        endGame(socketWrapper);
         socketWriter.write(socket, socketData);
+        endGame(socketWrapper);
     }
 
     /**

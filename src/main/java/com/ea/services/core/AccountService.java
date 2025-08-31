@@ -4,6 +4,7 @@ import com.ea.dto.SocketData;
 import com.ea.dto.SocketWrapper;
 import com.ea.entities.core.AccountEntity;
 import com.ea.entities.core.PersonaConnectionEntity;
+import com.ea.entities.core.PersonaEntity;
 import com.ea.mappers.SocketMapper;
 import com.ea.repositories.core.AccountRepository;
 import com.ea.repositories.core.BlacklistRepository;
@@ -41,24 +42,22 @@ public class AccountService {
 
     /**
      * Account creation
+     * If name is null, we assume it's a FIFA 10/Madden 10/TW 10 account creation without a name
+     * In this case, we just save the account entity without checking for duplicates
+     * We will create the name later using the first persona name
      *
-     * @param socket
-     * @param socketData
+     * @param socket     The socket to write the response to
+     * @param socketData The socket data containing the input message
      */
     public void acct(Socket socket, SocketData socketData) {
         String name = getValueFromSocket(socketData.getInputMessage(), "NAME");
-        if (name == null) {
-            // FIFA 10 uses 'MAIL' instead of 'NAME', while other games use 'NAME'
-            // This is a huge problem as when the player tries to connect to another game, his name is null
-            // We could set the name to the email address, but the max length is 16 characters for the name
-            // So, we just return an error and make the player create an account in a game that uses 'NAME'
-            socketData.setIdMessage("acctimst"); // Invalid error (EC_INV_MASTER)
-            socketWriter.write(socket, socketData);
-            return;
-        }
+        String mail = getValueFromSocket(socketData.getInputMessage(), "MAIL");
 
-        Optional<AccountEntity> accountEntityOpt = accountRepository.findByName(name);
-        if (accountEntityOpt.isPresent()) {
+        Optional<AccountEntity> existingAccountByName = accountRepository.findByName(name);
+        List<AccountEntity> existingAccountByMail = accountRepository.findByMail(mail);
+        if (!existingAccountByMail.isEmpty()) {
+            socketData.setIdMessage("acctmail");
+        } else if (existingAccountByName.isPresent()) {
             socketData.setIdMessage("acctdupl"); // Duplicate account error (EC_DUPLICATE)
             int alts = Integer.parseInt(getValueFromSocket(socketData.getInputMessage(), "ALTS"));
             if (alts > 0) {
@@ -78,8 +77,8 @@ public class AccountService {
     /**
      * Account update
      *
-     * @param socket
-     * @param socketData
+     * @param socket     The socket to write the response to
+     * @param socketData The socket data containing the input message
      */
     public void edit(Socket socket, SocketData socketData) {
         String name = getValueFromSocket(socketData.getInputMessage(), "NAME");
@@ -90,46 +89,40 @@ public class AccountService {
 
             String pass = getValueFromSocket(socketData.getInputMessage(), "PASS");
             String mail = getValueFromSocket(socketData.getInputMessage(), "MAIL");
-            String spam = getValueFromSocket(socketData.getInputMessage(), "SPAM");
             String chng = getValueFromSocket(socketData.getInputMessage(), "CHNG");
 
-            boolean update = false;
-            boolean error = false;
-
-            if (mail != null && !mail.equals(accountEntity.getMail())) {
+            List<AccountEntity> existingAccountsByMail = accountRepository.findByMail(mail);
+            if (mail == null || existingAccountsByMail.size() > 1 || (existingAccountsByMail.size() == 1 && !existingAccountsByMail.get(0).getId().equals(accountEntity.getId()))) {
+                socketData.setIdMessage("editmail"); // Duplicate email, but we can only send an "invalid email" error
+                socketWriter.write(socket, socketData);
+                return;
+            } else if (!mail.equals(accountEntity.getMail())) {
                 accountEntity.setMail(mail);
-                update = true;
             }
 
             if (!pass.equals(chng)) {
                 if (passwordUtils.bCryptMatches(pass, accountEntity.getPass())) {
                     accountEntity.setPass(passwordUtils.bCryptEncode(chng));
-                    update = true;
                 } else {
                     socketData.setIdMessage("editpass"); // Invalid password error (EC_INV_PASS)
-                    error = true;
+                    socketWriter.write(socket, socketData);
+                    return;
                 }
             }
-
-            if (!error && (update || !spam.equals(accountEntity.getSpam()))) {
-                accountEntity.setSpam(spam);
-                accountEntity.setUpdatedOn(LocalDateTime.now());
-                accountRepository.save(accountEntity);
-            }
-
+            accountEntity.setUpdatedOn(LocalDateTime.now());
+            accountRepository.save(accountEntity);
         } else {
             socketData.setIdMessage("editimst"); // Inexisting error (EC_INV_MASTER)
         }
-
         socketWriter.write(socket, socketData);
     }
 
     /**
      * Account login
      *
-     * @param socket
-     * @param socketData
-     * @param socketWrapper
+     * @param socket        The socket to write the response to
+     * @param socketData    The socket data containing the input message
+     * @param socketWrapper The socket wrapper
      */
     public void auth(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         String name = getValueFromSocket(socketData.getInputMessage(), "NAME");
@@ -178,15 +171,15 @@ public class AccountService {
 
                 String personas = accountEntity.getPersonas().stream()
                         .filter(p -> p.getDeletedOn() == null)
-                        .map(p -> p.getPers())
+                        .map(PersonaEntity::getPers)
                         .collect(Collectors.joining(","));
                 Map<String, String> content = Stream.of(new String[][]{
-                        {"NAME", accountEntity.getName()},
+                        {"NAME", accountEntity.getName() != null ? accountEntity.getName() : ""},
                         {"ADDR", socket.getInetAddress().getHostAddress()},
                         {"PERSONAS", personas},
                         {"LOC", accountEntity.getLoc()},
-                        {"MAIL", accountEntity.getMail()},
-                        {"SPAM", accountEntity.getSpam()}
+                        {"MAIL", accountEntity.getMail() != null ? accountEntity.getMail() : ""},
+                        {"SPAM", "NN"}
                 }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
                 socketData.setOutputData(content);
 
@@ -238,7 +231,7 @@ public class AccountService {
             }
         } else if (name != null) {
             Optional<AccountEntity> accountEntityOpt = accountRepository.findByName(name);
-            if (accountEntityOpt.isPresent()) {
+            if (accountEntityOpt.isPresent() && accountEntityOpt.get().getMail() != null) {
                 AccountEntity accountEntity = accountEntityOpt.get();
                 String pass = passwordUtils.generateRandomPassword();
                 accountEntity.setPass(passwordUtils.bCryptEncode(pass));

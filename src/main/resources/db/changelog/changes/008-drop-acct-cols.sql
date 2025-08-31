@@ -1,0 +1,9 @@
+ALTER TABLE core.account DROP COLUMN spam;
+ALTER TABLE core.account DROP COLUMN tos;
+ALTER TABLE core.account DROP COLUMN tick;
+ALTER TABLE core.account DROP COLUMN gamecode;
+ALTER TABLE core.account DROP COLUMN vers;
+ALTER TABLE core.account DROP COLUMN sku;
+ALTER TABLE core.account DROP COLUMN slus;
+ALTER TABLE core.account DROP COLUMN sdkvers;
+ALTER TABLE core.account DROP COLUMN builddate;
