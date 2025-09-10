@@ -69,6 +69,12 @@ public class GameService {
      */
     public void gqwk(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         socketWriter.write(socket, socketData);
+
+        // Temporarily disable the game search feature so it doesn't trigger instant start of a game with +ses
+        if (true) {
+            return;
+        }
+
         String mode = getValueFromSocket(socketData.getInputMessage(), "MODE");
 
         if ("2".equals(mode)) { // Wait for a game to become available

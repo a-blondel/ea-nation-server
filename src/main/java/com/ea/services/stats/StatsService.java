@@ -23,6 +23,7 @@ public class StatsService {
     private final SocketWriter socketWriter;
     private final GameServerService gameServerService;
     private final MohhStatsService mohhStatsService;
+    private final NfsStatsService nfsStatsService;
     private final NhlStatsService nhlStatsService;
     private final GameService gameService;
     private final RoomService roomService;
@@ -36,9 +37,11 @@ public class StatsService {
      */
     public void cate(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         if (MOH07_OR_MOH08.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
-            mohhStatsService.cate(socketData);
-        } else if (PSP_NHL_07.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+            mohhStatsService.cate(socketData, socketWrapper);
+        } else if (PSP_NHL_07.equals(socketWrapper.getPersonaConnectionEntity().getVers())) {
             nhlStatsService.cate(socketData);
+        } else if (ALL_NFS.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+            nfsStatsService.cate(socketData, socketWrapper);
         }
         socketWriter.write(socket, socketData);
     }
@@ -53,8 +56,10 @@ public class StatsService {
     public void snap(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         if (MOH07_OR_MOH08.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             mohhStatsService.snap(socket, socketData, socketWrapper);
-        } else if (PSP_NHL_07.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+        } else if (PSP_NHL_07.equals(socketWrapper.getPersonaConnectionEntity().getVers())) {
             nhlStatsService.snap(socket, socketData, socketWrapper);
+        } else if (ALL_NFS.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+            nfsStatsService.snap(socket, socketData, socketWrapper);
         } else {
             socketWriter.write(socket, socketData);
         }

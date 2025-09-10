@@ -8,6 +8,7 @@ import com.ea.entities.core.GameEntity;
 import com.ea.entities.core.PersonaEntity;
 import com.ea.entities.stats.MohhGameReportEntity;
 import com.ea.entities.stats.MohhPersonaStatsEntity;
+import com.ea.enums.LeaderboardLabel;
 import com.ea.enums.Mohh2Map;
 import com.ea.enums.MohhMap;
 import com.ea.mappers.SocketMapper;
@@ -48,20 +49,48 @@ public class MohhStatsService {
     private final MohhGameReportRepository mohhGameReportRepository;
     private final GameServerService gameServerService;
 
+    private static List<String> getSyms(String vers) {
+        List<String> syms;
+        if (vers.equals(PSP_MOH_07)) {
+            syms = List.of(LeaderboardLabel.MY_LEADERBOARD.name, LeaderboardLabel.MY_COMMUNITY_LEADERBOARD.name,
+                    LeaderboardLabel.TOP_100.name, LeaderboardLabel.COMMUNITY_TOP_100.name,
+                    LeaderboardLabel.WEAPON_LEADERS.name, LeaderboardLabel.COMMUNITY_WEAPON_LEADERS.name);
+        } else {
+            syms = List.of(LeaderboardLabel.MY_LEADERBOARD.name,
+                    LeaderboardLabel.TOP_100.name,
+                    LeaderboardLabel.WEAPON_LEADERS.name);
+        }
+        return syms;
+    }
+
     /**
      * Retrieve ranking categories
      *
-     * @param socketData The socket data
+     * @param socketData    The socket data
+     * @param socketWrapper The socket wrapper of current connection
      */
-    public void cate(SocketData socketData) {
+    public void cate(SocketData socketData, SocketWrapper socketWrapper) {
+        String vers = socketWrapper.getPersonaConnectionEntity().getVers();
+        String rData = "0,1,1,1,1,1,1,1," +
+                "1,1,1,1,1,1,1,1," +
+                "2,1,1,1,1,1,1,1";
+        if (vers.equals(PSP_MOH_07)) {
+            rData += ",3,1,1,1,1,1,1,1" +
+                    ",4,1,1,1,1,1,1,1" +
+                    ",5,1,1,1,1,1,1,1";
+        }
+
+        String categoryCount = vers.equals(PSP_MOH_07) ? "6" : "3";
+        List<String> syms = getSyms(vers);
+        String categoryNames = "\"" + String.join("\",\"", syms) + "\"";
+
         Map<String, String> content = Stream.of(new String[][]{
-                {"CC", "6"}, // <total # of categories in this view>
-                {"IC", "6"}, // <total # of indices in this view>
-                {"VC", "6"}, // <total # of variations in this view>
-                {"U", "6"},
-                {"SYMS", "6"},
-                {"SS", "6"},
-                {"R", String.join(",", Collections.nCopies(66, "1"))}, // <comma-separated-list of category,index,view data>
+                {"CC", categoryCount}, // Category count
+                {"IC", categoryCount}, // Category index count
+                {"VC", categoryCount}, // Variations count
+                {"SYMS", categoryNames}, // Category names
+                {"SS", String.valueOf(categoryNames.length() + 1)}, // SYMS length + 1
+                {"R", rData},
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
         socketData.setOutputData(content);
@@ -86,7 +115,7 @@ public class MohhStatsService {
         String rankingCategory = getRankingCategory(isMohh, categoryIndex).mohh2Id;
 
         String columnNumber = isMohh ? "21" : "18";
-        if (WEAPON_LEADERS.mohh2Id.equals(rankingCategory)) {
+        if (MOHH_WEAPON_LEADERS_ID.mohh2Id.equals(rankingCategory)) {
             columnNumber = "32";
         }
 
@@ -94,14 +123,14 @@ public class MohhStatsService {
         List<MohhPersonaStatsEntity> mohhPersonaStatsEntityList = new ArrayList<>();
         long offset = 0;
         String vers = socketWrapper.getPersonaConnectionEntity().getVers();
-        if (MY_LEADERBOARD.mohh2Id.equals(rankingCategory)) {
+        if (MOHH_MY_LEADERBOARD_ID.mohh2Id.equals(rankingCategory)) {
             Long rank = mohhPersonaStatsRepository.getRankByPersonaIdAndVers(socketWrapper.getPersonaEntity().getId(), vers);
             offset = (rank != null) ? rank : 0;
             offset = Math.max(offset - 50, 0);
             mohhPersonaStatsEntityList = mohhPersonaStatsRepository.getLeaderboardByVers(vers, 100, offset);
-        } else if (TOP_100.mohh2Id.equals(rankingCategory)) {
+        } else if (MOHH_TOP_100_ID.mohh2Id.equals(rankingCategory)) {
             mohhPersonaStatsEntityList = mohhPersonaStatsRepository.getLeaderboardByVers(vers, 100, offset);
-        } else if (WEAPON_LEADERS.mohh2Id.equals(rankingCategory)) {
+        } else if (MOHH_WEAPON_LEADERS_ID.mohh2Id.equals(rankingCategory)) {
             mohhPersonaStatsEntityList = mohhPersonaStatsRepository.getWeaponLeaderboardByVers(vers, 100, offset);
         }
 
@@ -116,7 +145,7 @@ public class MohhStatsService {
                 {"PARAMS", "1,1,1,1,1,1,1,1,1,1,1,1"}, // <comma-separated list of integer parameters>
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
-        if ("1".equals(cols) && Set.of(MY_LEADERBOARD.mohh2Id, TOP_100.mohh2Id).contains(rankingCategory)) {
+        if ("1".equals(cols) && Set.of(MOHH_MY_LEADERBOARD_ID.mohh2Id, MOHH_TOP_100_ID.mohh2Id).contains(rankingCategory)) {
             content.putAll(Stream.of(new String[][]{
                     {"CN0", "RNK"}, // <column-name>
                     {"CD0", "\"Leaderboard Ranking\""}, // <column-name> (selected)
@@ -174,7 +203,7 @@ public class MohhStatsService {
                         {"CD17", "\"Team Deathmatch Rounds Played\""},
                 }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
             }
-        } else if ("1".equals(cols) && WEAPON_LEADERS.mohh2Id.equals(rankingCategory)) {
+        } else if ("1".equals(cols) && MOHH_WEAPON_LEADERS_ID.mohh2Id.equals(rankingCategory)) {
             content.putAll(Stream.of(new String[][]{
                     {"CN0", "RNK"},
                     {"CD0", "\"Leaderboard Ranking\""},
@@ -265,7 +294,7 @@ public class MohhStatsService {
             String name = mohhPersonaStatsEntity.getPersona().getPers();
             String rank = String.valueOf(++offset);
             String points = String.valueOf(mohhPersonaStatsEntity.getKill() - mohhPersonaStatsEntity.getDeath());
-            if (Set.of(MY_LEADERBOARD.mohh2Id, TOP_100.mohh2Id).contains(rankCategory)) {
+            if (Set.of(MOHH_MY_LEADERBOARD_ID.mohh2Id, MOHH_TOP_100_ID.mohh2Id).contains(rankCategory)) {
                 String mostPlayedTeam = mohhPersonaStatsEntity.getAxis() > mohhPersonaStatsEntity.getAllies() ? "0" : "1";
                 String playTime = String.valueOf(mohhPersonaStatsEntity.getPlayTime());
                 String column6 = isMohh ? playTime : getPrecision(mohhPersonaStatsEntity.getHit(), mohhPersonaStatsEntity.getShot()); // mohh playtime, mohh2 accuracy
@@ -309,7 +338,7 @@ public class MohhStatsService {
                         {"O", "0"}, // <online> ?
                         {"S", stats}, // <stats>
                 }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-            } else if (WEAPON_LEADERS.mohh2Id.equals(rankCategory)) {
+            } else if (MOHH_WEAPON_LEADERS_ID.mohh2Id.equals(rankCategory)) {
                 rankingList.add(Stream.of(new String[][]{
                         {"N", name},
                         {"R", rank},
