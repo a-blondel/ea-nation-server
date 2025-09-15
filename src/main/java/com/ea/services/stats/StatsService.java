@@ -27,6 +27,7 @@ public class StatsService {
     private final NhlStatsService nhlStatsService;
     private final GameService gameService;
     private final RoomService roomService;
+    private final NfsRankService nfsRankService;
 
     /**
      * Retrieve ranking categories
@@ -87,6 +88,8 @@ public class StatsService {
             if (gameServerService.isP2P(vers)) {
                 if (PSP_NHL_07.equals(vers)) {
                     nhlStatsService.rank(socketData);
+                } else if (ALL_NFS.contains(vers)) {
+                    nfsRankService.rank(socketData);
                 }
                 // Close the game and gameConnections if the game is P2P
                 gameService.endGame(socketWrapper);

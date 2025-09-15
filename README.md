@@ -29,16 +29,16 @@ Fell free to join !
 | MADDEN 07, 08, 09, 10             | PSP         | EU, US    | Playable, partial support     |
 | Medal of Honor: Heroes            | PSP         | EU, US    | Full support                  |
 | Medal of Honor: Heroes 2          | PSP, Wii    | EU, US    | In progress, not playable yet |
-| Need for Speed: Most Wanted 5-1-0 | PSP         | EU, US    | Playable*, partial support    |
-| Need for Speed Carbon: OTC        | PSP         | EU, US    | Playable, partial support     |
-| Need for Speed: ProStreet         | PSP         | EU, US    | Playable, partial support     |
-| Need for Speed: Undercover        | PSP         | EU, US    | Playable, partial support     |
+| Need for Speed: Most Wanted 5-1-0 | PSP         | EU, US    | Full support*                 |
+| Need for Speed Carbon: OTC        | PSP         | EU, US    | Full support                  |
+| Need for Speed: ProStreet         | PSP         | EU, US    | Full support                  |
+| Need for Speed: Undercover        | PSP         | EU, US    | Full support                  |
 | NBA Live 07, 08                   | PSP         | US        | Playable, partial support     |
 | NCAA 07                           | PSP         | US        | Playable, partial support     |
 | NHL 07                            | PSP         | EU, US    | Playable, partial support     |
 | Tiger Woods PGA Tour 07, 08, 10   | PSP         | EU, US    | Playable, partial support     |
 
-Playable* : Requires a SSL bypass patch to connect,
+`*` : Requires a SSL bypass patch to connect,
 see [patches](https://github.com/a-blondel/ea-nation-server/tree/main/patches)
 
 Partial support means that some features are not implemented yet, like:
