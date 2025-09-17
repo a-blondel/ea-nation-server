@@ -3,8 +3,11 @@ package com.ea.services.stats;
 
 import com.ea.dto.SocketData;
 import com.ea.dto.SocketWrapper;
+import com.ea.entities.core.PersonaEntity;
+import com.ea.entities.stats.NfsPersonaStatsEntity;
 import com.ea.mappers.SocketMapper;
 import com.ea.repositories.core.GameConnectionRepository;
+import com.ea.repositories.stats.NfsPersonaStatsRepository;
 import com.ea.services.server.GameServerService;
 import com.ea.steps.SocketWriter;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,6 +34,7 @@ public class NfsStatsService {
     private final SocketWriter socketWriter;
     private final GameConnectionRepository gameConnectionRepository;
     private final GameServerService gameServerService;
+    private final NfsPersonaStatsRepository nfsPersonaStatsRepository;
 
     private static int getRaceCount(String vers) {
         int raceCount;
@@ -45,6 +50,33 @@ public class NfsStatsService {
             raceCount = 0;
         }
         return raceCount;
+    }
+
+    private static String getStats(boolean hasStats, NfsPersonaStatsEntity nfsPersonaStatsEntity, String vers) {
+        long totalGames = hasStats ? (nfsPersonaStatsEntity.getWins() + nfsPersonaStatsEntity.getLosses()) : 0;
+        long dnf = totalGames > 0 ? Math.round(((double) nfsPersonaStatsEntity.getDidquit() + nfsPersonaStatsEntity.getDiddisc()) / totalGames * 100) : 0;
+        dnf = Math.min(dnf, 100); // Ensure DNF percentage does not exceed 100
+
+        String stats;
+        if (PSP_NFS_06.equals(vers)) {
+            // For NFS MW: wins at index 2, losses at index 3, DNF% at index 10
+            stats = ",," +
+                    (hasStats ? Long.toHexString(nfsPersonaStatsEntity.getWins()) : "0") +
+                    "," +
+                    (hasStats ? Long.toHexString(nfsPersonaStatsEntity.getLosses()) : "0") +
+                    ",,,," +
+                    (hasStats ? Long.toHexString(dnf) : "0");
+        } else {
+            // For other NFS games: wins at index 1, losses at index 2, DNF% at index 4
+            stats = "," +
+                    (hasStats ? Long.toHexString(nfsPersonaStatsEntity.getWins()) : "0") +
+                    "," +
+                    (hasStats ? Long.toHexString(nfsPersonaStatsEntity.getLosses()) : "0") +
+                    ",," +
+                    (hasStats ? Long.toHexString(dnf) : "0") +
+                    ",,,,";
+        }
+        return stats;
     }
 
     /**
@@ -189,5 +221,27 @@ public class NfsStatsService {
 //            socketWriter.write(socket, socketData);
 //        }
 //    }
+
+    /**
+     * Get persona stats and rank for NFS games
+     *
+     * @param personaEntity The persona entity to get stats for
+     * @param vers          The version of the game
+     * @return A map containing stats and rank
+     */
+    public Map<String, String> getStatsAndRank(PersonaEntity personaEntity, String vers) {
+        Map<String, String> result = new HashMap<>();
+
+        NfsPersonaStatsEntity nfsPersonaStatsEntity = nfsPersonaStatsRepository.findByPersonaIdAndVers(personaEntity.getId(), vers);
+        boolean hasStats = null != nfsPersonaStatsEntity;
+
+        String stats = getStats(hasStats, nfsPersonaStatsEntity, vers);
+
+        String rank = hasStats ? String.valueOf(nfsPersonaStatsRepository.getRankByPersonaIdAndVers(nfsPersonaStatsEntity.getPersona().getId(), vers)) : "";
+
+        result.put("stats", stats);
+        result.put("rank", rank);
+        return result;
+    }
 
 }

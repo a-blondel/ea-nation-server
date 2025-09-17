@@ -47,7 +47,7 @@ public class NhlStatsService {
      * @return A string containing the stats in hex format
      */
     private static String getStats(long totalGames, NhlPersonaStatsEntity nhlPersonaStatsEntity, boolean hasStats) {
-        long dnf = totalGames > 0 ? Math.round((double) nhlPersonaStatsEntity.getQuit() / totalGames * 100) : 0;
+        long dnf = totalGames > 0 ? Math.round(((double) nhlPersonaStatsEntity.getQuit() + nhlPersonaStatsEntity.getDisc()) / totalGames * 100) : 0;
         dnf = Math.min(dnf, 100); // Ensure DNF percentage does not exceed 100
 
         // Hex values. 2nd value is wins, 3rd is losses, 5ths is DNF (Did Not Finish Percentage)
@@ -184,8 +184,8 @@ public class NhlStatsService {
                     String.valueOf(nhlPersonaStatsEntity.getStreak()),
                     String.format("%.0f", totalWins * 100.0 / (totalWins + totalLosses)),
                     String.valueOf(nhlPersonaStatsEntity.getDraw()),
-                    String.valueOf(nhlPersonaStatsEntity.getQuit()),
-                    String.format("%.0f", nhlPersonaStatsEntity.getQuit() * 100.0 / (totalWins + totalLosses + nhlPersonaStatsEntity.getDraw())),
+                    String.valueOf(nhlPersonaStatsEntity.getQuit() + nhlPersonaStatsEntity.getDisc()),
+                    String.format("%.0f", (nhlPersonaStatsEntity.getQuit() + nhlPersonaStatsEntity.getDisc()) * 100.0 / (totalWins + totalLosses + nhlPersonaStatsEntity.getDraw())),
                     String.valueOf(nhlPersonaStatsEntity.getShots()),
                     String.valueOf(nhlPersonaStatsEntity.getScore()),
                     String.valueOf(nhlPersonaStatsEntity.getScoreAgainst()),
