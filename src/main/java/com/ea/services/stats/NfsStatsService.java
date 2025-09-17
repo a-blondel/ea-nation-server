@@ -4,9 +4,11 @@ package com.ea.services.stats;
 import com.ea.dto.SocketData;
 import com.ea.dto.SocketWrapper;
 import com.ea.entities.core.PersonaEntity;
+import com.ea.entities.stats.NfsGameReportEntity;
 import com.ea.entities.stats.NfsPersonaStatsEntity;
 import com.ea.mappers.SocketMapper;
 import com.ea.repositories.core.GameConnectionRepository;
+import com.ea.repositories.stats.NfsGameReportRepository;
 import com.ea.repositories.stats.NfsPersonaStatsRepository;
 import com.ea.services.server.GameServerService;
 import com.ea.steps.SocketWriter;
@@ -15,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,11 +33,13 @@ import static com.ea.utils.SocketUtils.getValueFromSocket;
 @Service
 public class NfsStatsService {
 
+    private static final int[] PSP_NFS_06_VENUE_MAP = {1, 2, 4, 6, 8, 10, 12, 14, 16, 18};
     private final SocketMapper socketMapper;
     private final SocketWriter socketWriter;
     private final GameConnectionRepository gameConnectionRepository;
     private final GameServerService gameServerService;
     private final NfsPersonaStatsRepository nfsPersonaStatsRepository;
+    private final NfsGameReportRepository nfsGameReportRepository;
 
     private static int getRaceCount(String vers) {
         int raceCount;
@@ -159,14 +164,50 @@ public class NfsStatsService {
         String seqn = getValueFromSocket(socketData.getInputMessage(), "SEQN");
         String cols = getValueFromSocket(socketData.getInputMessage(), "COLS");
         String start = getValueFromSocket(socketData.getInputMessage(), "START");
-        String categoryIndex = getValueFromSocket(socketData.getInputMessage(), "CI"); // 1 = My Leaderboard, 2 = TOP 100, 3 = Lap records
+        String categoryIndex = getValueFromSocket(socketData.getInputMessage(), "CI"); // 0 = My Leaderboard, 1 = TOP 100, 3+ = Lap records
+        String itemIndex = getValueFromSocket(socketData.getInputMessage(), "II"); // For lap records: 0 = Forward, 1 = Reverse
 
-        String columnNumber = Integer.parseInt(categoryIndex) > 2 ? "4" : "10";
+        String vers = socketWrapper.getPersonaConnectionEntity().getVers();
+        int ci = Integer.parseInt(categoryIndex);
+
+        // Fetch data based on category type
+        List<NfsPersonaStatsEntity> nfsPersonaStatsEntityList = new ArrayList<>();
+        List<NfsGameReportEntity> nfsGameReportEntityList = new ArrayList<>();
+        long offset = 0;
+        boolean isLapRecords = ci >= 3;
+
+        if (ci == 0) { // My Leaderboard
+            Long rank = nfsPersonaStatsRepository.getRankByPersonaIdAndVers(socketWrapper.getPersonaEntity().getId(), vers);
+            offset = (rank != null) ? Math.max(rank - 50, 0) : 0;
+            nfsPersonaStatsEntityList = nfsPersonaStatsRepository.getLeaderboardByVers(vers, 100, offset);
+        } else if (ci == 1) { // Top 100
+            nfsPersonaStatsEntityList = nfsPersonaStatsRepository.getLeaderboardByVers(vers, 100, offset);
+        } else if (isLapRecords) { // Lap Records (CI >= 3)
+            int venue;
+            if (PSP_NFS_06.equals(vers)) {
+                venue = PSP_NFS_06_VENUE_MAP[ci - 3]; // MW uses one venue for unranked and one for ranked
+            } else {
+                venue = ci - 2; // CI=3 -> VENUE=1, CI=4 -> VENUE=2, etc.
+            }
+
+            int dir = Integer.parseInt(itemIndex != null ? itemIndex : "0"); // II=0 -> DIR=0, II=1 -> DIR=1
+
+            if (PSP_NFS_06.equals(vers)) {
+                // For NFS Most Wanted, use racetime instead of lap
+                nfsGameReportEntityList = nfsGameReportRepository.getRacetimeRecordsByVenueAndDir(vers, venue, dir, 100, offset);
+            } else {
+                // For other NFS games, use lap time
+                nfsGameReportEntityList = nfsGameReportRepository.getLapRecordsByVenueAndDir(vers, venue, dir, 100, offset);
+            }
+        }
+
+        String columnNumber = isLapRecords ? "4" : "6";
+        int actualSize = isLapRecords ? nfsGameReportEntityList.size() : nfsPersonaStatsEntityList.size();
 
         Map<String, String> content = Stream.of(new String[][]{
                 {"CHAN", chan}, // <matching request value>
                 {"START", start}, // <actual start used>
-                {"RANGE", "0"}, // <actual range used>
+                {"RANGE", String.valueOf(actualSize)}, // <actual range used>
                 {"SEQN", seqn}, // <value provided in request>
                 {"CC", columnNumber}, // <number of columns>
                 {"FC", "1"}, // <number of fixed columns>
@@ -174,13 +215,22 @@ public class NfsStatsService {
                 {"PARAMS", "1,1,1,1,1,1,1,1,1,1,1,1"}, // <comma-separated list of integer parameters>
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
-        if ("1".equals(cols) && Integer.parseInt(categoryIndex) > 2) {
-            content.putAll(Stream.of(new String[][]{
-                    {"CN0", "RNK"},
-                    {"CN1", "Persona"},
-                    {"CN2", "\"Fastest lap time\""},
-                    {"CN3", "Car"},
-            }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+        if ("1".equals(cols) && isLapRecords) {
+            if (PSP_NFS_06.equals(vers)) {
+                content.putAll(Stream.of(new String[][]{
+                        {"CN0", "RNK"},
+                        {"CN1", "Persona"},
+                        {"CN2", "Car"},
+                        {"CN3", "\"Lap time\""},
+                }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+            } else {
+                content.putAll(Stream.of(new String[][]{
+                        {"CN0", "RNK"},
+                        {"CN1", "Persona"},
+                        {"CN2", "\"Fastest lap time\""},
+                        {"CN3", "Car"},
+                }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+            }
         } else if ("1".equals(cols)) {
             content.putAll(Stream.of(new String[][]{
                     {"CN0", "RNK"},
@@ -189,38 +239,124 @@ public class NfsStatsService {
                     {"CD1", "Persona"},
                     {"CN2", "Score"},
                     {"CD2", "Score"},
-                    {"CN4", "Wins"},
-                    {"CD4", "Wins"},
-                    {"CN5", "Losses"},
-                    {"CD5", "Losses"},
-                    {"CN8", "DNF%"},
-                    {"CD8", "\"Did not finish percentage\""},
+                    {"CN3", "Wins"},
+                    {"CD3", "Wins"},
+                    {"CN4", "Losses"},
+                    {"CD4", "Losses"},
+                    {"CN5", "DNF%"},
+                    {"CD5", "\"Did not finish percentage\""},
             }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
         }
 
         socketData.setOutputData(content);
         socketWriter.write(socket, socketData);
 
-        //snp(socket, isMohh, rankingCategory, mohhPersonaStatsEntityList, offset);
+        // Send ranking data
+        if (isLapRecords) {
+            snpLapRecords(socket, nfsGameReportEntityList, offset + 1, vers);
+        } else {
+            snp(socket, nfsPersonaStatsEntityList, offset + 1, vers);
+        }
     }
 
-//    /**
-//     * Send ranking snapshot
-//     * Favorite team : 0 = Axis, 1 = Allied
-//     *
-//     * @param socket                     The socket to write the response to
-//     * @param rankCategory               The rank category (e.g., MY_LEADERBOARD, TOP_100)
-//     * @param nfsPersonaStatsEntityList The list of persona stats entities
-//     * @param offset                     The offset for the ranking
-//     */
-//    public void snp(Socket socket, String rankCategory, List<NfsPersonaStatsEntity> nfsPersonaStatsEntityList, long offset) {
-//        List<Map<String, String>> rankingList = new ArrayList<>();
-//
-//        for (Map<String, String> ranking : rankingList) {
-//            SocketData socketData = new SocketData("+snp", null, ranking);
-//            socketWriter.write(socket, socketData);
-//        }
-//    }
+    /**
+     * Send ranking snapshot for persona stats (My Leaderboard and Top 100)
+     *
+     * @param socket                    The socket to write the response to
+     * @param nfsPersonaStatsEntityList The list of persona stats entities
+     * @param startRank                 The starting rank for display
+     * @param vers                      The game version
+     */
+    public void snp(Socket socket, List<NfsPersonaStatsEntity> nfsPersonaStatsEntityList, long startRank, String vers) {
+        List<Map<String, String>> rankingList = new ArrayList<>();
+        long rank = startRank;
+
+        for (NfsPersonaStatsEntity nfsPersonaStatsEntity : nfsPersonaStatsEntityList) {
+            String name = nfsPersonaStatsEntity.getPersona().getPers();
+            String points = String.valueOf(nfsPersonaStatsEntity.getWins() - nfsPersonaStatsEntity.getLosses());
+
+            long totalGames = nfsPersonaStatsEntity.getWins() + nfsPersonaStatsEntity.getLosses();
+            long dnfCount = nfsPersonaStatsEntity.getDidquit() + nfsPersonaStatsEntity.getDiddisc();
+            String dnfPercentage = totalGames > 0 ? String.format("%.0f", (dnfCount * 100.0) / totalGames) : "0";
+
+            String stats = String.join(",",
+                    String.valueOf(rank),
+                    name,
+                    points, // Score (wins - losses)
+                    String.valueOf(nfsPersonaStatsEntity.getWins()),
+                    String.valueOf(nfsPersonaStatsEntity.getLosses()),
+                    dnfPercentage
+            );
+
+            rankingList.add(Stream.of(new String[][]{
+                    {"N", name}, // <persona name>
+                    {"R", String.valueOf(rank)}, // <rank>
+                    {"P", points}, // <points>
+                    {"O", "0"}, // <online>
+                    {"S", stats}, // <stats>
+            }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+
+            rank++;
+        }
+
+        for (Map<String, String> ranking : rankingList) {
+            SocketData socketData = new SocketData("+snp", null, ranking);
+            socketWriter.write(socket, socketData);
+        }
+    }
+
+    /**
+     * Send ranking snapshot for lap records
+     *
+     * @param socket                  The socket to write the response to
+     * @param nfsGameReportEntityList The list of game report entities
+     * @param startRank               The starting rank for display
+     * @param vers                    The game version
+     */
+    public void snpLapRecords(Socket socket, List<NfsGameReportEntity> nfsGameReportEntityList, long startRank, String vers) {
+        List<Map<String, String>> rankingList = new ArrayList<>();
+        long rank = startRank;
+
+        for (NfsGameReportEntity nfsGameReportEntity : nfsGameReportEntityList) {
+            String name = nfsGameReportEntity.getGameConnection().getPersonaConnection().getPersona().getPers();
+
+            // Use racetime for NFS MW, lap time for other games
+            long timeValue = PSP_NFS_06.equals(vers) ? nfsGameReportEntity.getRacetime() : nfsGameReportEntity.getLap();
+            String timeString = String.valueOf(timeValue);
+
+            String stats;
+            if (PSP_NFS_06.equals(vers)) {
+                stats = String.join(",",
+                        String.valueOf(rank),
+                        name,
+                        String.valueOf(nfsGameReportEntity.getCar()),
+                        timeString
+                );
+            } else {
+                stats = String.join(",",
+                        String.valueOf(rank),
+                        name,
+                        timeString,
+                        String.valueOf(nfsGameReportEntity.getCar())
+                );
+            }
+
+            rankingList.add(Stream.of(new String[][]{
+                    {"N", name}, // <persona name>
+                    {"R", String.valueOf(rank)}, // <rank>
+//                    {"P", timeString}, // <time value>
+//                    {"O", "0"}, // <online>
+                    {"S", stats}, // <stats>
+            }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+
+            rank++;
+        }
+
+        for (Map<String, String> ranking : rankingList) {
+            SocketData socketData = new SocketData("+snp", null, ranking);
+            socketWriter.write(socket, socketData);
+        }
+    }
 
     /**
      * Get persona stats and rank for NFS games

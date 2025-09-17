@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface NfsPersonaStatsRepository extends JpaRepository<NfsPersonaStatsEntity, Long> {
     NfsPersonaStatsEntity findByPersonaIdAndVers(Long personaId, String vers);
@@ -19,4 +21,13 @@ public interface NfsPersonaStatsRepository extends JpaRepository<NfsPersonaStats
             WHERE STATS.PERSONA_ID = ?1
             """, nativeQuery = true)
     Long getRankByPersonaIdAndVers(long id, String vers);
+
+    @Query(value = """
+            FROM NfsPersonaStatsEntity ps
+            WHERE ps.vers = :vers AND ps.time > 0
+            AND ps.persona.deletedOn IS NULL
+            AND ps.persona.account.isBanned = FALSE
+            ORDER BY (wins - losses) DESC, persona.id ASC LIMIT :limit OFFSET :offset
+            """)
+    List<NfsPersonaStatsEntity> getLeaderboardByVers(String vers, long limit, long offset);
 }
