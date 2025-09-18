@@ -6,6 +6,7 @@ import com.ea.entities.core.GameConnectionEntity;
 import com.ea.entities.core.PersonaEntity;
 import com.ea.entities.stats.NhlGameReportEntity;
 import com.ea.entities.stats.NhlPersonaStatsEntity;
+import com.ea.enums.LeaderboardLabel;
 import com.ea.repositories.core.GameConnectionRepository;
 import com.ea.repositories.stats.NhlGameReportRepository;
 import com.ea.repositories.stats.NhlPersonaStatsRepository;
@@ -18,7 +19,10 @@ import org.springframework.stereotype.Service;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -43,7 +47,7 @@ public class NhlStatsService {
      * @return A string containing the stats in hex format
      */
     private static String getStats(long totalGames, NhlPersonaStatsEntity nhlPersonaStatsEntity, boolean hasStats) {
-        long dnf = totalGames > 0 ? Math.round((double) nhlPersonaStatsEntity.getQuit() / totalGames * 100) : 0;
+        long dnf = totalGames > 0 ? Math.round(((double) nhlPersonaStatsEntity.getQuit() + nhlPersonaStatsEntity.getDisc()) / totalGames * 100) : 0;
         dnf = Math.min(dnf, 100); // Ensure DNF percentage does not exceed 100
 
         // Hex values. 2nd value is wins, 3rd is losses, 5ths is DNF (Did Not Finish Percentage)
@@ -63,13 +67,12 @@ public class NhlStatsService {
      */
     public void cate(SocketData socketData) {
         Map<String, String> content = Stream.of(new String[][]{
-                {"CC", "2"}, // <total # of categories in this view>
-                {"IC", "2"}, // <total # of indices in this view>
-                {"VC", "2"}, // <total # of variations in this view>
-                {"U", "2"},
-                {"SYMS", "2"},
-                {"SS", "2"},
-                {"R", String.join(",", Collections.nCopies(22, "1"))}, // <comma-separated-list of category,index,view data>
+                {"CC", "1"}, // <total # of categories in this view>
+                {"IC", "1"}, // <total # of indices in this view>
+                {"VC", "1"}, // <total # of variations in this view>
+                {"SYMS", "\"" + LeaderboardLabel.TOP_100.name + "\""},
+                {"SS", String.valueOf(LeaderboardLabel.TOP_100.name.length() + 1)},
+                {"R", "0,1,1,1,1,1,1,1"},
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
         socketData.setOutputData(content);
@@ -181,8 +184,8 @@ public class NhlStatsService {
                     String.valueOf(nhlPersonaStatsEntity.getStreak()),
                     String.format("%.0f", totalWins * 100.0 / (totalWins + totalLosses)),
                     String.valueOf(nhlPersonaStatsEntity.getDraw()),
-                    String.valueOf(nhlPersonaStatsEntity.getQuit()),
-                    String.format("%.0f", nhlPersonaStatsEntity.getQuit() * 100.0 / (totalWins + totalLosses + nhlPersonaStatsEntity.getDraw())),
+                    String.valueOf(nhlPersonaStatsEntity.getQuit() + nhlPersonaStatsEntity.getDisc()),
+                    String.format("%.0f", (nhlPersonaStatsEntity.getQuit() + nhlPersonaStatsEntity.getDisc()) * 100.0 / (totalWins + totalLosses + nhlPersonaStatsEntity.getDraw())),
                     String.valueOf(nhlPersonaStatsEntity.getShots()),
                     String.valueOf(nhlPersonaStatsEntity.getScore()),
                     String.valueOf(nhlPersonaStatsEntity.getScoreAgainst()),

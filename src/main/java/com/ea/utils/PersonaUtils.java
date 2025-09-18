@@ -7,6 +7,7 @@ import com.ea.entities.core.GameEntity;
 import com.ea.entities.core.PersonaEntity;
 import com.ea.repositories.core.GameRepository;
 import com.ea.services.stats.MohhStatsService;
+import com.ea.services.stats.NfsStatsService;
 import com.ea.services.stats.NhlStatsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,8 +21,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.ea.services.server.GameServerService.MOH07_OR_MOH08;
-import static com.ea.services.server.GameServerService.PSP_NHL_07;
+import static com.ea.services.server.GameServerService.*;
 
 @Component
 @RequiredArgsConstructor
@@ -31,6 +31,7 @@ public class PersonaUtils {
     private final GameRepository gameRepository;
     private final MohhStatsService mohhStatsService;
     private final NhlStatsService nhlStatsService;
+    private final NfsStatsService nfsStatsService;
 
     public Map<String, String> getPersonaInfo(Socket socket, SocketWrapper socketWrapper, Room room) {
         PersonaEntity personaEntity = socketWrapper.getPersonaEntity();
@@ -46,9 +47,13 @@ public class PersonaUtils {
             stats = mohhData.get("stats");
             rank = mohhData.get("rank");
         } else if (PSP_NHL_07.equals(vers)) {
-            Map<String, String> mohhData = nhlStatsService.getStatsAndRank(personaEntity, vers);
-            stats = mohhData.get("stats");
-            rank = mohhData.get("rank");
+            Map<String, String> nhlData = nhlStatsService.getStatsAndRank(personaEntity, vers);
+            stats = nhlData.get("stats");
+            rank = nhlData.get("rank");
+        } else if (ALL_NFS.contains(vers)) {
+            Map<String, String> nfsData = nfsStatsService.getStatsAndRank(personaEntity, vers);
+            stats = nfsData.get("stats");
+            rank = nfsData.get("rank");
         }
 
         List<GameEntity> gameIds = gameRepository.findCurrentGameOfPersona(socketWrapper.getPersonaConnectionEntity().getId());
