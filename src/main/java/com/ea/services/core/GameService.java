@@ -205,6 +205,7 @@ public class GameService {
             String userflags = getValueFromSocket(socketData.getInputMessage(), "USERFLAGS");
             String sysflags = getValueFromSocket(socketData.getInputMessage(), "SYSFLAGS");
             String params = getValueFromSocket(socketData.getInputMessage(), "PARAMS");
+            String kick = getValueFromSocket(socketData.getInputMessage(), "KICK");
 
             if (userflags != null) {
                 synchronized (this) {
@@ -249,6 +250,20 @@ public class GameService {
                     gameEntity.setParams(params);
                     gameRepository.save(gameEntity);
                     // Should we broadcast the game update to all players in the room but not in a game ?
+                }
+            }
+            if (kick != null) {
+                GameEntity gameEntity = gameConnectionRepository.findByPersonaConnectionIdAndEndTimeIsNull(personaConnectionEntity.getId())
+                        .map(GameConnectionEntity::getGame).orElse(null);
+                if (gameEntity != null) {
+                    for (SocketWrapper clientWrapper : socketManager.getSocketWrapperByVers(personaConnectionEntity.getVers())) {
+                        if (kick.equals(clientWrapper.getPersonaEntity().getPers())) {
+                            Map<String, String> content = Collections.singletonMap("GAME", gameEntity.getId().toString());
+                            socketWriter.write(clientWrapper.getSocket(), new SocketData("+kik", null, content));
+                            endGameConnection(clientWrapper);
+                            break;
+                        }
+                    }
                 }
             }
         }
