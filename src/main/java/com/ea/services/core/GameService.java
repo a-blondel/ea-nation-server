@@ -36,6 +36,7 @@ import static com.ea.utils.SocketUtils.getValueFromSocket;
 @Service
 public class GameService {
 
+    public static final String NFS_MW_CONVERT_TO_RANKED_PASSWORD = "ranked";
     private final GameRepository gameRepository;
     private final GameConnectionRepository gameConnectionRepository;
     private final PersonaConnectionRepository personaConnectionRepository;
@@ -639,6 +640,14 @@ public class GameService {
 
         List<String> relatedVers = gameServerService.getRelatedVers(vers);
         boolean duplicateName = gameRepository.existsByNameAndVersInAndEndTimeIsNull(gameEntity.getName(), relatedVers);
+
+        // Custom logic for NFS Most Wanted clients allowing to create custom ranked games based on unranked game parameters
+        // To do so, a specific password ("ranked") must be provided, then we set the sysflags to 262144 (ranked) and remove the password
+        if (PSP_NFS_06.equals(vers) && gameEntity.getSysflags().equals("0")
+                && gameEntity.getPass() != null && gameEntity.getPass().equals(NFS_MW_CONVERT_TO_RANKED_PASSWORD)) {
+            gameEntity.setSysflags("262144");
+            gameEntity.setPass(null);
+        }
 
         if (duplicateName) {
             socketData.setIdMessage("gcredupl");
