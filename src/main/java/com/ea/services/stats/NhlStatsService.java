@@ -412,15 +412,15 @@ public class NhlStatsService {
         int opponentScore = (Integer) opponentStats.get("SCORE");
         int playerQuit = (Integer) playerStats.get("QUIT");
         int opponentQuit = (Integer) opponentStats.get("QUIT");
+        int playerDisc = (Integer) playerStats.get("DISC");
+        int opponentDisc = (Integer) opponentStats.get("DISC");
         int ot = (Integer) playerStats.get("OT");
 
         // Business rules for WIN/LOSS/DRAW:
-        // 1. Score determines win/loss, except if the winning player quits
+        // 1. Score determines win/loss, except if the winning player quits/disconnects
         // 2. Otherwise, it's a draw regardless of quits
-
-
         int playerStreak = personaStats.getStreak();
-        if (playerScore > opponentScore && playerQuit == 0) { // Player wins
+        if (playerScore > opponentScore && playerQuit == 0 && playerDisc == 0) { // Player wins
             if (playerStreak > 0) {
                 personaStats.setStreak(personaStats.getStreak() + 1);
             } else {
@@ -433,7 +433,7 @@ public class NhlStatsService {
             }
             personaStats.setPoints(personaStats.getPoints() + 2); // 2 points for a win
             return;
-        } else if (playerScore < opponentScore && opponentQuit == 0) { // Player loses
+        } else if (playerScore < opponentScore && opponentQuit == 0 && opponentDisc == 0) { // Player loses
             if (playerStreak < 0) {
                 personaStats.setStreak(personaStats.getStreak() - 1);
             } else {
