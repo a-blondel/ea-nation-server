@@ -25,6 +25,7 @@ public class StatsService {
     private final MohhStatsService mohhStatsService;
     private final NfsStatsService nfsStatsService;
     private final NhlStatsService nhlStatsService;
+    private final FifaStatsService fifaStatsService;
     private final GameService gameService;
     private final RoomService roomService;
     private final NfsRankService nfsRankService;
@@ -43,6 +44,8 @@ public class StatsService {
             nhlStatsService.cate(socketData);
         } else if (ALL_NFS.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             nfsStatsService.cate(socketData, socketWrapper);
+        } else if (ALL_FIFA.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+            fifaStatsService.cate(socketData, socketWrapper);
         }
         socketWriter.write(socket, socketData);
     }
@@ -61,6 +64,8 @@ public class StatsService {
             nhlStatsService.snap(socket, socketData, socketWrapper);
         } else if (ALL_NFS.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             nfsStatsService.snap(socket, socketData, socketWrapper);
+        } else if (ALL_FIFA.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+            fifaStatsService.snap(socket, socketData, socketWrapper);
         } else {
             socketWriter.write(socket, socketData);
         }
@@ -90,6 +95,8 @@ public class StatsService {
                     nhlStatsService.rank(socketData);
                 } else if (ALL_NFS.contains(vers)) {
                     nfsRankService.rank(socketData);
+                } else if (ALL_FIFA.contains(vers)) {
+                    fifaStatsService.rank(socketData);
                 }
                 // Close the game and gameConnections if the game is P2P
                 gameService.endGame(socketWrapper);
