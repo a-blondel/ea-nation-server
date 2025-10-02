@@ -33,7 +33,8 @@ import static com.ea.utils.SocketUtils.getValueFromSocket;
 @Service
 public class NfsStatsService {
 
-    private static final int[] PSP_NFS_06_VENUE_MAP = {1, 2, 4, 6, 8, 10, 12, 14, 16, 18};
+    private static final int[] PSP_NFS_06_VENUE_MAP_FORWARD = {1, 2, 4, 6, 8, 10, 12, 14, 16, 18};
+    private static final int[] PSP_NFS_06_VENUE_MAP_REVERSE = {1, 3, 5, 7, 9, 11, 13, 15, 17, 19};
     private final SocketMapper socketMapper;
     private final SocketWriter socketWriter;
     private final GameConnectionRepository gameConnectionRepository;
@@ -183,14 +184,17 @@ public class NfsStatsService {
         } else if (ci == 1) { // Top 100
             nfsPersonaStatsEntityList = nfsPersonaStatsRepository.getLeaderboardByVers(vers, 100, offset);
         } else if (isLapRecords) { // Lap Records (CI >= 3)
-            int venue;
-            if (PSP_NFS_06.equals(vers)) {
-                venue = PSP_NFS_06_VENUE_MAP[ci - 3]; // MW uses one venue for unranked and one for ranked
-            } else {
-                venue = ci - 2; // CI=3 -> VENUE=1, CI=4 -> VENUE=2, etc.
-            }
-
             int dir = Integer.parseInt(itemIndex != null ? itemIndex : "0"); // II=0 -> DIR=0, II=1 -> DIR=1
+
+            int venue = ci - 2; // CI=3 -> VENUE=1, CI=4 -> VENUE=2, etc.
+            if (PSP_NFS_06.equals(vers)) {
+                // MW uses one venue for forward and another one for reverse
+                if (dir == 0) {
+                    venue = PSP_NFS_06_VENUE_MAP_FORWARD[ci - 3];
+                } else if (dir == 1) {
+                    venue = PSP_NFS_06_VENUE_MAP_REVERSE[ci - 3];
+                }
+            }
 
             if (PSP_NFS_06.equals(vers)) {
                 // For NFS Most Wanted, use racetime instead of lap

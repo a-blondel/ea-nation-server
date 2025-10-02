@@ -6,6 +6,7 @@ import com.ea.entities.core.AccountEntity;
 import com.ea.entities.core.GameEntity;
 import com.ea.entities.core.PersonaEntity;
 import com.ea.repositories.core.GameRepository;
+import com.ea.services.stats.FifaStatsService;
 import com.ea.services.stats.MohhStatsService;
 import com.ea.services.stats.NfsStatsService;
 import com.ea.services.stats.NhlStatsService;
@@ -32,6 +33,7 @@ public class PersonaUtils {
     private final MohhStatsService mohhStatsService;
     private final NhlStatsService nhlStatsService;
     private final NfsStatsService nfsStatsService;
+    private final FifaStatsService fifaStatsService;
 
     public Map<String, String> getPersonaInfo(Socket socket, SocketWrapper socketWrapper, Room room) {
         PersonaEntity personaEntity = socketWrapper.getPersonaEntity();
@@ -54,6 +56,10 @@ public class PersonaUtils {
             Map<String, String> nfsData = nfsStatsService.getStatsAndRank(personaEntity, vers);
             stats = nfsData.get("stats");
             rank = nfsData.get("rank");
+        } else if (ALL_FIFA.contains(vers)) {
+            Map<String, String> fifaData = fifaStatsService.getStatsAndRank(personaEntity, vers);
+            stats = fifaData.get("stats");
+            rank = fifaData.get("rank");
         }
 
         List<GameEntity> gameIds = gameRepository.findCurrentGameOfPersona(socketWrapper.getPersonaConnectionEntity().getId());

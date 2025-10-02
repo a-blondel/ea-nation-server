@@ -31,6 +31,15 @@ public class GameServerService {
     //    NHL
     public static final String PSP_NHL_07 = "PSP/NHL07";
 
+    //    FIFA
+    public static final String PSP_UEFA_07 = "PSP/UEFA07";
+    public static final String PSP_FIFA_07 = "PSP/FIFA07";
+    public static final String PSP_FIFA_08 = "PSP/FIFA08";
+    public static final String PSP_FIFA_09 = "PSP/FIFA09";
+    public static final String PSP_FIFA_10 = "PSP/FIFA10";
+    public static final String PSP_WOLRDCUP_06 = "FLM";
+    public static final String PSP_WORLDCUP_10 = "PSP/WORLDCUP10";
+    public static final List<String> ALL_FIFA = List.of(PSP_UEFA_07, PSP_FIFA_07, PSP_FIFA_08, PSP_FIFA_09, PSP_FIFA_10, PSP_WOLRDCUP_06, PSP_WORLDCUP_10);
 
     private final GameServerConfig gameServerConfig;
 
