@@ -12,42 +12,56 @@ public interface NfsGameReportRepository extends JpaRepository<NfsGameReportEnti
     boolean existsByGameConnectionId(Long gameConnectionId);
 
     @Query(value = """
-            FROM NfsGameReportEntity gr
-            WHERE gr.gameConnection.game.vers = :vers AND gr.venue = :venue AND gr.dir = :dir AND gr.rnk = 1 AND gr.lap > 0
-            AND gr.gameConnection.personaConnection.persona.deletedOn IS NULL
-            AND gr.gameConnection.personaConnection.persona.account.isBanned = FALSE
-            AND gr.lap = (
-                SELECT MIN(gr2.lap) 
+            SELECT gr FROM NfsGameReportEntity gr
+            WHERE gr.gameConnectionId IN (
+                SELECT MIN(gr2.gameConnectionId)
                 FROM NfsGameReportEntity gr2
-                WHERE gr2.gameConnection.game.vers = :vers 
-                AND gr2.venue = :venue 
-                AND gr2.dir = :dir 
-                AND gr2.rnk = 1 
-                AND gr2.lap > 0
-                AND gr2.gameConnection.personaConnection.persona.id = gr.gameConnection.personaConnection.persona.id
-                AND gr2.gameConnection.personaConnection.persona.deletedOn IS NULL
-                AND gr2.gameConnection.personaConnection.persona.account.isBanned = FALSE
+                INNER JOIN (
+                    SELECT gr3.gameConnection.personaConnection.persona.id as personaId, MIN(gr3.lap) as minLap
+                    FROM NfsGameReportEntity gr3
+                    WHERE gr3.gameConnection.game.vers = :vers
+                    AND gr3.venue = :venue
+                    AND gr3.dir = :dir
+                    AND gr3.rnk = 1
+                    AND gr3.lap > 0
+                    AND gr3.gameConnection.personaConnection.persona.deletedOn IS NULL
+                    AND gr3.gameConnection.personaConnection.persona.account.isBanned = FALSE
+                    GROUP BY gr3.gameConnection.personaConnection.persona.id
+                ) minTimes ON gr2.gameConnection.personaConnection.persona.id = minTimes.personaId
+                AND gr2.lap = minTimes.minLap
+                WHERE gr2.gameConnection.game.vers = :vers
+                AND gr2.venue = :venue
+                AND gr2.dir = :dir
+                AND gr2.rnk = 1
+                GROUP BY gr2.gameConnection.personaConnection.persona.id
             )
             ORDER BY gr.lap ASC LIMIT :limit OFFSET :offset
             """)
     List<NfsGameReportEntity> getLapRecordsByVenueAndDir(String vers, int venue, int dir, long limit, long offset);
 
     @Query(value = """
-            FROM NfsGameReportEntity gr
-            WHERE gr.gameConnection.game.vers = :vers AND gr.venue = :venue AND gr.dir = :dir AND gr.rnk = 1 AND gr.racetime > 0
-            AND gr.gameConnection.personaConnection.persona.deletedOn IS NULL
-            AND gr.gameConnection.personaConnection.persona.account.isBanned = FALSE
-            AND gr.racetime = (
-                SELECT MIN(gr2.racetime) 
+            SELECT gr FROM NfsGameReportEntity gr
+            WHERE gr.gameConnectionId IN (
+                SELECT MIN(gr2.gameConnectionId)
                 FROM NfsGameReportEntity gr2
-                WHERE gr2.gameConnection.game.vers = :vers 
-                AND gr2.venue = :venue 
-                AND gr2.dir = :dir 
-                AND gr2.rnk = 1 
-                AND gr2.racetime > 0
-                AND gr2.gameConnection.personaConnection.persona.id = gr.gameConnection.personaConnection.persona.id
-                AND gr2.gameConnection.personaConnection.persona.deletedOn IS NULL
-                AND gr2.gameConnection.personaConnection.persona.account.isBanned = FALSE
+                INNER JOIN (
+                    SELECT gr3.gameConnection.personaConnection.persona.id as personaId, MIN(gr3.racetime) as minRacetime
+                    FROM NfsGameReportEntity gr3
+                    WHERE gr3.gameConnection.game.vers = :vers
+                    AND gr3.venue = :venue
+                    AND gr3.dir = :dir
+                    AND gr3.rnk = 1
+                    AND gr3.racetime > 0
+                    AND gr3.gameConnection.personaConnection.persona.deletedOn IS NULL
+                    AND gr3.gameConnection.personaConnection.persona.account.isBanned = FALSE
+                    GROUP BY gr3.gameConnection.personaConnection.persona.id
+                ) minTimes ON gr2.gameConnection.personaConnection.persona.id = minTimes.personaId
+                AND gr2.racetime = minTimes.minRacetime
+                WHERE gr2.gameConnection.game.vers = :vers
+                AND gr2.venue = :venue
+                AND gr2.dir = :dir
+                AND gr2.rnk = 1
+                GROUP BY gr2.gameConnection.personaConnection.persona.id
             )
             ORDER BY gr.racetime ASC LIMIT :limit OFFSET :offset
             """)
