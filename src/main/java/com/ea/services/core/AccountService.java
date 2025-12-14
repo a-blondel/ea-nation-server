@@ -69,6 +69,15 @@ public class AccountService {
             }
         } else {
             AccountEntity accountEntity = socketMapper.toAccountEntity(socketData.getInputMessage());
+            if (accountEntity.getLoc() == null || accountEntity.getLoc().isEmpty()) {
+                String lang = getValueFromSocket(socketData.getInputMessage(), "LANG");
+                String from = getValueFromSocket(socketData.getInputMessage(), "FROM");
+                if (lang != null && !lang.isEmpty() && from != null && !from.isEmpty()) {
+                    accountEntity.setLoc(lang + from);
+                } else {
+                    accountEntity.setLoc("enUS"); // Default to enUS if not provided
+                }
+            }
             accountRepository.save(accountEntity);
         }
         socketWriter.write(socket, socketData);
@@ -177,7 +186,7 @@ public class AccountService {
                         {"NAME", accountEntity.getName() != null ? accountEntity.getName() : ""},
                         {"ADDR", socket.getInetAddress().getHostAddress()},
                         {"PERSONAS", personas},
-                        {"LOC", accountEntity.getLoc()},
+                        {"LOC", accountEntity.getLoc() != null ? accountEntity.getLoc() : "enUS"},
                         {"MAIL", accountEntity.getMail() != null ? accountEntity.getMail() : ""},
                         {"SPAM", "NN"}
                 }).collect(Collectors.toMap(data -> data[0], data -> data[1]));

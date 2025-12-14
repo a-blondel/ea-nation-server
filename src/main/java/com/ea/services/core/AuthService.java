@@ -67,11 +67,17 @@ public class AuthService {
                 {"TOSAC_URL", tosUrl},
                 {"TOSA_URL", tosUrl},
                 {"TOS_URL", tosUrl},
+                {"NEWS_URL", tosUrl},
                 {"FAQ_URL", tosUrl},
                 {"EACONNECT_WEBOFFER_URL", tosUrl},
                 {"ROSTER_URL", rosterUrl}, // Required by NHL/FIFA 07 (roster download isn't implemented, but it is required by the game)
                 {"ROSTER_VER", "1.0"}, // Trick to skip roster download for NHL 07
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+
+        String name = getValueFromSocket(socketData.getInputMessage(), "NAME");
+        if (name != null && name.equals("7")) {
+            socketData.setIdMessage("newsnew7");
+        }
 
         socketData.setOutputData(content);
         socketWriter.write(socket, socketData);
