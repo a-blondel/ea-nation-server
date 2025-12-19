@@ -101,7 +101,7 @@ public class AccountService {
             String chng = getValueFromSocket(socketData.getInputMessage(), "CHNG");
 
             List<AccountEntity> existingAccountsByMail = accountRepository.findByMail(mail);
-            if (mail == null || existingAccountsByMail.size() > 1 || (existingAccountsByMail.size() == 1 && !existingAccountsByMail.get(0).getId().equals(accountEntity.getId()))) {
+            if (mail == null || existingAccountsByMail.size() > 1 || (existingAccountsByMail.size() == 1 && !existingAccountsByMail.getFirst().getId().equals(accountEntity.getId()))) {
                 socketData.setIdMessage("editmail"); // Duplicate email, but we can only send an "invalid email" error
                 socketWriter.write(socket, socketData);
                 return;
@@ -259,4 +259,16 @@ public class AccountService {
         socketWriter.write(socket, socketData);
     }
 
+    public void user(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+//        String pers = getValueFromSocket(socketData.getInputMessage(), "PERS");
+
+        Map<String, String> content = Stream.of(new String[][]{
+                {"NAME", socketWrapper.getAccountEntity().getName()},
+                {"SPAM", "NN"},
+                {"MAIL", socketWrapper.getAccountEntity().getMail()},
+        }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+
+        socketData.setOutputData(content);
+        socketWriter.write(socket, socketData);
+    }
 }

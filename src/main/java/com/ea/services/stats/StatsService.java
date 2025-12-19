@@ -4,6 +4,7 @@ import com.ea.dto.SocketData;
 import com.ea.dto.SocketWrapper;
 import com.ea.services.core.GameService;
 import com.ea.services.core.RoomService;
+import com.ea.services.core.UserSetService;
 import com.ea.services.server.GameServerService;
 import com.ea.steps.SocketWriter;
 import jakarta.transaction.Transactional;
@@ -29,6 +30,7 @@ public class StatsService {
     private final GameService gameService;
     private final RoomService roomService;
     private final NfsRankService nfsRankService;
+    private final UserSetService userSetService;
 
     /**
      * Retrieve ranking categories
@@ -42,7 +44,7 @@ public class StatsService {
             mohhStatsService.cate(socketData, socketWrapper);
         } else if (PSP_NHL_07.equals(socketWrapper.getPersonaConnectionEntity().getVers())) {
             nhlStatsService.cate(socketData);
-        } else if (ALL_NFS.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+        } else if (ALL_PSP_NFS.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             nfsStatsService.cate(socketData, socketWrapper);
         } else if (ALL_FIFA.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             fifaStatsService.cate(socketData, socketWrapper);
@@ -62,7 +64,7 @@ public class StatsService {
             mohhStatsService.snap(socket, socketData, socketWrapper);
         } else if (PSP_NHL_07.equals(socketWrapper.getPersonaConnectionEntity().getVers())) {
             nhlStatsService.snap(socket, socketData, socketWrapper);
-        } else if (ALL_NFS.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+        } else if (ALL_PSP_NFS.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             nfsStatsService.snap(socket, socketData, socketWrapper);
         } else if (ALL_FIFA.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             fifaStatsService.snap(socket, socketData, socketWrapper);
@@ -93,16 +95,20 @@ public class StatsService {
             if (gameServerService.isP2P(vers)) {
                 if (PSP_NHL_07.equals(vers)) {
                     nhlStatsService.rank(socketData);
-                } else if (ALL_NFS.contains(vers)) {
+                } else if (ALL_PSP_NFS.contains(vers)) {
                     nfsRankService.rank(socketData);
                 } else if (ALL_FIFA.contains(vers)) {
                     fifaStatsService.rank(socketData);
                 }
                 // Close the game and gameConnections if the game is P2P
                 gameService.endGame(socketWrapper);
-
-                // Remove the persona from the room (back to main menu)
-                roomService.removePersonaFromRoom(vers, socketWrapper);
+                if (USERSETS_GAMES.contains(vers)) {
+                    // Send +who, +ust and +usm updates to all members
+                    userSetService.sendRankPostGameUpdates(socketWrapper);
+                } else {
+                    // Remove the persona from the room (back to main menu)
+                    roomService.removePersonaFromRoom(vers, socketWrapper);
+                }
             }
         }
     }

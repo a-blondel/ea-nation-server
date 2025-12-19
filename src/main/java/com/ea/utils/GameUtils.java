@@ -47,10 +47,17 @@ public class GameUtils {
 
         boolean isP2P = gameServerService.isP2P(gameEntity.getVers());
 
-        String prefix = isP2P ? "" : "@"; // Use empty prefix for P2P games, otherwise use @ for host
         // Workaround when there is no host (MoHH2 serverless patch)
         boolean hasHost = hostSocketWrapperOfGame != null;
-        String host = hasHost ? prefix + hostSocketWrapperOfGame.getPersonaEntity().getPers() : "@brobot1";
+        String host;
+        if (hasHost) {
+            // For P2P games, no prefix. For non-P2P games, use @ prefix
+            String prefix = isP2P ? "" : "@";
+            host = prefix + hostSocketWrapperOfGame.getPersonaEntity().getPers();
+        } else {
+            // Fallback for serverless patch (non-P2P only)
+            host = "@brobot1";
+        }
         int count = gameConnections.size();
         if (!hasHost) count++;
 

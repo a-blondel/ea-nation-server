@@ -155,4 +155,39 @@ public class SocketManager {
                 .toList();
     }
 
+    /**
+     * Find a SocketWrapper by persona ID and game version.
+     *
+     * @param personaId The persona ID to search for
+     * @param vers      The game version to filter by
+     * @return The matching SocketWrapper, or null if not found
+     */
+    public SocketWrapper getSocketWrapperByPersonaIdAndVers(Long personaId, String vers) {
+        return sockets.values().stream()
+                .filter(wrapper -> wrapper.getPersonaEntity() != null &&
+                        wrapper.getPersonaEntity().getId() != null &&
+                        wrapper.getPersonaEntity().getId().equals(personaId) &&
+                        wrapper.getPersonaConnectionEntity() != null &&
+                        vers.equals(wrapper.getPersonaConnectionEntity().getVers()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * Find a SocketWrapper by persona name and game version.
+     *
+     * @param personaName The persona name to search for
+     * @param vers        The game version to filter by
+     * @return The matching SocketWrapper, or null if not found
+     */
+    public SocketWrapper getSocketWrapperByPersonaNameAndVers(String personaName, String vers) {
+        return sockets.values().stream()
+                .filter(wrapper -> wrapper.getPersonaEntity() != null &&
+                        personaName.equals(wrapper.getPersonaEntity().getPers()) &&
+                        wrapper.getPersonaConnectionEntity() != null &&
+                        vers.equals(wrapper.getPersonaConnectionEntity().getVers()))
+                .findFirst()
+                .orElse(null);
+    }
+
 }

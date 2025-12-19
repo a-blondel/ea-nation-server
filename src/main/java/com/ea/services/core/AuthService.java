@@ -27,6 +27,7 @@ public class AuthService {
     private final PersonaService personaService;
     private final GameServerService gameServerService;
     private final SocketWriter socketWriter;
+    private final UserSetService userSetService;
 
     public void dir(Socket socket, SocketData socketData) {
         String vers = getValueFromSocket(socketData.getInputMessage(), "VERS");
@@ -87,6 +88,7 @@ public class AuthService {
         String stats = getValueFromSocket(socketData.getInputMessage(), "STATS");
         String inGame = getValueFromSocket(socketData.getInputMessage(), "INGAME");
         String rooms = getValueFromSocket(socketData.getInputMessage(), "ROOMS", SPACE_CHAR); // Not the same separator
+        String userSets = getValueFromSocket(socketData.getInputMessage(), "USERSETS");
 
         Map<String, String> content;
         // Request separates attributes either by 0x20 or 0x0a...
@@ -104,15 +106,18 @@ public class AuthService {
             }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
         } else {
             String myGame = getValueFromSocket(socketData.getInputMessage(), "MYGAME");
+            String games = getValueFromSocket(socketData.getInputMessage(), "GAMES");
             String async = getValueFromSocket(socketData.getInputMessage(), "ASYNC");
+            String mesgs = getValueFromSocket(socketData.getInputMessage(), "MESGS");
+            String userset0 = getValueFromSocket(socketData.getInputMessage(), "USERSET0");
+            String userset1 = getValueFromSocket(socketData.getInputMessage(), "USERSET1");
+            String userset2 = getValueFromSocket(socketData.getInputMessage(), "USERSET2");
+            String userset3 = getValueFromSocket(socketData.getInputMessage(), "USERSET3");
+            rooms = getValueFromSocket(socketData.getInputMessage(), "ROOMS");
+            String users = getValueFromSocket(socketData.getInputMessage(), "USERS");
+            String mesgTypes = getValueFromSocket(socketData.getInputMessage(), "MESGTYPES");
 
             if ("1".equals(inGame)) {
-                String games = getValueFromSocket(socketData.getInputMessage(), "GAMES");
-                rooms = getValueFromSocket(socketData.getInputMessage(), "ROOMS");
-                String mesgs = getValueFromSocket(socketData.getInputMessage(), "MESGS");
-                String mesgTypes = getValueFromSocket(socketData.getInputMessage(), "MESGTYPES");
-                String users = getValueFromSocket(socketData.getInputMessage(), "USERS");
-                String userSets = getValueFromSocket(socketData.getInputMessage(), "USERSETS");
                 content = Stream.of(new String[][]{
                         {"INGAME", inGame},
                         {"MESGS", mesgs},
@@ -123,18 +128,51 @@ public class AuthService {
                         {"ROOMS", rooms},
                         {"ASYNC", async},
                         {"USERSETS", userSets},
+                        {"USERSET0", userset0 != null ? userset0 : ""},
+                        {"USERSET1", userset1 != null ? userset1 : ""},
+                        {"USERSET2", userset2 != null ? userset2 : ""},
+                        {"USERSET3", userset3 != null ? userset3 : ""},
                         {"STATS", stats},
                 }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
             } else {
                 if (inGame != null) {
                     content = Stream.of(new String[][]{
                             {"INGAME", inGame},
+                            {"GAMES", games != null ? games : "0"},
+                            {"MYGAME", myGame != null ? myGame : "0"},
+                            {"ROOMS", rooms != null ? rooms : "0"},
+                            {"USERS", users != null ? users : "0"},
+                            {"USERSETS", userSets != null ? userSets : "0"},
+                            {"MESGS", mesgs != null ? mesgs : "1"},
+                            {"MESGTYPES", mesgTypes != null ? mesgTypes : "GPY"},
+                            {"ASYNC", async != null ? async : "0"},
+                            {"STATS", stats != null ? stats : "0"},
+                            {"SLOTS", "3"},
                     }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
                 } else if (myGame != null) {
-                    content = Stream.of(new String[][]{
-                            {"MYGAME", myGame},
-                            {"STATS", stats},
-                    }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+                    // When client sends MYGAME=1 with additional fields (USERSETS, ASYNC, MESGS, etc.)
+                    // we should return all requested fields
+                    if (async != null || mesgs != null || userSets != null || rooms != null) {
+                        content = Stream.of(new String[][]{
+                                {"MYGAME", myGame},
+                                {"GAMES", games != null ? games : "0"},
+                                {"STATS", stats},
+                                {"ASYNC", async != null ? async : "0"},
+                                {"MESGS", mesgs != null ? mesgs : "0"},
+                                {"MESGTYPES", mesgTypes != null ? mesgTypes : "GPY"},
+                                {"ROOMS", rooms != null ? rooms : "0"},
+                                {"USERSETS", userSets != null ? userSets : "0"},
+                                {"USERSET0", userset0 != null ? userset0 : ""},
+                                {"USERS", users != null ? users : "0"},
+                                {"SLOTS", "3"},
+                                {"INGAME", "0"},
+                        }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+                    } else {
+                        content = Stream.of(new String[][]{
+                                {"MYGAME", myGame},
+                                {"STATS", stats},
+                        }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+                    }
                 } else {
                     content = Collections.emptyMap();
                 }
@@ -147,6 +185,11 @@ public class AuthService {
 
         if (null != stats || null != inGame) {
             personaService.who(socket, socketWrapper);
+        }
+
+        // If USERSETS=1, send +ust and +usm for each member of the UserSet
+        if ("1".equals(userSets) && socketWrapper.getUserSetId() != null) {
+            userSetService.sendUserSetUpdatesToSocket(socket, socketWrapper.getUserSetId());
         }
     }
 

@@ -22,11 +22,13 @@ public class GameServerService {
     public static final List<String> GAMES_WITHOUT_ROOM = List.of(PSP_MOH_07_UHS, PSP_MOH_07, PSP_MOH_08, WII_MOH_08);
 
     //    NFS
+    public static final String PC_NFS_06 = "\"pc/1.3-Nov 21 2005\"";
+    public static final String PS2_NFS_06 = "\"ps2/1.2-Sep 20 2005\"";
     public static final String PSP_NFS_06 = "PSP/NFS06";
     public static final String PSP_NFS_07 = "PSP/NFS07";
     public static final String PSP_NFS_08 = "PSP/NFS08";
     public static final String PSP_NFS_09 = "PSP/NFS09";
-    public static final List<String> ALL_NFS = List.of(PSP_NFS_06, PSP_NFS_07, PSP_NFS_08, PSP_NFS_09);
+    public static final List<String> ALL_PSP_NFS = List.of(PSP_NFS_06, PSP_NFS_07, PSP_NFS_08, PSP_NFS_09);
 
     //    NHL
     public static final String PSP_NHL_07 = "PSP/NHL07";
@@ -40,6 +42,9 @@ public class GameServerService {
     public static final String PSP_WOLRDCUP_06 = "FLM";
     public static final String PSP_WORLDCUP_10 = "PSP/WORLDCUP10";
     public static final List<String> ALL_FIFA = List.of(PSP_UEFA_07, PSP_FIFA_07, PSP_FIFA_08, PSP_FIFA_09, PSP_FIFA_10, PSP_WOLRDCUP_06, PSP_WORLDCUP_10);
+
+    // Games using usersets instead of rooms
+    public static final List<String> USERSETS_GAMES = List.of(PC_NFS_06, PS2_NFS_06);
 
     private final GameServerConfig gameServerConfig;
 
