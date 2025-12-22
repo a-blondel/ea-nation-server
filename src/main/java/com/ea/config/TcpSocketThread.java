@@ -5,6 +5,7 @@ import com.ea.dto.SocketData;
 import com.ea.dto.SocketWrapper;
 import com.ea.services.core.GameService;
 import com.ea.services.core.PersonaService;
+import com.ea.services.core.UserSetService;
 import com.ea.services.server.SocketManager;
 import com.ea.steps.SocketReader;
 import com.ea.steps.SocketWriter;
@@ -30,6 +31,7 @@ public class TcpSocketThread implements Runnable {
     private final SocketWriter socketWriter;
     private final PersonaService personaService;
     private final GameService gameService;
+    private final UserSetService userSetService;
     private ScheduledExecutorService pingExecutor;
 
     @Override
@@ -53,6 +55,7 @@ public class TcpSocketThread implements Runnable {
                 playerInfo = SocketUtils.getPlayerInfo(socketWrapper);
                 socketManager.removeSocket(socketWrapper.getIdentifier());
                 if (socketWrapper.getPersonaEntity() != null) {
+                    userSetService.endUserSetMembership(socketWrapper);
                     gameService.endGameConnection(socketWrapper);
                     personaService.endPersonaConnection(socketWrapper);
                     socketWrapper.cleanupOnSocketClose(socketWrapper);

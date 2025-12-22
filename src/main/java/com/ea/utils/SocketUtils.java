@@ -13,7 +13,7 @@ public class SocketUtils {
 
     public static final String DATETIME_FORMAT = "yyyy.M.d-H:mm:ss";
     public static final String SPACE_CHAR = " ";
-    public static final String TAB_CHAR = "\u0009";
+    public static final String TAB_CHAR = "\t";
     public static final String RETURN_CHAR = "\\R";
     public static final String NEWLINE_CHAR = "\n";
 
@@ -25,11 +25,11 @@ public class SocketUtils {
      * @return int - the size of the content
      */
     public static int getlength(byte[] buffer, int lastPos) {
-        String size = "";
+        StringBuilder size = new StringBuilder();
         for (int i = lastPos + 8; i < lastPos + 12; i++) {
-            size += String.format("%02x", buffer[i]);
+            size.append(String.format("%02x", buffer[i]));
         }
-        return Integer.parseInt(size, 16);
+        return Integer.parseInt(size.toString(), 16);
     }
 
     /**

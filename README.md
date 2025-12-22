@@ -19,32 +19,38 @@ Fell free to join !
 
 ## Supported games
 
-| Game                              | Platform(s) | Region(s) | Status                        |
-|-----------------------------------|-------------|-----------|-------------------------------|
-| UEFA Champions League 2006-2007   | PSP         | EU, US    | Playable, partial support     |
-| FIFA 07, 08, 09, 10               | PSP         | EU, US    | Playable, partial support     |
-| FIFA World Cup Germany 2006       | PSP         | EU, US    | Playable, partial support     |
-| FIFA World Cup South Africa 2010  | PSP         | EU, US    | Playable, partial support     |
-| Fight Night Round 3               | PSP         | EU, US    | Playable, partial support     |
-| MADDEN 07, 08, 09, 10             | PSP         | EU, US    | Playable, partial support     |
-| Medal of Honor: Heroes            | PSP         | EU, US    | Full support                  |
-| Medal of Honor: Heroes 2          | PSP, Wii    | EU, US    | In progress, not playable yet |
-| Need for Speed: Most Wanted 5-1-0 | PSP         | EU, US    | Full support                  |
-| Need for Speed Carbon: OTC        | PSP         | EU, US    | Full support                  |
-| Need for Speed: ProStreet         | PSP         | EU, US    | Full support                  |
-| Need for Speed: Undercover        | PSP         | EU, US    | Full support                  |
-| NBA Live 06, 07, 08               | PSP         | US        | Playable, partial support     |
-| NCAA 07                           | PSP         | US        | Playable, partial support     |
-| NHL 07                            | PSP         | EU, US    | Playable, partial support     |
-| Tiger Woods PGA Tour 07, 08, 10   | PSP         | EU, US    | Playable, partial support     |
+| Game                              | Platform(s)     | Region(s) | Status                        |
+|-----------------------------------|-----------------|-----------|-------------------------------|
+| UEFA Champions League 2006-2007   | PSP             | EU, US    | Playable, partial support     |
+| FIFA 07, 08, 09, 10               | PSP             | EU, US    | Playable, partial support     |
+| FIFA World Cup Germany 2006       | PSP             | EU, US    | Playable, partial support     |
+| FIFA World Cup South Africa 2010  | PSP             | EU, US    | Playable, partial support     |
+| Fight Night Round 3               | PSP             | EU, US    | Playable, partial support     |
+| MADDEN 07, 08, 09, 10             | PSP             | EU, US    | Playable, partial support     |
+| Medal of Honor: Heroes            | PSP             | EU, US    | Full support                  |
+| Medal of Honor: Heroes 2          | PSP, Wii        | EU, US    | In progress, not playable yet |
+| Need for Speed: Most Wanted 2005  | PC, PS2 (Alpha) | EU, US    | Playable, partial support     |
+| Need for Speed: Most Wanted 5-1-0 | PSP             | EU, US    | Full support                  |
+| Need for Speed Carbon: OTC        | PSP             | EU, US    | Full support                  |
+| Need for Speed: ProStreet         | PSP             | EU, US    | Full support                  |
+| Need for Speed: Undercover        | PSP             | EU, US    | Full support                  |
+| NBA Live 06, 07, 08               | PSP             | US        | Playable, partial support     |
+| NCAA 07                           | PSP             | US        | Playable, partial support     |
+| NHL 07                            | PSP             | EU, US    | Playable, partial support     |
+| Tiger Woods PGA Tour 07, 08, 10   | PSP             | EU, US    | Playable, partial support     |
 
 Notes:
 
-- FIFA WC 06, Fight Night Round 3, NFS MW 510 and NBA Live 06 requires
-  the [SSLv2 stunnel](https://github.com/a-blondel/ea-sslv2-stunnel) to connect
-- The EU version of NFS Most Wanted requires
-  an [SSL bypass patch](https://github.com/a-blondel/ea-nation-server/tree/main/patches) to connect, as the game's port
-  is already used by NFS Undercover
+- **FIFA WC 06, Fight Night Round 3, NFS MW 2005/5-1-0 and NBA Live 06 requires
+  the [SSLv2 stunnel](https://github.com/a-blondel/ea-sslv2-stunnel) to connect**
+- **The EU version of NFS MW 5-1-0 requires
+  an [SSL bypass patch](https://github.com/a-blondel/ea-nation-server/tree/main/patches/PSP/Xdelta/NFS-Most-Wanted) to
+  connect, as the game's port is already used by NFS Undercover**
+- **The only supported PS2 version of NFS MW 2005 is the `Alpha 124` (a.k.a. `Sep 20, 2005 prototype`), as the online
+  feature was cut from the Beta & Release on PS2**
+- **The PS2 version of NFS MW 2005 requires a DNAS patch. Either
+  use [DNAS-net Patcher](https://www.psx-place.com/threads/dnas-net-patcher.22813/) or the
+  provided [Xdelta patch](https://github.com/a-blondel/ea-nation-server/tree/main/patches/PS2/Xdelta/NFS-Most-Wanted)**
 - Partial support means that some features are not implemented yet, like:
     - Leaderboards
     - Roster download

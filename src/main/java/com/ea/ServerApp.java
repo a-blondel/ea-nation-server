@@ -4,6 +4,7 @@ import com.ea.config.*;
 import com.ea.services.core.GameService;
 import com.ea.services.core.PersonaService;
 import com.ea.services.core.RoomService;
+import com.ea.services.core.UserSetService;
 import com.ea.services.server.GameServerService;
 import com.ea.services.server.SocketManager;
 import com.ea.steps.SocketReader;
@@ -45,6 +46,7 @@ public class ServerApp implements CommandLineRunner {
     private final PersonaService personaService;
     private final GameService gameService;
     private final RoomService roomService;
+    private final UserSetService userSetService;
     private ExecutorService clientHandlingExecutor = Executors.newFixedThreadPool(500);
 
     public static void main(String[] args) {
@@ -149,7 +151,7 @@ public class ServerApp implements CommandLineRunner {
     }
 
     private Runnable createTcpSocketThread(Socket socket) {
-        return new TcpSocketThread(socket, socketManager, socketReader, socketWriter, personaService, gameService);
+        return new TcpSocketThread(socket, socketManager, socketReader, socketWriter, personaService, gameService, userSetService);
     }
 
     private Runnable createSslSocketThread(Socket socket) {

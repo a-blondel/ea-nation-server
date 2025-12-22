@@ -29,6 +29,8 @@ public class SocketWrapper {
     private volatile PersonaEntity personaEntity;
     private volatile PersonaConnectionEntity personaConnectionEntity;
     private volatile Thread gameSearchThread;
+    private volatile Long userSetId;
+    private volatile String auxText;
 
 
     public void cleanupOnSocketClose(SocketWrapper socketWrapper) {

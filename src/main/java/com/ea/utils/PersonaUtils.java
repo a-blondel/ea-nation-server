@@ -6,6 +6,7 @@ import com.ea.entities.core.AccountEntity;
 import com.ea.entities.core.GameEntity;
 import com.ea.entities.core.PersonaEntity;
 import com.ea.repositories.core.GameRepository;
+import com.ea.repositories.core.UserSetRepository;
 import com.ea.services.stats.FifaStatsService;
 import com.ea.services.stats.MohhStatsService;
 import com.ea.services.stats.NfsStatsService;
@@ -34,6 +35,7 @@ public class PersonaUtils {
     private final NhlStatsService nhlStatsService;
     private final NfsStatsService nfsStatsService;
     private final FifaStatsService fifaStatsService;
+    private final UserSetRepository userSetRepository;
 
     public Map<String, String> getPersonaInfo(Socket socket, SocketWrapper socketWrapper, Room room) {
         PersonaEntity personaEntity = socketWrapper.getPersonaEntity();
@@ -52,7 +54,7 @@ public class PersonaUtils {
             Map<String, String> nhlData = nhlStatsService.getStatsAndRank(personaEntity, vers);
             stats = nhlData.get("stats");
             rank = nhlData.get("rank");
-        } else if (ALL_NFS.contains(vers)) {
+        } else if (ALL_PSP_NFS.contains(vers)) {
             Map<String, String> nfsData = nfsStatsService.getStatsAndRank(personaEntity, vers);
             stats = nfsData.get("stats");
             rank = nfsData.get("rank");
@@ -75,6 +77,11 @@ public class PersonaUtils {
 
         String hostPrefix = socketWrapper.getIsDedicatedHost().get() ? "@" : "";
 
+        // Get auxiliary text from socket wrapper (used by NFS MW)
+        String auxText = socketWrapper.getAuxText() != null ? socketWrapper.getAuxText() : "";
+
+        String userSetName = getUserSetName(socketWrapper);
+
         return Stream.of(new String[][]{
                 {"I", String.valueOf(accountEntity.getId())},
                 {"M", hostPrefix + accountEntity.getName()},
@@ -82,7 +89,7 @@ public class PersonaUtils {
                 {"F", "U"},
                 {"P", "80"},
                 {"S", stats},
-                {"X", "0"},
+                {"X", auxText},
                 {"G", String.valueOf(gameId)},
                 {"AT", ""},
                 {"CL", "511"},
@@ -90,7 +97,7 @@ public class PersonaUtils {
                 {"MD", "0"},
                 // Rank (in decimal)
                 {"R", rank},
-                {"US", "0"},
+                {"US", userSetName}, // UserSet name
                 {"HW", "0"},
                 {"RP", String.valueOf(personaEntity.getRp())}, // Reputation (0 to 5 stars)
                 {"LO", accountEntity.getLoc()}, // Locale (used to display country flag)
@@ -109,6 +116,29 @@ public class PersonaUtils {
                 {"RM", room != null ? room.getName() : "room"}, // Room name
                 {"RF", room != null ? room.getFlags() : "CK"}, // Room flags
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+    }
+
+    /**
+     * Get UserSet name for the given SocketWrapper
+     *
+     * @param socketWrapper the SocketWrapper
+     * @return the UserSet name, or empty string if not in a UserSet
+     */
+    private String getUserSetName(SocketWrapper socketWrapper) {
+        String userSetName = "";
+        if (socketWrapper.getUserSetId() != null) {
+            userSetName = userSetRepository.findById(socketWrapper.getUserSetId())
+                    .map(us -> {
+                        String name = us.getName();
+                        // Add quotes if name contains spaces
+                        if (name != null && name.contains(" ") && !name.startsWith("\"")) {
+                            return "\"" + name + "\"";
+                        }
+                        return name;
+                    })
+                    .orElse("");
+        }
+        return userSetName;
     }
 
 

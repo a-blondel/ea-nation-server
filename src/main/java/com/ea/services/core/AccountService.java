@@ -69,6 +69,15 @@ public class AccountService {
             }
         } else {
             AccountEntity accountEntity = socketMapper.toAccountEntity(socketData.getInputMessage());
+            if (accountEntity.getLoc() == null || accountEntity.getLoc().isEmpty()) {
+                String lang = getValueFromSocket(socketData.getInputMessage(), "LANG");
+                String from = getValueFromSocket(socketData.getInputMessage(), "FROM");
+                if (lang != null && !lang.isEmpty() && from != null && !from.isEmpty()) {
+                    accountEntity.setLoc(lang + from);
+                } else {
+                    accountEntity.setLoc("enUS"); // Default to enUS if not provided
+                }
+            }
             accountRepository.save(accountEntity);
         }
         socketWriter.write(socket, socketData);
@@ -92,7 +101,7 @@ public class AccountService {
             String chng = getValueFromSocket(socketData.getInputMessage(), "CHNG");
 
             List<AccountEntity> existingAccountsByMail = accountRepository.findByMail(mail);
-            if (mail == null || existingAccountsByMail.size() > 1 || (existingAccountsByMail.size() == 1 && !existingAccountsByMail.get(0).getId().equals(accountEntity.getId()))) {
+            if (mail == null || existingAccountsByMail.size() > 1 || (existingAccountsByMail.size() == 1 && !existingAccountsByMail.getFirst().getId().equals(accountEntity.getId()))) {
                 socketData.setIdMessage("editmail"); // Duplicate email, but we can only send an "invalid email" error
                 socketWriter.write(socket, socketData);
                 return;
@@ -177,7 +186,7 @@ public class AccountService {
                         {"NAME", accountEntity.getName() != null ? accountEntity.getName() : ""},
                         {"ADDR", socket.getInetAddress().getHostAddress()},
                         {"PERSONAS", personas},
-                        {"LOC", accountEntity.getLoc()},
+                        {"LOC", accountEntity.getLoc() != null ? accountEntity.getLoc() : "enUS"},
                         {"MAIL", accountEntity.getMail() != null ? accountEntity.getMail() : ""},
                         {"SPAM", "NN"}
                 }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
@@ -250,4 +259,16 @@ public class AccountService {
         socketWriter.write(socket, socketData);
     }
 
+    public void user(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+//        String pers = getValueFromSocket(socketData.getInputMessage(), "PERS");
+
+        Map<String, String> content = Stream.of(new String[][]{
+                {"NAME", socketWrapper.getAccountEntity().getName()},
+                {"SPAM", "NN"},
+                {"MAIL", socketWrapper.getAccountEntity().getMail()},
+        }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+
+        socketData.setOutputData(content);
+        socketWriter.write(socket, socketData);
+    }
 }
