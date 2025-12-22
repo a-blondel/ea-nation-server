@@ -492,27 +492,28 @@ public class GameService {
                 // Send who to the joining client
                 personaService.who(socket, socketWrapper);
 
-                // Send +ust to the client who joined
-                userSetService.sendUserSetInfo(socket, socketWrapper);
+                if (USERSETS_GAMES.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+                    // Send +ust to the client who joined
+                    userSetService.sendUserSetInfo(socket, socketWrapper);
 
-                // Broadcast +usm for all game members to update G= attribute
-                userSetService.broadcastUserSetMembersForGame(gameEntity);
+                    // Broadcast +usm for all game members to update G= attribute
+                    userSetService.broadcastUserSetMembersForGame(gameEntity);
+                }
 
                 // Broadcast the game join to all connected clients in the room
-                // Inform about all players in the game (+usr for each player, to each player)
+                // Inform about all players in the game (+usr for each player, to each player), except for UserSet games
                 List<GameConnectionEntity> gameConnections = gameConnectionRepository.findByGameIdAndEndTimeIsNull(gameEntity.getId());
                 for (SocketWrapper clientWrapper : socketManager.getSocketWrapperByVers(gameEntity.getVers())) {
-                    for (GameConnectionEntity gameConnection : gameConnections) { // For each player in the game, send +usr to each player
-                        SocketWrapper inGameWrapper = socketManager.getSocketWrapperByPersonaConnectionId(gameConnection.getPersonaConnection().getId());
-                        if (inGameWrapper != null && gameConnections.stream().anyMatch(gameConnectionEntity -> gameConnectionEntity.getPersonaConnection().getId().equals(clientWrapper.getPersonaConnectionEntity().getId()))) {
-                            personaService.usr(clientWrapper.getSocket(), inGameWrapper); // Update user info for each player
+                    if (!USERSETS_GAMES.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+                        for (GameConnectionEntity gameConnection : gameConnections) { // For each player in the game, send +usr to each player
+                            SocketWrapper inGameWrapper = socketManager.getSocketWrapperByPersonaConnectionId(gameConnection.getPersonaConnection().getId());
+                            if (inGameWrapper != null && gameConnections.stream().anyMatch(gameConnectionEntity -> gameConnectionEntity.getPersonaConnection().getId().equals(clientWrapper.getPersonaConnectionEntity().getId()))) {
+                                personaService.usr(clientWrapper.getSocket(), inGameWrapper); // Update user info for each player
+                            }
                         }
-                    }
-                    // Only send agm/mgm to players who are in the game
-                    if (gameConnections.stream().anyMatch(gc -> gc.getPersonaConnection().getId().equals(clientWrapper.getPersonaConnectionEntity().getId()))) {
                         agm(clientWrapper.getSocket(), gameEntity);
-                        mgm(clientWrapper.getSocket(), gameEntity);
                     }
+                    mgm(clientWrapper.getSocket(), gameEntity);
                 }
             } else {
                 updateHostInfo(gameEntity);
@@ -649,10 +650,6 @@ public class GameService {
             gameEntity.setName(socketWrapper.getPersonaEntity().getPers());
         }
 
-        if (gameEntity.getParams() == null) {
-            gameEntity.setParams(""); // TODO: Verify if setting the userset is better here
-        }
-
         List<String> relatedVers = gameServerService.getRelatedVers(vers);
         boolean duplicateName = gameRepository.existsByNameAndVersInAndEndTimeIsNull(gameEntity.getName(), relatedVers);
 
@@ -678,24 +675,25 @@ public class GameService {
             gameRepository.save(gameEntity);
             startGameConnection(socketWrapper, gameEntity, true);
             socketWriter.write(socket, new SocketData("gcre", null, gameUtils.getGameInfo(gameEntity)));
-            personaService.who(socket, socketWrapper); // Used to set the game id with G= attribute
 
             if (gameServerService.isP2P(vers)) {
-                personaService.usr(socket, socketWrapper);
+                if (USERSETS_GAMES.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+                    // Broadcast +who and +usm with G= attribute to all UserSet members
+                    userSetService.broadcastUserSetStateAfterGameCreation(socketWrapper);
+                } else {
+                    personaService.usr(socket, socketWrapper);
 
-                // Broadcast +who and +usm with G= attribute to all UserSet members
-                userSetService.broadcastUserSetStateAfterGameCreation(socketWrapper);
+                    // Add the game to the room
+                    Room room = roomService.getRoomByVers(vers);
+                    room.getGameIds().add(gameEntity.getId());
 
-
-                // Add the game to the room
-                Room room = roomService.getRoomByVers(vers);
-                room.getGameIds().add(gameEntity.getId());
-
-                // Broadcast the game creation to people inside the room
-                socketManager.getSocketWrapperByVers(vers).stream()
-                        .filter(wrapper -> null != wrapper.getPersonaEntity() && room.getPersonaIds().contains(wrapper.getPersonaEntity().getId()))
-                        .forEach(wrapper -> socketWriter.write(wrapper.getSocket(), new SocketData("+agm", null, gameUtils.getGameInfo(gameEntity))));
+                    // Broadcast the game creation to people inside the room
+                    socketManager.getSocketWrapperByVers(vers).stream()
+                            .filter(wrapper -> null != wrapper.getPersonaEntity() && room.getPersonaIds().contains(wrapper.getPersonaEntity().getId()))
+                            .forEach(wrapper -> socketWriter.write(wrapper.getSocket(), new SocketData("+agm", null, gameUtils.getGameInfo(gameEntity))));
+                }
             }
+            personaService.who(socket, socketWrapper); // Used to set the game id with G= and US= attributes
 
             try {
                 Thread.sleep(100);
@@ -910,7 +908,7 @@ public class GameService {
             });
 
             // For P2P games, remove the game from the room and broadcast the game deletion
-            // But for USERSETS_GAMES, do NOT broadcast game removal - players should stay in the UserSet lobby
+            // But for USERSETS_GAMES, do not broadcast game removal - players should stay in the UserSet lobby
             if (gameServerService.isP2P(game.getVers()) && !USERSETS_GAMES.contains(game.getVers())) {
                 roomService.removeGameFromRoom(game, socketWrapper);
             } else if (USERSETS_GAMES.contains(game.getVers())) {

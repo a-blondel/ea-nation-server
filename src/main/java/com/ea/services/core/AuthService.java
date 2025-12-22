@@ -33,11 +33,16 @@ public class AuthService {
         String vers = getValueFromSocket(socketData.getInputMessage(), "VERS");
         String slus = getValueFromSocket(socketData.getInputMessage(), "SLUS");
 
+        int port = gameServerService.getTcpPort(vers, slus);
+        if (port == -1) {
+            log.warn("No TCP port found for VERS={} SLUS={}", vers, slus);
+        }
+
         Map<String, String> content = Stream.of(new String[][]{
                 // { "DIRECT", "0" }, // 0x8001FC04
                 // if DIRECT == 0 then read ADDR and PORT
                 {"ADDR", props.getTcpHost()}, // 0x8001FC18
-                {"PORT", String.valueOf(gameServerService.getTcpPort(vers, slus))}, // 0x8001fc30
+                {"PORT", String.valueOf(port)}, // 0x8001fc30
                 // { "SESS", "0" }, // 0x8001fc48 %s-%s-%08x 0--498ea96f
                 // { "MASK", "0" }, // 0x8001fc60
                 // if ADDR == 0 then read DOWN

@@ -103,7 +103,9 @@ public class StatsService {
                 // Close the game and gameConnections if the game is P2P
                 gameService.endGame(socketWrapper);
                 if (USERSETS_GAMES.contains(vers)) {
-                    // Send +who, +ust and +usm updates to all members
+                    // Send +who to update G= and US=
+                    userSetService.who(socket, socketWrapper);
+                    // Send +ust and +usm updates to all members
                     userSetService.sendRankPostGameUpdates(socketWrapper);
                 } else {
                     // Remove the persona from the room (back to main menu)

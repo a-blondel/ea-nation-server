@@ -5,7 +5,6 @@ import com.ea.dto.SocketData;
 import com.ea.dto.SocketWrapper;
 import com.ea.entities.core.*;
 import com.ea.repositories.core.GameConnectionRepository;
-import com.ea.repositories.core.GameRepository;
 import com.ea.repositories.core.UserSetMemberRepository;
 import com.ea.repositories.core.UserSetRepository;
 import com.ea.services.server.SocketManager;
@@ -37,7 +36,6 @@ public class UserSetService {
 
     private final UserSetRepository userSetRepository;
     private final UserSetMemberRepository userSetMemberRepository;
-    private final GameRepository gameRepository;
     private final GameConnectionRepository gameConnectionRepository;
     private final SocketWriter socketWriter;
     private final SocketManager socketManager;
@@ -45,10 +43,11 @@ public class UserSetService {
     private final RoomService roomService;
 
     /**
-     * Create a new UserSet (pre-race lobby)
+     * Create a new UserSet
      * Request: ucre NAME=xxx SIZE=4 TYPE=0 UPDATES=0 SYSFLAGS=KV CUSTFLAGS=JKM2 PARAMS=...
      * Response: ucre I=id T=type SF=sysflags CF=custflags O=owner S=size N=name D=desc P=params C=count IDENT=id NAME=name
      */
+    @Transactional
     public void ucre(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         String vers = socketWrapper.getPersonaConnectionEntity().getVers();
         String name = getValueFromSocket(socketData.getInputMessage(), "NAME");
@@ -162,7 +161,7 @@ public class UserSetService {
 
         Optional<UserSetEntity> userSetOpt = userSetRepository.findByNameAndVersAndEndTimeIsNull(name, vers);
         if (userSetOpt.isEmpty()) {
-            socketData.setIdMessage("ujoiugam"); // Unknown userset
+            socketData.setIdMessage("ujoinfnd"); // Unknown userset
             socketWriter.write(socket, socketData);
             return;
         }
@@ -236,8 +235,6 @@ public class UserSetService {
             return;
         }
 
-        UserSetEntity userSet;
-
         // Remove member from UserSet
         Optional<UserSetMemberEntity> memberOpt = userSetMemberRepository
                 .findByPersonaIdAndEndTimeIsNull(socketWrapper.getPersonaEntity().getId());
@@ -257,22 +254,20 @@ public class UserSetService {
         // Send +who update to clear US
         who(socket, socketWrapper);
 
-        // Refresh userSet to avoid LazyInitializationException
-        userSet = userSetRepository.findById(userSetId).orElse(null);
-        if (userSet != null) {
-            // Check if userset still has members
-            int remainingCount = userSetMemberRepository.countByUserSetIdAndEndTimeIsNull(userSet.getId());
-            if (remainingCount > 0) {
-                broadcastUserSetUpdate(userSet);
-            }
+        UserSetEntity userSet = userSetOpt.get();
+        // Check if userset still has members
+        int remainingCount = userSetMemberRepository.countByUserSetIdAndEndTimeIsNull(userSet.getId());
+        if (remainingCount > 0) {
+            broadcastUserSetUpdate(userSet);
         }
     }
 
     /**
-     * Delete a UserSet (owner only)
+     * Delete a UserSet (sent by the owner)
      * Request: udel NAME=xxx
      * Response: udel (empty)
      */
+    @Transactional
     public void udel(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         Long userSetId = socketWrapper.getUserSetId();
 
@@ -290,29 +285,6 @@ public class UserSetService {
         // Get all members before deleting
         List<UserSetMemberEntity> members = userSetMemberRepository.findByUserSetIdAndEndTimeIsNull(userSet.getId());
 
-        // Close the game FIRST for USERSETS_GAMES since gdel doesn't do it
-        // This must happen BEFORE sending +who so that G=0 is shown for all members
-        Long gameId = null;
-        if (socketWrapper.getPersonaConnectionEntity() != null) {
-            List<GameEntity> ownerGames = gameRepository.findCurrentGameOfPersona(socketWrapper.getPersonaConnectionEntity().getId());
-            if (!ownerGames.isEmpty()) {
-                GameEntity game = ownerGames.getFirst();
-                gameId = game.getId();
-                LocalDateTime now = LocalDateTime.now();
-
-                // Close ALL game connections using the repository (not cached entity collection)
-                List<GameConnectionEntity> activeConnections = gameConnectionRepository.findByGameIdAndEndTimeIsNull(game.getId());
-                for (GameConnectionEntity connection : activeConnections) {
-                    connection.setEndTime(now);
-                    gameConnectionRepository.saveAndFlush(connection);
-                }
-
-                // Close the game itself
-                game.setEndTime(now);
-                gameRepository.saveAndFlush(game);
-            }
-        }
-
         // Send minimal updates to all members
         for (UserSetMemberEntity member : members) {
             SocketWrapper memberWrapper = socketManager.getSocketWrapperByPersonaIdAndVers(member.getPersona().getId(), vers);
@@ -326,12 +298,6 @@ public class UserSetService {
                 // Send minimal +ust with just I field
                 Map<String, String> content = Collections.singletonMap("I", String.valueOf(member.getUserSet().getId()));
                 socketWriter.write(memberWrapper.getSocket(), new SocketData("+ust", null, content));
-
-                // Send +mgm with the GAME ID (not userset ID) to notify the client that the game is gone
-                if (gameId != null) {
-                    Map<String, String> mgmContent = Collections.singletonMap("IDENT", String.valueOf(gameId));
-                    socketWriter.write(memberWrapper.getSocket(), new SocketData("+mgm", null, mgmContent));
-                }
             }
 
             // Mark member as ended
@@ -400,7 +366,7 @@ public class UserSetService {
     public void auxi(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         String text = getValueFromSocket(socketData.getInputMessage(), "TEXT");
 
-        if (text != null && !text.equals("?")) {
+        if (text != null) {
             // Set auxiliary text
             socketWrapper.setAuxText(text);
         }
@@ -411,20 +377,18 @@ public class UserSetService {
         socketData.setOutputData(content);
         socketWriter.write(socket, socketData);
 
-        // Broadcast +who and +usm updates to UserSet members
+        // Broadcast +usm updates to UserSet members
         if (socketWrapper.getUserSetId() != null) {
             Optional<UserSetEntity> userSetOpt = userSetRepository.findById(socketWrapper.getUserSetId());
             if (userSetOpt.isPresent()) {
                 UserSetEntity userSet = userSetOpt.get();
                 String vers = socketWrapper.getPersonaConnectionEntity().getVers();
-                // Broadcast +who and +usm to all members
+                // Broadcast +usm to all members
                 List<UserSetMemberEntity> members = userSetMemberRepository.findByUserSetIdAndEndTimeIsNull(userSet.getId());
-                for (UserSetMemberEntity member : members) {
-                    SocketWrapper memberWrapper = socketManager.getSocketWrapperByPersonaIdAndVers(member.getPersona().getId(), vers);
-                    if (memberWrapper != null) {
-                        who(memberWrapper.getSocket(), socketWrapper);
-                        usm(memberWrapper.getSocket(), socketWrapper);
-                    }
+                List<SocketWrapper> memberWrappers = getMemberWrappers(members, vers);
+
+                for (SocketWrapper memberWrapper : memberWrappers) {
+                    usm(memberWrapper.getSocket(), socketWrapper);
                 }
             }
         }
@@ -441,44 +405,9 @@ public class UserSetService {
 
         SocketWrapper targetWrapper = socketManager.getSocketWrapperByPersonaNameAndVers(pers, vers);
         if (targetWrapper != null && targetWrapper.getPersonaEntity() != null) {
-            // Build persona info similar to +who
-            PersonaEntity personaEntity = targetWrapper.getPersonaEntity();
-
-            String userSetName = "";
-            if (targetWrapper.getUserSetId() != null) {
-                Optional<UserSetEntity> userSetOpt = userSetRepository.findById(targetWrapper.getUserSetId());
-                userSetName = userSetOpt.map(us -> {
-                    String name = us.getName();
-                    // Add quotes if name contains spaces (Aries protocol requirement)
-                    if (name != null && name.contains(" ") && !name.startsWith("\"")) {
-                        return "\"" + name + "\"";
-                    }
-                    return name;
-                }).orElse("");
-            }
-
-            Map<String, String> content = Stream.of(new String[][]{
-                    {"I", String.valueOf(personaEntity.getId())},
-                    {"N", personaEntity.getPers()},
-                    {"M", personaEntity.getPers()},
-                    {"F", ""},
-                    {"A", targetWrapper.getSocket().getInetAddress().getHostAddress()},
-                    {"P", "80"},
-                    {"S", ""},
-                    {"G", "0"},
-                    {"AT", ""},
-                    {"CL", "511"},
-                    {"LV", "0"},
-                    {"MD", "0"},
-                    {"LA", targetWrapper.getSocket().getInetAddress().getHostAddress()},
-                    {"HW", "0"},
-                    {"RP", String.valueOf(personaEntity.getRp())},
-                    {"MA", ""},
-                    {"LO", personaEntity.getAccount().getLoc()},
-                    {"X", targetWrapper.getAuxText() != null ? targetWrapper.getAuxText() : ""},
-                    {"US", userSetName},
-            }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
-            socketData.setOutputData(content);
+            Room room = roomService.getRoomByPersonaId(socketWrapper.getPersonaEntity().getId());
+            Map<String, String> personaInfo = personaUtils.getPersonaInfo(socket, targetWrapper, room);
+            socketData.setOutputData(personaInfo);
         }
         socketWriter.write(socket, socketData);
     }
@@ -517,7 +446,7 @@ public class UserSetService {
     }
 
     /**
-     * Send rank post-game updates: +who, +ust, and +usm for all members
+     * Send rank post-game updates: +ust, and +usm for all members
      * This is specifically called after rank to properly restore lobby state
      *
      * @param socketWrapper the socket wrapper of the player who triggered the rank
@@ -534,59 +463,56 @@ public class UserSetService {
 
         UserSetEntity userSet = userSetOpt.get();
         List<UserSetMemberEntity> members = userSetMemberRepository.findByUserSetIdAndEndTimeIsNull(userSet.getId());
-        String vers = userSet.getVers();
 
-        // Send updates to all members
-        for (UserSetMemberEntity member : members) {
-            SocketWrapper memberWrapper = socketManager.getSocketWrapperByPersonaIdAndVers(member.getPersona().getId(), vers);
-            if (memberWrapper != null) {
-                // Send +who with updated status (G=0 since game is over)
-                who(memberWrapper.getSocket(), memberWrapper);
-
-                // Send +ust with full userset info
-                ust(memberWrapper.getSocket(), userSet);
-
-                // Send +usm for ALL members (including self) - with G=0 and F="" since game is over
-                for (UserSetMemberEntity otherMember : members) {
-                    SocketWrapper otherWrapper = socketManager.getSocketWrapperByPersonaIdAndVers(otherMember.getPersona().getId(), vers);
-                    if (otherWrapper != null) {
-                        usm(memberWrapper.getSocket(), otherWrapper);
-                    }
-                }
-
-                // Send +sst (server status) to update lobby statistics
-                roomService.sst(memberWrapper.getSocket(), memberWrapper);
-            }
-        }
+        // Use the common broadcast method
+        broadcastToMembers(userSet, members);
     }
 
     /**
      * Broadcast UserSet updates to all members
      */
-    @Transactional
     private void broadcastUserSetUpdate(UserSetEntity userSet) {
         // Filter active members (those without endTime)
         List<UserSetMemberEntity> members = userSet.getMembers().stream()
                 .filter(member -> member.getEndTime() == null)
                 .toList();
 
+        broadcastToMembers(userSet, members);
+    }
+
+    /**
+     * Generic broadcast method to send +ust and +usm to all specified members
+     *
+     * @param userSet the UserSet to broadcast
+     * @param members the list of members to broadcast to
+     */
+    private void broadcastToMembers(UserSetEntity userSet, List<UserSetMemberEntity> members) {
         String vers = userSet.getVers();
+        List<SocketWrapper> memberWrappers = getMemberWrappers(members, vers);
 
-        for (UserSetMemberEntity member : members) {
-            SocketWrapper memberWrapper = socketManager.getSocketWrapperByPersonaIdAndVers(member.getPersona().getId(), vers);
-            if (memberWrapper != null) {
-                // Send +ust
-                ust(memberWrapper.getSocket(), userSet);
+        for (SocketWrapper memberWrapper : memberWrappers) {
+            // Send +ust
+            ust(memberWrapper.getSocket(), userSet);
 
-                // Send +usm for each member
-                for (UserSetMemberEntity otherMember : members) {
-                    SocketWrapper otherWrapper = socketManager.getSocketWrapperByPersonaIdAndVers(otherMember.getPersona().getId(), vers);
-                    if (otherWrapper != null) {
-                        usm(memberWrapper.getSocket(), otherWrapper);
-                    }
-                }
+            // Send +usm for each member
+            for (SocketWrapper otherWrapper : memberWrappers) {
+                usm(memberWrapper.getSocket(), otherWrapper);
             }
         }
+    }
+
+    /**
+     * Get socket wrappers for a list of members
+     *
+     * @param members the list of members
+     * @param vers    the version
+     * @return list of socket wrappers (excluding null values)
+     */
+    private List<SocketWrapper> getMemberWrappers(List<UserSetMemberEntity> members, String vers) {
+        return members.stream()
+                .map(member -> socketManager.getSocketWrapperByPersonaIdAndVers(member.getPersona().getId(), vers))
+                .filter(java.util.Objects::nonNull)
+                .toList();
     }
 
     /**
@@ -598,19 +524,14 @@ public class UserSetService {
     }
 
     /**
-     * Send +who packet for a user (local implementation to avoid circular dependency with PersonaService)
+     * Send +who packet for a user
      *
      * @param socket        the socket to write into
      * @param socketWrapper the wrapper containing user data
      */
-    private void who(Socket socket, SocketWrapper socketWrapper) {
+    public void who(Socket socket, SocketWrapper socketWrapper) {
         Room room = roomService.getRoomByPersonaId(socketWrapper.getPersonaEntity().getId());
         Map<String, String> personaInfo = personaUtils.getPersonaInfo(socket, socketWrapper, room);
-
-        // Set UserSet name if the player is in a UserSet
-        if (socketWrapper.getUserSetId() != null) {
-            personaInfo.put("US", getUserSetName(socketWrapper.getUserSetId()));
-        }
 
         socketWriter.write(socket, new SocketData("+who", null, personaInfo), TAB_CHAR);
     }
@@ -647,17 +568,10 @@ public class UserSetService {
         // Get game ID if player is in a game
         Long gameId = getGameIdForUser(memberWrapper);
 
-        // Build the F (flags) field:
-        // "G" = in game, can be combined with other flags
-        String flags = "";
-        if (gameId != null && gameId > 0) {
-            flags = "G";
-        }
-
         Map<String, String> content = Stream.of(new String[][]{
                 {"I", String.valueOf(personaEntity.getId())},
                 {"N", personaEntity.getPers()},
-                {"F", flags},
+                {"F", ""},
                 {"G", String.valueOf(Optional.ofNullable(gameId).orElse(0L))},
                 {"X", memberWrapper.getAuxText() != null ? memberWrapper.getAuxText() : ""},
                 {"S", "0"},
@@ -699,11 +613,10 @@ public class UserSetService {
 
         // Send +usm for each member
         List<UserSetMemberEntity> members = userSetMemberRepository.findByUserSetIdAndEndTimeIsNull(userSet.getId());
-        for (UserSetMemberEntity member : members) {
-            SocketWrapper memberWrapper = socketManager.getSocketWrapperByPersonaIdAndVers(member.getPersona().getId(), vers);
-            if (memberWrapper != null) {
-                usm(targetSocket, memberWrapper);
-            }
+        List<SocketWrapper> memberWrappers = getMemberWrappers(members, vers);
+
+        for (SocketWrapper memberWrapper : memberWrappers) {
+            usm(targetSocket, memberWrapper);
         }
     }
 
@@ -742,25 +655,6 @@ public class UserSetService {
     }
 
     /**
-     * Get UserSet name by ID
-     */
-    public String getUserSetName(Long userSetId) {
-        if (userSetId == null) {
-            return "";
-        }
-        return userSetRepository.findById(userSetId)
-                .map(us -> {
-                    String name = us.getName();
-                    // Add quotes if name contains spaces (Aries protocol requirement)
-                    if (name != null && name.contains(" ") && !name.startsWith("\"")) {
-                        return "\"" + name + "\"";
-                    }
-                    return name;
-                })
-                .orElse("");
-    }
-
-    /**
      * Broadcast complete userset state after game creation
      * This sends +who with G= and +usm updates to all userset members
      */
@@ -777,21 +671,13 @@ public class UserSetService {
         UserSetEntity userSet = userSetOpt.get();
         List<UserSetMemberEntity> members = userSetMemberRepository.findByUserSetIdAndEndTimeIsNull(userSet.getId());
         String vers = userSet.getVers();
+        List<SocketWrapper> memberWrappers = getMemberWrappers(members, vers);
 
-        // Broadcast +who and +usm to all members
-        for (UserSetMemberEntity member : members) {
-            SocketWrapper memberWrapper = socketManager.getSocketWrapperByPersonaIdAndVers(member.getPersona().getId(), vers);
-            if (memberWrapper != null) {
-                // Send +who to update G= attribute
-                who(memberWrapper.getSocket(), memberWrapper);
-
-                // Send +usm for this member to all members
-                for (UserSetMemberEntity otherMember : members) {
-                    SocketWrapper otherWrapper = socketManager.getSocketWrapperByPersonaIdAndVers(otherMember.getPersona().getId(), vers);
-                    if (otherWrapper != null) {
-                        usm(otherWrapper.getSocket(), memberWrapper);
-                    }
-                }
+        // Broadcast +usm to all members
+        for (SocketWrapper memberWrapper : memberWrappers) {
+            // Send +usm for this member to all members
+            for (SocketWrapper otherWrapper : memberWrappers) {
+                usm(otherWrapper.getSocket(), memberWrapper);
             }
         }
     }
@@ -804,32 +690,16 @@ public class UserSetService {
         // Get all active game connections
         List<GameConnectionEntity> gameConnections = gameConnectionRepository.findByGameIdAndEndTimeIsNull(gameEntity.getId());
 
-        // First, send +who for each game member to all other game members (so they know G= attribute)
-        for (GameConnectionEntity connection : gameConnections) {
-            SocketWrapper memberWrapper = socketManager.getSocketWrapperByPersonaConnectionId(connection.getPersonaConnection().getId());
-            if (memberWrapper != null) {
-                for (GameConnectionEntity otherConnection : gameConnections) {
-                    if (!otherConnection.getId().equals(connection.getId())) {
-                        SocketWrapper otherWrapper = socketManager.getSocketWrapperByPersonaConnectionId(otherConnection.getPersonaConnection().getId());
-                        if (otherWrapper != null) {
-                            who(otherWrapper.getSocket(), memberWrapper);
-                        }
-                    }
-                }
-            }
-        }
+        // Get socket wrappers for all game members
+        List<SocketWrapper> memberWrappers = gameConnections.stream()
+                .map(conn -> socketManager.getSocketWrapperByPersonaConnectionId(conn.getPersonaConnection().getId()))
+                .filter(java.util.Objects::nonNull)
+                .toList();
 
         // Send +usm for each game member to all game members
-        for (GameConnectionEntity connection : gameConnections) {
-            SocketWrapper memberWrapper = socketManager.getSocketWrapperByPersonaConnectionId(connection.getPersonaConnection().getId());
-            if (memberWrapper != null) {
-                // Send +usm for this member to all game members
-                for (GameConnectionEntity otherConnection : gameConnections) {
-                    SocketWrapper otherWrapper = socketManager.getSocketWrapperByPersonaConnectionId(otherConnection.getPersonaConnection().getId());
-                    if (otherWrapper != null) {
-                        usm(otherWrapper.getSocket(), memberWrapper);
-                    }
-                }
+        for (SocketWrapper memberWrapper : memberWrappers) {
+            for (SocketWrapper otherWrapper : memberWrappers) {
+                usm(otherWrapper.getSocket(), memberWrapper);
             }
         }
     }
@@ -894,10 +764,6 @@ public class UserSetService {
                     if (memberWrapper != null) {
                         // Clear UserSet from wrapper
                         memberWrapper.setUserSetId(null);
-
-                        // Send +who update to clear US field
-                        who(memberWrapper.getSocket(), memberWrapper);
-
                         // Send minimal +ust with just I field to notify UserSet is gone
                         Map<String, String> ustContent = Collections.singletonMap("I", String.valueOf(userSet.getId()));
                         socketWriter.write(memberWrapper.getSocket(), new SocketData("+ust", null, ustContent));

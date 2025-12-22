@@ -7,9 +7,6 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-/**
- * UserSetMember entity for tracking players in a UserSet.
- */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -29,13 +26,10 @@ public class UserSetMemberEntity {
     @JoinColumn(name = "persona_id")
     private PersonaEntity persona;
 
-    @Column(name = "slot")
     private int slot;
 
-    @Column(name = "start_time")
     private LocalDateTime startTime;
 
-    @Column(name = "end_time")
     private LocalDateTime endTime;
 
 }

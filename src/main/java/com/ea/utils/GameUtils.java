@@ -70,7 +70,7 @@ public class GameUtils {
                 {"NAME", gameEntity.getName()},
                 {"HOST", host},
                 // { "GPSHOST", hostSocketWrapperOfGame.getPers() },
-                {"PARAMS", gameEntity.getParams()},
+                {"PARAMS", gameEntity.getParams() != null ? gameEntity.getParams() : ""},
                 {"PLATPARAMS", "0"},  // ???
                 {"ROOM", String.valueOf(gameEntity.getRoomId() != null ? gameEntity.getRoomId() : 0)},
                 {"CUSTFLAGS", "413082880"},

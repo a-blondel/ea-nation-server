@@ -80,20 +80,7 @@ public class PersonaUtils {
         // Get auxiliary text from socket wrapper (used by NFS MW)
         String auxText = socketWrapper.getAuxText() != null ? socketWrapper.getAuxText() : "";
 
-        String userSetName = "";
-        // Set UserSet name if the player is in a UserSet
-        if (socketWrapper.getUserSetId() != null) {
-            userSetName = userSetRepository.findById(socketWrapper.getUserSetId())
-                    .map(us -> {
-                        String name = us.getName();
-                        // Add quotes if name contains spaces
-                        if (name != null && name.contains(" ") && !name.startsWith("\"")) {
-                            return "\"" + name + "\"";
-                        }
-                        return name;
-                    })
-                    .orElse("");
-        }
+        String userSetName = getUserSetName(socketWrapper);
 
         return Stream.of(new String[][]{
                 {"I", String.valueOf(accountEntity.getId())},
@@ -129,6 +116,29 @@ public class PersonaUtils {
                 {"RM", room != null ? room.getName() : "room"}, // Room name
                 {"RF", room != null ? room.getFlags() : "CK"}, // Room flags
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+    }
+
+    /**
+     * Get UserSet name for the given SocketWrapper
+     *
+     * @param socketWrapper the SocketWrapper
+     * @return the UserSet name, or empty string if not in a UserSet
+     */
+    private String getUserSetName(SocketWrapper socketWrapper) {
+        String userSetName = "";
+        if (socketWrapper.getUserSetId() != null) {
+            userSetName = userSetRepository.findById(socketWrapper.getUserSetId())
+                    .map(us -> {
+                        String name = us.getName();
+                        // Add quotes if name contains spaces
+                        if (name != null && name.contains(" ") && !name.startsWith("\"")) {
+                            return "\"" + name + "\"";
+                        }
+                        return name;
+                    })
+                    .orElse("");
+        }
+        return userSetName;
     }
 
 
