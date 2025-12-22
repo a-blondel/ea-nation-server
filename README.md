@@ -44,10 +44,13 @@ Notes:
 - **FIFA WC 06, Fight Night Round 3, NFS MW 2005/5-1-0 and NBA Live 06 requires
   the [SSLv2 stunnel](https://github.com/a-blondel/ea-sslv2-stunnel) to connect**
 - **The EU version of NFS MW 5-1-0 requires
-  an [SSL bypass patch](https://github.com/a-blondel/ea-nation-server/tree/main/patches) to connect, as the game's port
-  is already used by NFS Undercover**
+  an [SSL bypass patch](https://github.com/a-blondel/ea-nation-server/tree/main/patches/PSP/Xdelta/NFS-Most-Wanted) to
+  connect, as the game's port is already used by NFS Undercover**
 - **The only supported PS2 version of NFS MW 2005 is the `Alpha 124` (a.k.a. `Sep 20, 2005 prototype`), as the online
   feature was cut from the Beta & Release on PS2**
+- **The PS2 version of NFS MW 2005 requires a DNAS patch. Either
+  use [DNAS-net Patcher](https://www.psx-place.com/threads/dnas-net-patcher.22813/) or the
+  provided [Xdelta patch](https://github.com/a-blondel/ea-nation-server/tree/main/patches/PS2/Xdelta/NFS-Most-Wanted)**
 - Partial support means that some features are not implemented yet, like:
     - Leaderboards
     - Roster download
