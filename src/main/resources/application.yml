@@ -67,6 +67,20 @@ game:
           port: 11270
           slus:
             - 'ULUS-10221'
+    #    - vers: 'FLM' # FIFA 06 - Too risky given the collision with World Cup 06 VERS
+    #      sdk: '3.7.2.0'
+    #      ssl:
+    #        enabled: false # Use SSLv2 stunnel
+    #        domain: 'pspfifa06.ea.com'
+    #      regions:
+    #        #        - name: 'EU' # Disabled as it uses same port as FIFA 09
+    #        #          port: 30490
+    #        #          slus:
+    #        #            - 'ULUS-10029'
+    #        - name: 'US'
+    #          port: 30480
+    #          slus:
+    #            - 'ULUS-10029'
     - vers: 'PSP/FIFA07'
       sdk: '4.3.2.0'
       ssl:
@@ -110,7 +124,7 @@ game:
     - vers: 'FLM' # FIFA World Cup Germany 2006
       sdk: '3.9.5.1'
       ssl:
-        enabled: false # SSL is bypassed as it uses SSLv2
+        enabled: false # Use SSLv2 stunnel
         domain: 'pspuefa06.ea.com' # Yes, uefa06 for world cup 2006
       regions:
         - name: 'US'
@@ -133,7 +147,7 @@ game:
     - vers: 'PSP/KOK06' # Fight Night Round 3
       sdk: '3.9.5.1'
       ssl:
-        enabled: false # SSL is bypassed as it uses SSLv2
+        enabled: false # Use SSLv2 stunnel
         domain: 'pspkok06.ea.com'
       regions:
         - name: 'EU'
@@ -144,6 +158,16 @@ game:
           port: 31590
           slus:
             - 'ULUS10066'
+    #    - vers: 'PSP/DEV' # Madden NFL 06 - Doesn't work (fails at persona selection), and uses madden 09 US port
+    #      sdk: '3.7.1.1'
+    #      ssl:
+    #        enabled: false # Use SSLv2 stunnel
+    #        domain: 'pspmadden06.ea.com'
+    #      regions:
+    #        - name: 'US'
+    #          port: 30090
+    #          slus:
+    #            - 'ULUS10024'
     - vers: 'PSP/MADDEN07'
       sdk: '4.3.2.0'
       ssl:
@@ -188,6 +212,16 @@ game:
           port: 25090
           slus:
             - 'SLUS-ULUS10441'
+    - vers: 'PSP/NBA06'
+      sdk: '3.7.2.0'
+      ssl:
+        enabled: false # Use SSLv2 stunnel
+        domain: 'pspnba06.ea.com'
+      regions:
+        - name: 'US'
+          port: 30190
+          slus:
+            - 'ULUS10030'
     - vers: 'PSP/NBA07'
       sdk: '4.3.2.0'
       ssl:
@@ -219,10 +253,30 @@ game:
           port: 10590
           slus:
             - 'ULUS10116'
+    - vers: '"pc/1.3-Nov 21 2005"' # Need for Speed: Most Wanted (PC)
+      sdk: '3.9.3.0'
+      ssl:
+        enabled: false # Use SSLv2 stunnel
+        domain: 'pcnfs06.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 30920
+          slus:
+            - 'SLUS_21351'
+    - vers: '"ps2/1.2-Sep 20 2005"' # Need for Speed: Most Wanted (PS2)
+      sdk: '3.8.4.0'
+      ssl:
+        enabled: false # Use SSLv2 stunnel
+        domain: 'ps2nfs06.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 30900
+          slus:
+            - 'SLES_53558'
     - vers: 'PSP/NFS06' # Need for Speed: Most Wanted 5-1-0
       sdk: '3.7.2.0'
       ssl:
-        enabled: false # SSL is bypassed as it uses SSLv2
+        enabled: false # Use SSLv2 stunnel
         domain: 'pspnfs06.ea.com'
       regions:
         - name: 'GLOBAL'

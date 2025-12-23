@@ -26,6 +26,7 @@ public class SocketProcessor {
     private final SocketManager socketManager;
     private final BuddyService buddyService;
     private final RoomService roomService;
+    private final UserSetService userSetService;
 
     /**
      * Dispatch to appropriate service based on request type
@@ -98,6 +99,9 @@ public class SocketProcessor {
                 break;
             case ("sele"):
                 authService.sele(socket, socketData, socketWrapper);
+                break;
+            case ("user"):
+                accountService.user(socket, socketData, socketWrapper);
                 break;
             case ("acct"):
                 accountService.acct(socket, socketData);
@@ -179,6 +183,30 @@ public class SocketProcessor {
                 break;
             case ("filt"):
                 gameService.filt(socket, socketData);
+                break;
+            case ("ucre"):
+                userSetService.ucre(socket, socketData, socketWrapper);
+                break;
+            case ("usea"):
+                userSetService.usea(socket, socketData, socketWrapper);
+                break;
+            case ("ujoi"):
+                userSetService.ujoi(socket, socketData, socketWrapper);
+                break;
+            case ("ulea"):
+                userSetService.ulea(socket, socketData, socketWrapper);
+                break;
+            case ("udel"):
+                userSetService.udel(socket, socketData, socketWrapper);
+                break;
+            case ("uadm"):
+                userSetService.uadm(socket, socketData, socketWrapper);
+                break;
+            case ("auxi"):
+                userSetService.auxi(socket, socketData, socketWrapper);
+                break;
+            case ("onln"):
+                userSetService.onln(socket, socketData, socketWrapper);
                 break;
             default:
                 log.info("Unsupported operation: {}", socketData.getIdMessage());

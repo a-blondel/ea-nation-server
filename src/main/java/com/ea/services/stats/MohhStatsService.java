@@ -403,7 +403,7 @@ public class MohhStatsService {
         LocalDateTime parsedStartTime = LocalDateTime.parse(startTime, formatter);
         List<GameConnectionEntity> gameConnectionEntities = gameConnectionRepository.findMatchingGameConnections(playerName, parsedStartTime, false);
         if (!gameConnectionEntities.isEmpty()) {
-            GameConnectionEntity gameConnectionEntity = gameConnectionEntities.get(0);
+            GameConnectionEntity gameConnectionEntity = gameConnectionEntities.getFirst();
             MohhGameReportEntity mohhGameReportEntity = new MohhGameReportEntity();
             mohhGameReportEntity.setGameConnection(gameConnectionEntity);
             socketMapper.toMohhGameReportEntity(mohhGameReportEntity, socketData.getInputMessage());

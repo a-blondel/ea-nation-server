@@ -30,7 +30,7 @@ public class SocketMapper {
 
         // gpsc packets comes without a room, it doesn't matter as this entity is not saved to the database,
         // we redirect the gpsc packet to the host which uses gcre with a room this time that is saved to the database
-        Integer roomId = 0;
+        int roomId = 0;
 
         // The game sends "ROOM" but the entity uses "roomId" for naming convention, so we handle it manually
         String roomIdStr = SocketUtils.getValueFromSocket(socket, "ROOM", RETURN_CHAR);
@@ -54,10 +54,9 @@ public class SocketMapper {
         return accountEntity;
     }
 
-    public MohhGameReportEntity toMohhGameReportEntity(MohhGameReportEntity mohhGameReportEntity, String socket) {
+    public void toMohhGameReportEntity(MohhGameReportEntity mohhGameReportEntity, String socket) {
         setFieldsFromSocket(mohhGameReportEntity, socket, TAB_CHAR);
         aggregateMohhGameReportFields(mohhGameReportEntity);
-        return mohhGameReportEntity;
     }
 
     private void setFieldsFromSocket(Object entity, String socket, String splitter) {

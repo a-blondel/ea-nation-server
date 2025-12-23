@@ -243,7 +243,7 @@ public class FifaStatsService {
 
         // Process Player 0 if game connection found and report doesn't exist
         if (!gameConnectionsPlayer0.isEmpty()) {
-            GameConnectionEntity gameConnection0 = gameConnectionsPlayer0.get(0);
+            GameConnectionEntity gameConnection0 = gameConnectionsPlayer0.getFirst();
             if (!fifaGameReportRepository.existsById(gameConnection0.getId())) {
                 // Create and save game report for Player 0
                 FifaGameReportEntity gameReport0 = new FifaGameReportEntity();
@@ -261,7 +261,7 @@ public class FifaStatsService {
 
         // Process Player 1 if game connection found and report doesn't exist
         if (!gameConnectionsPlayer1.isEmpty()) {
-            GameConnectionEntity gameConnection1 = gameConnectionsPlayer1.get(0);
+            GameConnectionEntity gameConnection1 = gameConnectionsPlayer1.getFirst();
             if (!fifaGameReportRepository.existsById(gameConnection1.getId())) {
                 // Create and save game report for Player 1
                 FifaGameReportEntity gameReport1 = new FifaGameReportEntity();

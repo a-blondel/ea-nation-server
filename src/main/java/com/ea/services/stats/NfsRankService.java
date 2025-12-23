@@ -55,7 +55,7 @@ public class NfsRankService {
         List<GameConnectionEntity> gameConnections = gameConnectionRepository.findMatchingGameConnections(playerName, startTime, true);
 
         if (!gameConnections.isEmpty()) {
-            GameConnectionEntity gameConnection = gameConnections.get(0);
+            GameConnectionEntity gameConnection = gameConnections.getFirst();
 
             // Check if report already exists for this game connection
             if (!nfsGameReportRepository.existsByGameConnectionId(gameConnection.getId())) {

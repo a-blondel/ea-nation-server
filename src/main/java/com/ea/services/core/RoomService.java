@@ -193,6 +193,7 @@ public class RoomService {
                 {"F", attr != null ? attr : "Z"}, // NHL07 uses "Z" for lobby messages (no ATTR specified)
                 {"T", text},
                 {"N", socketWrapper.getPersonaEntity().getPers()},
+                {"U", ""},
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
         socketData.setIdMessage("+msg");
         socketData.setOutputData(content);

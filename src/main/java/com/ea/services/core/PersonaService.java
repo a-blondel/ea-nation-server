@@ -343,7 +343,8 @@ public class PersonaService {
      */
     public void who(Socket socket, SocketWrapper socketWrapper) {
         Room room = roomService.getRoomByPersonaId(socketWrapper.getPersonaEntity().getId());
-        socketWriter.write(socket, new SocketData("+who", null, personaUtils.getPersonaInfo(socket, socketWrapper, room)));
+        Map<String, String> personaInfo = personaUtils.getPersonaInfo(socket, socketWrapper, room);
+        socketWriter.write(socket, new SocketData("+who", null, personaInfo));
     }
 
     /**
