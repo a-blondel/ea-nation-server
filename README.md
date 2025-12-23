@@ -1,6 +1,6 @@
 # EA Nation Server
 
-An emulator of the EA Nation server.
+An emulator of the EA Nation server based on the Aries protocol.
 
 This project is a continuation of the [mohh-master-server](https://github.com/a-blondel/mohh-master-server), as the
 scope of the project has been extended to support more games.
