@@ -54,8 +54,10 @@ public class RoomService {
         if (room != null) {
             Map<String, String> content = Stream.of(new String[][]{
                     {"I", String.valueOf(room.getId())}, // Room identifier
-                    {"N", room.getName()}, // Room name
+                    {"N", "LVL.1"}, // Room name
                     {"DN", room.getName()}, // Actual room name displayed
+                    {"D", ""}, // Description (132 bytes max)
+                    {"F", "ACK"}, // Room flags
                     {"T", String.valueOf(room.getPersonaIds().size())}, // Current room population
                     {"L", "50"}, // Max users allowed in room
             }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
@@ -77,6 +79,12 @@ public class RoomService {
         String ident = getValueFromSocket(socketData.getInputMessage(), "IDENT");
         // String name = getValueFromSocket(socketData.getInputMessage(), "NAME");
 
+        if (ident == null) {
+            socketData.setIdMessage("movenfnd");
+            socketWriter.write(socket, socketData);
+            return;
+        }
+
         long roomId = Long.parseLong(ident);
         addPersonaToRoom(roomId, socketWrapper);
 
@@ -85,9 +93,11 @@ public class RoomService {
         if (!ident.equals("0")) {
             Map<String, String> content = Stream.of(new String[][]{
                     {"IDENT", ident},
-                    {"NAME", room.getName()},
+                    {"NAME", "LVL.1"},
                     {"COUNT", String.valueOf(room.getPersonaIds().size())},
                     {"FLAGS", room.getFlags()},
+                    {"LIMIT", "50"},
+                    {"DESC", ""},
             }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
             socketData.setOutputData(content);
             socketWriter.write(socket, socketData);
@@ -103,6 +113,7 @@ public class RoomService {
                     Room clientRoom = getRoomByPersonaId(clientWrapper.getPersonaEntity().getId());
                     if (clientRoom != null && clientRoom.getId().equals(roomId)) {
                         socketWriter.write(socket, new SocketData("+usr", null, personaUtils.getPersonaInfo(clientWrapper.getSocket(), clientWrapper, room)));
+                        socketWriter.write(socket, new SocketData("+who", null, personaUtils.getPersonaInfo(clientWrapper.getSocket(), clientWrapper, room)));
                         // Also notify each client in the room about the new user
                         if (!clientWrapper.getSocket().equals(socket)) {
                             socketWriter.write(clientWrapper.getSocket(), new SocketData("+usr", null, personaUtils.getPersonaInfo(socket, socketWrapper, room)));
@@ -116,20 +127,105 @@ public class RoomService {
     }
 
     /**
+     * Create a room
+     * Since rooms are pre-defined, we deny it
+     * Attributes:
+     * - NAME=URR.xxx
+     * - DESC=D_OS44
+     * - LVLRNG=-1
+     *
+     * @param socket     The socket to write the response to
+     * @param socketData The socket data
+     */
+    public void room(Socket socket, SocketData socketData) {
+        socketData.setIdMessage("roomfull");
+        socketWriter.write(socket, socketData);
+    }
+
+    /**
      * Fetch room category information
-     * It isn't clear how to use this method, but we can use it to apply custom logic
-     * If we receive this packet, then :
-     * - The user isn't in a room yet, so we can remove them from any room they might be in
-     * - The user is requesting room categories, so we can send them the list of rooms available
+     * Sends the list of available categories to the client.
+     * Format: CAT0 = "name,params,prefix,res0,res1,res2,res3,auto_create"
+     * <p>
+     * CRITICAL: The "prefix" field determines room filtering!
+     * Rooms will only display if their name (field N) starts with "prefix."
+     * Example: prefix="LVL" → rooms must be named "LVL.xxx"
      *
      * @param socket        The socket to write the response to
      * @param socketData    The socket data
      * @param socketWrapper The socket wrapper of current connection
      */
     public void rcat(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+        /**
+         * "LVL" - Level (niveau du joueur)
+         * "CNT" - Country (pays)
+         * "CLB" - Club (nom du club)
+         */
+        Map<String, String> content = Stream.of(new String[][]{
+                {"CAT0", "Default,Global,LVL,,,,,1"},
+        }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+
+        socketData.setOutputData(content);
+
         socketWriter.write(socket, socketData);
         removePersonaFromRoom(socketWrapper.getPersonaConnectionEntity().getVers(), socketWrapper);
         rom(socket, socketData);
+    }
+
+    /**
+     * Auto-generate rooms for categories (arom)
+     * Called by the client after receiving rcat with auto_create=1
+     * Expected request args: CAT<x>=<prefix>, PARM<x>=<params>
+     * Expected response: COUNT=<n> followed by n +rom async messages
+     *
+     * @param socket        The socket to write the response to
+     * @param socketData    The socket data
+     * @param socketWrapper The socket wrapper of current connection
+     */
+    public void arom(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+
+        // Count how many CAT/PARM pairs we received by checking cat0, cat1, cat2...
+        int count = 0;
+        while (getValueFromSocket(socketData.getInputMessage(), "cat" + count) != null) {
+            count++;
+        }
+
+        Map<String, String> content = Stream.of(new String[][]{
+                {"COUNT", String.valueOf(count)},
+        }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+        socketData.setOutputData(content);
+        socketWriter.write(socket, socketData);
+
+        rom(socket, socketData);
+
+        // Send +rom for each category
+//        String vers = socketWrapper.getPersonaConnectionEntity().getVers();
+//        Room room = getRoomByVers(vers);
+//
+//        if (room != null) {
+//            for (int i = 0; i < count; i++) {
+//                String catPrefix = getValueFromSocket(socketData.getInputMessage(), "cat" + i);
+//                String parms = getValueFromSocket(socketData.getInputMessage(), "parm" + i);
+//
+//                // CRITICAL: Room name must start with category prefix + "."
+//                // Example: catPrefix="LVL", parms="1" → N="LVL.1" or "LVL.Level1"
+//                Map<String, String> romInfo = Stream.of(new String[][]{
+//                        {"I", String.valueOf(100 + i)}, // Unique ID for each auto-room
+//                        {"N", catPrefix + "." + parms}, // Name MUST start with prefix!
+//                        {"DN", "Level" + parms}, // Display name shown to user
+//                        {"H", "Server"},
+//                        {"D", "level" + parms},
+//                        {"F", "A"}, // Flag A (bit 1) = room persists
+//                        {"T", "0"}, // Current population
+//                        {"GT", "1"}, // Game type
+//                        {"G", "0"}, // Game count
+//                        {"L", "50"}, // Max players
+//                        {"C", "0"}, // Category (ignored, always 0)
+//                }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+//
+//                socketWriter.write(socket, new SocketData("+rom", null, romInfo));
+//            }
+//        }
     }
 
     /**
@@ -188,6 +284,7 @@ public class RoomService {
 
         String text = getValueFromSocket(socketData.getInputMessage(), "TEXT");
         String attr = getValueFromSocket(socketData.getInputMessage(), "ATTR");
+        String priv = getValueFromSocket(socketData.getInputMessage(), "PRIV");
 
         Map<String, String> content = Stream.of(new String[][]{
                 {"F", attr != null ? attr : "Z"}, // NHL07 uses "Z" for lobby messages (no ATTR specified)
@@ -197,6 +294,25 @@ public class RoomService {
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
         socketData.setIdMessage("+msg");
         socketData.setOutputData(content);
+
+        // Handle private messages (game invitations) with ATTR=ENX and PRIV field
+        if ("ENX".equals(attr) && priv != null) {
+            // Find the target player by persona name
+            SocketWrapper targetWrapper = socketManager.getSocketWrapperByPersonaNameAndVers(
+                    priv,
+                    socketWrapper.getPersonaConnectionEntity().getVers()
+            );
+
+            if (targetWrapper != null) {
+                // Send the invitation/revocation message to the target player
+                socketWriter.write(targetWrapper.getSocket(), socketData, TAB_CHAR);
+            } else {
+                log.warn("Target player {} not found for invitation from {}",
+                        priv,
+                        socketWrapper.getPersonaEntity().getPers());
+            }
+            return;
+        }
 
         GameEntity gameEntity = gameRepository.findCurrentGameOfPersona(socketWrapper.getPersonaConnectionEntity().getId())
                 .stream()

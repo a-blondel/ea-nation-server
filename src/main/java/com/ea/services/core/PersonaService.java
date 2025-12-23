@@ -427,4 +427,22 @@ public class PersonaService {
         roomService.rom(socket, socketData);
     }
 
+    public void usld(Socket socket, SocketData socketData) {
+        Map<String, String> content = Stream.of(new String[][]{
+                {"IMGATE", "0"},
+                {"QMSG0", "0"},
+                {"QMSG1", "1"},
+                {"QMSG2", "2"},
+                {"QMSG3", "3"},
+                {"QMSG4", "4"},
+                {"QMSG5", "5"},
+                {"SPM_EA", "0"},
+                {"SPM_PART", "0"},
+                {"UID", "$000000000b32588d"},
+        }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+
+        socketData.setOutputData(content);
+        socketWriter.write(socket, socketData);
+    }
+
 }

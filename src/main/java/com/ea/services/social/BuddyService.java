@@ -654,6 +654,178 @@ public class BuddyService {
     }
 
     /**
+     * GINV - Game Invite (client sends this to invite another player)
+     *
+     * @param socket             the socket to write into
+     * @param socketData         the object to use to write the message
+     * @param buddySocketWrapper the wrapper containing user data
+     */
+    public void ginv(Socket socket, SocketData socketData, BuddySocketWrapper buddySocketWrapper) {
+        String user = getValueFromSocket(socketData.getInputMessage(), "USER"); // Target user to invite
+        String gstr = getValueFromSocket(socketData.getInputMessage(), "GSTR"); // Game session identifier
+        String id = getValueFromSocket(socketData.getInputMessage(), "ID");     // Callback ID for ACK
+        String rsrc = getValueFromSocket(socketData.getInputMessage(), "RSRC"); // Resource
+        String titl = getValueFromSocket(socketData.getInputMessage(), "TITL"); // Title
+        String sess = getValueFromSocket(socketData.getInputMessage(), "SESS"); // Session
+
+        // Send ACK back to sender with all original fields (client needs ID to match callback)
+        Map<String, String> content = Stream.of(new String[][]{
+                {"RSRC", rsrc},
+                {"ID", id},
+                {"USER", user},
+                {"TITL", titl},
+                {"SESS", sess},
+                {"GSTR", gstr},
+        }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+        socketData.setOutputData(content);
+        socketWriter.write(socket, socketData);
+
+        PersonaEntity fromPersona = buddySocketWrapper.getPersonaEntity();
+        if (fromPersona == null) {
+            log.warn("GINV: Sender persona not found");
+            return;
+        }
+
+        // Find target user's socket
+        Optional<BuddySocketWrapper> targetWrapperOpt = socketManager.getBuddySocketWrapperByPersona(user);
+        if (targetWrapperOpt.isPresent()) {
+            BuddySocketWrapper targetWrapper = targetWrapperOpt.get();
+
+            // Send GNOT packet to the target user with TYPE='I' (Invite)
+            sendGnotPacket(targetWrapper.getSocket(), "I", fromPersona.getPers(), gstr, null);
+        } else {
+            log.warn("GINV: Target user {} not online", user);
+        }
+    }
+
+    /**
+     * GRSP - Game Response (client responds to a game invite)
+     *
+     * @param socket             the socket to write into
+     * @param socketData         the object to use to write the message
+     * @param buddySocketWrapper the wrapper containing user data
+     */
+    public void grsp(Socket socket, SocketData socketData, BuddySocketWrapper buddySocketWrapper) {
+        String user = getValueFromSocket(socketData.getInputMessage(), "USER"); // User who sent the invite
+        String answ = getValueFromSocket(socketData.getInputMessage(), "ANSW"); // Y=accept, N=decline
+        String rsrc = getValueFromSocket(socketData.getInputMessage(), "RSRC"); // Resource/session context
+        String lrsc = getValueFromSocket(socketData.getInputMessage(), "LRSC"); // Local resource/session context
+        String id = getValueFromSocket(socketData.getInputMessage(), "ID");   // Callback ID for ACK
+
+        PersonaEntity responderPersona = buddySocketWrapper.getPersonaEntity();
+        if (responderPersona == null) {
+            log.warn("GRSP: Responder persona not found");
+            socketWriter.write(socket, socketData);
+            return;
+        }
+
+        // Find original sender's socket
+        Optional<BuddySocketWrapper> senderWrapperOpt = socketManager.getBuddySocketWrapperByPersona(user);
+        if (senderWrapperOpt.isPresent()) {
+            BuddySocketWrapper senderWrapper = senderWrapperOpt.get();
+
+            // Send GNOT packet to the original sender with TYPE='A' (Accept) or 'D' (Decline)
+            String type = "Y".equals(answ) ? "A" : "D";
+            sendGnotPacket(senderWrapper.getSocket(), type, senderWrapper.getPersonaEntity().getPers(), rsrc, responderPersona.getPers());
+        } else {
+            log.warn("GRSP: Original sender {} not online", user);
+        }
+
+        Map<String, String> content = Stream.of(new String[][]{
+                {"RSRC", rsrc},
+                {"ID", id},
+                {"USER", user},
+                {"LRSC", lrsc != null ? lrsc : ""},
+                {"ANSW", answ},
+        }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+        socketData.setOutputData(content);
+        socketWriter.write(socket, socketData);
+    }
+
+    /**
+     * GRVK - Game Revoke (client cancels a game invite)
+     *
+     * @param socket             the socket to write into
+     * @param socketData         the object to use to write the message
+     * @param buddySocketWrapper the wrapper containing user data
+     */
+    public void grvk(Socket socket, SocketData socketData, BuddySocketWrapper buddySocketWrapper) {
+        String user = getValueFromSocket(socketData.getInputMessage(), "USER"); // User to notify of revoke
+        String rsrc = getValueFromSocket(socketData.getInputMessage(), "RSRC"); // Resource/session context
+        String id = getValueFromSocket(socketData.getInputMessage(), "ID");
+        String titl = getValueFromSocket(socketData.getInputMessage(), "TITL");
+        String sess = getValueFromSocket(socketData.getInputMessage(), "SESS");
+
+        PersonaEntity revokerPersona = buddySocketWrapper.getPersonaEntity();
+        if (revokerPersona == null) {
+            log.warn("GRVK: Revoker persona not found");
+            socketWriter.write(socket, socketData);
+            return;
+        }
+
+        // Find target user's socket
+        Optional<BuddySocketWrapper> targetWrapperOpt = socketManager.getBuddySocketWrapperByPersona(user);
+        if (targetWrapperOpt.isPresent()) {
+            BuddySocketWrapper targetWrapper = targetWrapperOpt.get();
+
+            // Send GNOT packet to the target user with status 'R' (Revoke)
+            sendGnotPacket(targetWrapper.getSocket(), "R", revokerPersona.getPers(), null, null);
+        } else {
+            log.warn("GRVK: Target user {} not online", user);
+        }
+
+        Map<String, String> content = Stream.of(new String[][]{
+                {"RSRC", rsrc},
+                {"ID", id},
+                {"USER", user},
+                {"TITL", titl},
+                {"SESS", sess},
+        }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+        socketData.setOutputData(content);
+        socketWriter.write(socket, socketData);
+    }
+
+    /**
+     * GNOT - Send a Game Notification packet to a client
+     * <p>
+     * Based on reverse engineering of _BuddyApiHandleGNOTMsg in FIFA 07 PS2:
+     * - TYPE: Status character (I=Invite, A=Accept, D=Decline, R=Revoke, G=Game)
+     * - HOST: Sender username (used when TYPE='I' or 'R')
+     * - GSTR: Game session identifier (used when TYPE='I' or 'R')
+     * - USER: Related username (used when TYPE='A' or 'D')
+     *
+     * @param socket the socket to send to
+     * @param type   the status (I, A, D, R, G)
+     * @param host   the sender username (for I, R statuses)
+     * @param gstr   the game session identifier (for I, R statuses)
+     * @param user   the related username (for A, D statuses)
+     */
+    private void sendGnotPacket(Socket socket, String type, String host, String gstr, String user) {
+        Map<String, String> gnotContent = new LinkedHashMap<>();
+        gnotContent.put("TYPE", type);
+
+        // For Invite and Revoke statuses, include HOST and GSTR
+        if ("I".equals(type) || "R".equals(type)) {
+            if (host != null) {
+                gnotContent.put("HOST", host);
+            }
+            if (gstr != null) {
+                gnotContent.put("GSTR", gstr);
+            }
+        }
+
+        // For Accept and Decline statuses, include USER
+        if ("A".equals(type) || "D".equals(type)) {
+            if (user != null) {
+                gnotContent.put("USER", user);
+            }
+        }
+
+        SocketData gnotSocketData = new SocketData("GNOT", null, gnotContent);
+        socketWriter.write(socket, gnotSocketData);
+    }
+
+    /**
      * Update presence for all buddies when a user changes its status
      *
      * @param changedPersona the persona whose presence changed

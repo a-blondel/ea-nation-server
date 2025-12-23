@@ -1,0 +1,1 @@
+﻿%{ CMD=alrt TITLE="Terms of Service" MESG="This server is not affiliated nor endorsed by EA." BTN1="OK" BTN1-GOTO="$exit=0" %}

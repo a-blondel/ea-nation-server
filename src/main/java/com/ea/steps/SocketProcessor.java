@@ -85,6 +85,15 @@ public class SocketProcessor {
             case ("SEND"):
                 buddyService.send(socket, socketData, buddySocketWrapper);
                 break;
+            case ("GINV"):
+                buddyService.ginv(socket, socketData, buddySocketWrapper);
+                break;
+            case ("GRSP"):
+                buddyService.grsp(socket, socketData, buddySocketWrapper);
+                break;
+            case ("GRVK"):
+                buddyService.grvk(socket, socketData, buddySocketWrapper);
+                break;
             case ("DISC"):
                 buddyService.disc(buddySocketWrapper);
                 break;
@@ -99,6 +108,18 @@ public class SocketProcessor {
                 break;
             case ("sele"):
                 authService.sele(socket, socketData, socketWrapper);
+                break;
+            case ("priv"):
+                authService.priv(socket, socketData);
+                break;
+            case ("qdef"):
+                authService.qdef(socket, socketData);
+                break;
+            case ("slst"):
+                authService.slst(socket, socketData);
+                break;
+            case ("uatr"):
+                authService.uatr(socket, socketData);
                 break;
             case ("user"):
                 accountService.user(socket, socketData, socketWrapper);
@@ -130,8 +151,17 @@ public class SocketProcessor {
             case ("rept"):
                 personaService.rept(socket, socketData, socketWrapper);
                 break;
+            case ("usld"):
+                personaService.usld(socket, socketData);
+                break;
             case ("rcat"):
                 roomService.rcat(socket, socketData, socketWrapper);
+                break;
+            case ("arom"):
+                roomService.arom(socket, socketData, socketWrapper);
+                break;
+            case ("room"):
+                roomService.room(socket, socketData);
                 break;
             case ("move"):
                 roomService.move(socket, socketData, socketWrapper);
@@ -183,6 +213,9 @@ public class SocketProcessor {
                 break;
             case ("filt"):
                 gameService.filt(socket, socketData);
+                break;
+            case ("ilgs"):
+                gameService.ilgs(socket, socketData);
                 break;
             case ("ucre"):
                 userSetService.ucre(socket, socketData, socketWrapper);

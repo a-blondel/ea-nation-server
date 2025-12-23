@@ -27,15 +27,15 @@ public class EmailUtils {
 
     /**
      * Send an email
+     *
      * @param subject the email subject
      * @param content the email content
-     * @param to the recipient
+     * @param to      the recipient
      */
-    public void sendEmail(String subject, String content, String to)
-    {
+    public void sendEmail(String subject, String content, String to) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            message.setFrom(new InternetAddress(props.getEmailUsername(), "MoHH Support"));
+            message.setFrom(new InternetAddress(props.getEmailUsername(), "EA Nation Hub Support"));
             message.setRecipients(MimeMessage.RecipientType.TO, to);
             message.setSubject(subject);
             message.setContent(content, "text/html; charset=utf-8");
@@ -47,6 +47,7 @@ public class EmailUtils {
 
     /**
      * Get the banner image URL
+     *
      * @return the banner image URL
      */
     public String getBanner() {
@@ -55,6 +56,7 @@ public class EmailUtils {
 
     /**
      * Get the HTML template content
+     *
      * @param templateName the template name
      * @return the HTML template content
      */

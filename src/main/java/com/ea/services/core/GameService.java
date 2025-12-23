@@ -832,6 +832,11 @@ public class GameService {
         socketWriter.write(socket, socketData);
     }
 
+    public void ilgs(Socket socket, SocketData socketData) {
+        // TODO: Implement ilgs command to avoid client to be stuck
+        socketWriter.write(socket, socketData);
+    }
+
     /**
      * Registers a game entry
      *

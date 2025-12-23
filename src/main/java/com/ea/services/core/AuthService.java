@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.ea.services.server.GameServerService.CUSTOM_TOS_GAMES;
 import static com.ea.utils.SocketUtils.SPACE_CHAR;
 import static com.ea.utils.SocketUtils.getValueFromSocket;
 
@@ -64,8 +65,17 @@ public class AuthService {
     }
 
     public void news(Socket socket, SocketData socketData) {
-        String tosUrl = props.getDnsName() + "/legalapp/webterms/us/fr/pc/";
+        String tosUrl = props.getDnsName() + "/tos/";
+        String newsUrl = props.getDnsName() + "/news/";
+        String faqUrl = props.getDnsName() + "/faq/";
+        String eaconnectUrl = props.getDnsName() + "/eaconnect/";
         String rosterUrl = props.getDnsName() + "/roster";
+
+        String vers = gameServerService.getVersByPort(socket.getLocalPort());
+        log.debug("Detected VERS={} for port {}", vers, socket.getLocalPort());
+        if (!vers.isEmpty() && CUSTOM_TOS_GAMES.contains(vers)) {
+            tosUrl = props.getDnsName() + "/tos-ps2/";
+        }
         Map<String, String> content = Stream.of(new String[][]{
                 {"BUDDY_SERVER", props.getTcpHost()},
                 {"BUDDY_PORT", String.valueOf(props.getTcpBuddyPort())},
@@ -73,9 +83,9 @@ public class AuthService {
                 {"TOSAC_URL", tosUrl},
                 {"TOSA_URL", tosUrl},
                 {"TOS_URL", tosUrl},
-                {"NEWS_URL", tosUrl},
-                {"FAQ_URL", tosUrl},
-                {"EACONNECT_WEBOFFER_URL", tosUrl},
+                {"NEWS_URL", newsUrl},
+                {"FAQ_URL", faqUrl},
+                {"EACONNECT_WEBOFFER_URL", eaconnectUrl},
                 {"ROSTER_URL", rosterUrl}, // Required by NHL/FIFA 07 (roster download isn't implemented, but it is required by the game)
                 {"ROSTER_VER", "1.0"}, // Trick to skip roster download for NHL 07
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
@@ -196,6 +206,52 @@ public class AuthService {
         if ("1".equals(userSets) && socketWrapper.getUserSetId() != null) {
             userSetService.sendUserSetUpdatesToSocket(socket, socketWrapper.getUserSetId());
         }
+    }
+
+    public void priv(Socket socket, SocketData socketData) {
+        String mode = getValueFromSocket(socketData.getInputMessage(), "MODE");
+        String result = mode.equals("off") ? "0" : "1";
+        Map<String, String> content = Collections.singletonMap("PRIV", result);
+        socketData.setOutputData(content);
+        socketWriter.write(socket, socketData);
+    }
+
+    // TODO - confirm which fields are expected
+    public void qdef(Socket socket, SocketData socketData) {
+        Map<String, String> content = Stream.of(new String[][]{
+                {"IMGATE", "0"},
+                {"QMSG0", "0"},
+                {"QMSG1", "1"},
+                {"QMSG2", "2"},
+                {"QMSG3", "3"},
+                {"QMSG4", "4"},
+                {"QMSG5", "5"},
+                {"SPM_EA", "0"},
+                {"SPM_PART", "0"},
+                {"UID", "$000000000b32588d"},
+        }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+
+        socketData.setOutputData(content);
+        socketWriter.write(socket, socketData);
+    }
+
+    // TODO - confirm which fields are expected
+    public void slst(Socket socket, SocketData socketData) {
+        Map<String, String> content = Stream.of(new String[][]{
+                {"COUNT", "3"},
+                {"VIEW0", "lobby,\"Online Lobby Stats View\"", "1"},
+                {"VIEW1", "DLC,\"DLC Lobby Stats View\"", "1"},
+                {"VIEW2", "RoadRules,\"Road Rules\"", "1"},
+        }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+
+        socketData.setOutputData(content);
+        socketWriter.write(socket, socketData);
+    }
+
+
+    public void uatr(Socket socket, SocketData socketData) {
+        // Should update user attributes with HWFLAG and HWMASK and send back +who and +usr
+        socketWriter.write(socket, socketData);
     }
 
 }

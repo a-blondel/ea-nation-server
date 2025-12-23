@@ -133,7 +133,7 @@ public class FifaStatsService {
 
         Map<String, String> content = Stream.of(new String[][]{
                 {"CHAN", chan},
-                {"START", start},
+                {"START", start != null ? start : "0"},
                 {"RANGE", String.valueOf(fifaPersonaStatsEntityList.size())},
                 {"SEQN", seqn},
                 {"CC", "11"},
