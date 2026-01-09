@@ -363,6 +363,15 @@ game:
           slus:
             - 'ULES00477'
             - 'ULUS10131'
+    - vers: 'PS3/NHL08'
+      sdk: '5.4.3.0'
+      ssl:
+        domain: 'ps3nhl08.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 20350
+          slus:
+            - '_PRODUCTSLUS' # BLUS30062
     - vers: 'PSP/MOH07' # Medal of Honor: Heroes
       sdk: '4.7.0.0'
       p2p: false
