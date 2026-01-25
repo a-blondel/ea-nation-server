@@ -20,6 +20,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.ea.services.server.GameServerService.MOH07_OR_MOH08;
 import static com.ea.utils.HexUtils.*;
 import static com.ea.utils.SocketUtils.DATETIME_FORMAT;
 
@@ -83,8 +84,8 @@ public class GameUtils {
                 {"NUMPART", "1"},
                 {"SEED", "3"}, // random seed
                 {"WHEN", DateTimeFormatter.ofPattern(DATETIME_FORMAT).format(gameEntity.getStartTime())},
-                // { "GAMEPORT", String.valueOf(props.getUdpPort())},
-                // { "VOIPPORT", "9667" },
+//                {"GAMEPORT", "3658"},  // Port UDP pour connexion P2P
+//                {"VOIPPORT", "9668"},  // Port UDP pour VOIP
                 // { "GAMEMODE", "0" }, // ???
                 {"AUTH", (Integer.parseInt(gameEntity.getSysflags()) & (1 << 18)) != 0 ? "098f6bcd4621d373cade4e832627b4f6" : ""}, // Required for ranked
 
@@ -124,6 +125,9 @@ public class GameUtils {
                     }
                     String ipAddr = personaConnectionEntity.getAddress().replace("/", "").split(":")[0];
                     String hostPrefix = !isP2P && gameConnectionEntity.isHost() ? "@" : "";
+                    String opparamValue = !socketWrapper.getUserparams().isEmpty() ? socketWrapper.getUserparams() : generateOpParam(personaEntity, gameEntity.getVers());
+                    log.info("getGameInfo: OPPARAM{} for {} = '{}' (length: {})",
+                            idx[0], personaEntity.getPers(), opparamValue, opparamValue.length());
                     content.putAll(Stream.of(new String[][]{
                             {"OPID" + idx[0], String.valueOf(personaEntity.getId())},
                             {"OPPO" + idx[0], hostPrefix + personaEntity.getPers()},
@@ -131,9 +135,10 @@ public class GameUtils {
                             {"LADDR" + idx[0], ipAddr},
                             {"MADDR" + idx[0], ""},
                             {"OPPART" + idx[0], "0"},
-                            {"OPPARAM" + idx[0], generateOpParam(personaEntity, gameEntity.getVers())},
+//                            {"OPPARAM" + idx[0], generateOpParam(personaEntity, gameEntity.getVers())},
                             {"OPFLAG" + idx[0], socketWrapper.getUserflags()},
-                            {"PRES" + idx[0], "0"},
+                            {"PRES" + idx[0], "1"},
+                            {"OPPARAM" + idx[0], opparamValue},
                             {"PARTSIZE" + idx[0], String.valueOf(gameEntity.getMaxsize())},
                             {"PARTPARAMS" + idx[0], ""},
                     }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
@@ -150,6 +155,9 @@ public class GameUtils {
      * @return Base64 encoded OPPARAM string
      */
     private String generateOpParam(PersonaEntity personaEntity, String vers) {
+        if (!MOH07_OR_MOH08.contains(vers)) {
+            return "";
+        }
         MohhPersonaStatsEntity mohhPersonaStatsEntity = mohhPersonaStatsRepository.findByPersonaIdAndVers(personaEntity.getId(), vers);
         Long rankLong = mohhPersonaStatsRepository.getRankByPersonaIdAndVers(personaEntity.getId(), vers);
         int rank = (rankLong != null) ? rankLong.intValue() : 0;

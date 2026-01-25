@@ -25,6 +25,7 @@ public class SocketWrapper {
     private String identifier;
     private volatile String lkey;
     private volatile String userflags = "1";
+    private volatile String userparams = "";
     private volatile AccountEntity accountEntity;
     private volatile PersonaEntity personaEntity;
     private volatile PersonaConnectionEntity personaConnectionEntity;

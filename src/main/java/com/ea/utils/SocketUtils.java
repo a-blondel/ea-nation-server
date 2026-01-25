@@ -50,12 +50,15 @@ public class SocketUtils {
         String result = null;
         String[] entries = data.split(splitter);
         for (String entry : entries) {
-            String[] parts = entry.trim().split("=");
-            if (key.equals(parts[0])) {
-                if (parts.length > 1) {
-                    result = parts[1];
+            String trimmed = entry.trim();
+            // Use indexOf to only split on the first '=' to preserve values containing '='
+            int eqIndex = trimmed.indexOf('=');
+            if (eqIndex > 0) {
+                String entryKey = trimmed.substring(0, eqIndex);
+                if (key.equals(entryKey)) {
+                    result = trimmed.substring(eqIndex + 1);
+                    break;
                 }
-                break;
             }
         }
         return result;

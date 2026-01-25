@@ -204,6 +204,7 @@ public class GameService {
         if (gameServerService.isP2P(personaConnectionEntity.getVers())) {
             // On NHL, the value is 0 or 1 to know if the client is ready or not
             String userflags = getValueFromSocket(socketData.getInputMessage(), "USERFLAGS");
+            String userparams = getValueFromSocket(socketData.getInputMessage(), "USERPARAMS");
             String sysflags = getValueFromSocket(socketData.getInputMessage(), "SYSFLAGS");
             String params = getValueFromSocket(socketData.getInputMessage(), "PARAMS");
             String kick = getValueFromSocket(socketData.getInputMessage(), "KICK");
@@ -213,20 +214,16 @@ public class GameService {
                     socketWrapper.setUserflags(userflags);
                 }
                 // Broadcast the userflags to all players in the game
-                Optional<GameConnectionEntity> gameConnectionOpt = gameConnectionRepository.findByPersonaConnectionIdAndEndTimeIsNull(personaConnectionEntity.getId());
-
-                if (gameConnectionOpt.isPresent()) {
-                    GameConnectionEntity gameConnectionEntity = gameConnectionOpt.get();
-                    GameEntity gameEntity = gameConnectionEntity.getGame();
-                    List<GameConnectionEntity> gameConnections = gameConnectionRepository.findByGameIdAndEndTimeIsNull(gameEntity.getId());
-                    for (GameConnectionEntity gameConnection : gameConnections) { // For each player in the game, send +agm and +mgm
-                        SocketWrapper gameConnectionSocketWrapper = socketManager.getSocketWrapperByPersonaConnectionId(gameConnection.getPersonaConnection().getId());
-                        if (gameConnectionSocketWrapper != null) {
-                            agm(gameConnectionSocketWrapper.getSocket(), gameEntity);
-                            mgm(gameConnectionSocketWrapper.getSocket(), gameEntity);
-                        }
-                    }
+                broadcastGameStateToPlayers(personaConnectionEntity);
+            }
+            if (userparams != null) {
+                log.info("gset received USERPARAMS from {}: '{}' (length: {})", 
+                        socketWrapper.getPersonaEntity().getPers(), userparams, userparams.length());
+                synchronized (this) {
+                    socketWrapper.setUserparams(userparams);
                 }
+                // Broadcast the userparams to all players in the game (FIFA 07 uses USERPARAMS instead of USERFLAGS)
+                broadcastGameStateToPlayers(personaConnectionEntity);
             }
             if (sysflags != null) {
                 // Update sysflags in the game entity
@@ -919,6 +916,32 @@ public class GameService {
             } else if (USERSETS_GAMES.contains(game.getVers())) {
                 Map<String, String> mgmContent = Collections.singletonMap("IDENT", String.valueOf(game.getId()));
                 socketWriter.write(socketWrapper.getSocket(), new SocketData("+mgm", null, mgmContent));
+            }
+        }
+    }
+
+    /**
+     * Broadcast game state to all players in the game
+     * This is used when a player changes their state (ready, team selection, etc.)
+     *
+     * @param personaConnectionEntity The persona connection entity of the player who changed their state
+     */
+    private void broadcastGameStateToPlayers(PersonaConnectionEntity personaConnectionEntity) {
+        Optional<GameConnectionEntity> gameConnectionOpt = gameConnectionRepository
+                .findByPersonaConnectionIdAndEndTimeIsNull(personaConnectionEntity.getId());
+
+        if (gameConnectionOpt.isPresent()) {
+            GameConnectionEntity gameConnectionEntity = gameConnectionOpt.get();
+            GameEntity gameEntity = gameConnectionEntity.getGame();
+            List<GameConnectionEntity> gameConnections = gameConnectionRepository
+                    .findByGameIdAndEndTimeIsNull(gameEntity.getId());
+            for (GameConnectionEntity gameConnection : gameConnections) {
+                SocketWrapper gameConnectionSocketWrapper = socketManager
+                        .getSocketWrapperByPersonaConnectionId(gameConnection.getPersonaConnection().getId());
+                if (gameConnectionSocketWrapper != null) {
+                    agm(gameConnectionSocketWrapper.getSocket(), gameEntity);
+                    mgm(gameConnectionSocketWrapper.getSocket(), gameEntity);
+                }
             }
         }
     }

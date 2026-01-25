@@ -43,7 +43,7 @@ public class SocketWriter {
         try (ByteArrayOutputStream buffer = new ByteArrayOutputStream();
              DataOutputStream writer = new DataOutputStream(buffer)) {
 
-            writer.write(socketData.getIdMessage().getBytes(StandardCharsets.UTF_8));
+            writer.write(socketData.getIdMessage().getBytes(StandardCharsets.ISO_8859_1));
             if (socketData.getIdMessage().length() == 4) {
                 writer.writeInt(0);
             }
@@ -53,7 +53,7 @@ public class SocketWriter {
                 byte[] contentBytes = (socketData.getOutputData().entrySet()
                         .stream()
                         .map(param -> param.getKey() + "=" + param.getValue())
-                        .collect(joining(joiner)) + "\0").getBytes(StandardCharsets.UTF_8);
+                        .collect(joining(joiner)) + "\0").getBytes(StandardCharsets.ISO_8859_1);
 
                 outputLength += contentBytes.length;
                 writer.writeInt(outputLength);

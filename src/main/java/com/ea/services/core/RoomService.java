@@ -286,8 +286,24 @@ public class RoomService {
         String attr = getValueFromSocket(socketData.getInputMessage(), "ATTR");
         String priv = getValueFromSocket(socketData.getInputMessage(), "PRIV");
 
+        // ATTR contains encoded flags using the table @ABCDEFGHIJKLMNOPQRSTUVWXYZ0123- where each char is a bit
+        // Examples: ENX = E(bit5) + N(bit14) + X(bit24) = 0x1004020
+        //           EN0 = E(bit5) + N(bit14) + 0(bit27) = 0x8004020
+        // For private messages, add P (bit 16 = 0x10000) to the flags
+        String flags;
+        if (priv != null) {
+            // Private message: ATTR + P (priv flag)
+            // The client expects F to contain the original ATTR flags plus P for private routing
+            flags = (attr != null ? attr : "") + "P";
+            log.info("Private mesg from {} to {}: ATTR={}, F={}, TEXT={}", 
+                    socketWrapper.getPersonaEntity().getPers(), priv, attr, flags, text);
+        } else {
+            // Public/broadcast message: use ATTR as-is
+            flags = attr != null ? attr : "Z"; // NHL07 uses "Z" for lobby messages (no ATTR specified)
+        }
+
         Map<String, String> content = Stream.of(new String[][]{
-                {"F", attr != null ? attr : "Z"}, // NHL07 uses "Z" for lobby messages (no ATTR specified)
+                {"F", flags},
                 {"T", text},
                 {"N", socketWrapper.getPersonaEntity().getPers()},
                 {"U", ""},
@@ -295,8 +311,8 @@ public class RoomService {
         socketData.setIdMessage("+msg");
         socketData.setOutputData(content);
 
-        // Handle private messages (game invitations) with ATTR=ENX and PRIV field
-        if ("ENX".equals(attr) && priv != null) {
+        // Handle private messages with PRIV field (game sync messages, invitations, etc.)
+        if (priv != null) {
             // Find the target player by persona name
             SocketWrapper targetWrapper = socketManager.getSocketWrapperByPersonaNameAndVers(
                     priv,
@@ -304,10 +320,10 @@ public class RoomService {
             );
 
             if (targetWrapper != null) {
-                // Send the invitation/revocation message to the target player
+                // Send the message to the target player
                 socketWriter.write(targetWrapper.getSocket(), socketData, TAB_CHAR);
             } else {
-                log.warn("Target player {} not found for invitation from {}",
+                log.warn("Target player {} not found for private message from {}",
                         priv,
                         socketWrapper.getPersonaEntity().getPers());
             }

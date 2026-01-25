@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -63,8 +64,8 @@ public class SocketParser {
     }
 
     private void processCompleteMessage(Socket socket, byte[] message, int messageSize) {
-        String id = new String(message, 0, 4);
-        String content = new String(message, 12, messageSize - 12);
+        String id = new String(message, 0, 4, StandardCharsets.ISO_8859_1);
+        String content = new String(message, 12, messageSize - 12, StandardCharsets.ISO_8859_1);
         SocketData socketData = new SocketData(id, content, null);
 
         String playerInfo = "";
