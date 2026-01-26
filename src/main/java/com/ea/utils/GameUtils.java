@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -126,8 +127,41 @@ public class GameUtils {
                     String ipAddr = personaConnectionEntity.getAddress().replace("/", "").split(":")[0];
                     String hostPrefix = !isP2P && gameConnectionEntity.isHost() ? "@" : "";
                     String opparamValue = !socketWrapper.getUserparams().isEmpty() ? socketWrapper.getUserparams() : generateOpParam(personaEntity, gameEntity.getVers());
-                    log.info("getGameInfo: OPPARAM{} for {} = '{}' (length: {})",
-                            idx[0], personaEntity.getPers(), opparamValue, opparamValue.length());
+                    
+                    // FIFA 07: Normalize OPPARAM when Ready detected
+                    // The game checks byte4 bit 3 for checkmarks AND expects byte6=0x8b (CLIENT format)
+                    // HOST sends byte6 with bit 4 set (0x9d, 0x9b, etc) which must be converted to 0x8b
+                    if ("1".equals(socketWrapper.getUserflags()) && !opparamValue.isEmpty()) {
+                        byte[] opparamBytes = opparamValue.getBytes(StandardCharsets.ISO_8859_1);
+                        if (opparamBytes.length >= 7) {
+                            boolean modified = false;
+                            byte originalByte4 = opparamBytes[4];
+                            byte originalByte6 = opparamBytes[6];
+                            
+                            // Set byte4 bit 3 for checkmark
+                            if ((opparamBytes[4] & 0x08) == 0) {
+                                opparamBytes[4] |= (byte) 0x08;
+                                modified = true;
+                            }
+                            
+                            // Convert HOST format (byte6 with bit 4 set: 0x9d, 0x9b, etc) to CLIENT format (0x8b)
+                            if ((opparamBytes[6] & 0x10) != 0) {
+                                opparamBytes[6] = (byte) 0x8b;
+                                modified = true;
+                            }
+                            
+                            if (modified) {
+                                opparamValue = new String(opparamBytes, StandardCharsets.ISO_8859_1);
+                                log.info("[FIFA07-DEBUG] Normalized OPPARAM{} for {} (OPFLAG=1): byte4 0x{} → 0x{}, byte6 0x{} → 0x{}", 
+                                        idx[0], personaEntity.getPers(),
+                                        String.format("%02x", originalByte4), String.format("%02x", opparamBytes[4]),
+                                        String.format("%02x", originalByte6), String.format("%02x", opparamBytes[6]));
+                            }
+                        }
+                    }
+                    
+                    log.info("[FIFA07-DEBUG] getGameInfo: Sending OPPARAM{} for {} (isHost={}): '{}' (length: {})",
+                            idx[0], personaEntity.getPers(), gameConnectionEntity.isHost(), opparamValue, opparamValue.length());
                     content.putAll(Stream.of(new String[][]{
                             {"OPID" + idx[0], String.valueOf(personaEntity.getId())},
                             {"OPPO" + idx[0], hostPrefix + personaEntity.getPers()},
