@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -209,14 +210,6 @@ public class GameService {
             String params = getValueFromSocket(socketData.getInputMessage(), "PARAMS");
             String kick = getValueFromSocket(socketData.getInputMessage(), "KICK");
 
-            // FIFA 07 DEBUG: Log all gset fields to understand HOST Ready mechanism
-            log.info("[FIFA07-DEBUG] gset from {}: USERFLAGS={}, SYSFLAGS={}, PARAMS={}, KICK={}",
-                    socketWrapper.getPersonaEntity().getPers(),
-                    userflags != null ? userflags : "null",
-                    sysflags != null ? sysflags : "null",
-                    params != null ? "present" : "null",
-                    kick != null ? kick : "null");
-
             if (userflags != null) {
                 synchronized (this) {
                     socketWrapper.setUserflags(userflags);
@@ -225,69 +218,13 @@ public class GameService {
                 broadcastGameStateToPlayers(personaConnectionEntity);
             }
             if (userparams != null) {
-                // FIFA 07: Check if player is Ready
-                // - CLIENT: byte6=0x8b, Ready indicated by byte4 bit 3
-                // - HOST: byte6 has bit 4 set when Ready (0x9d, 0x9b, etc)
-                boolean isPlayerReady = false;
-                String readyMechanism = "none";
-                String normalizedUserparams = userparams;
-
-                if (userparams.length() >= 7) {
-                    byte byte4 = (byte) userparams.charAt(4);
-                    byte byte5 = (byte) userparams.charAt(5);
-                    byte byte6 = (byte) userparams.charAt(6);
-
-                    // CLIENT packet has byte6=0x8b, Ready via byte4 bit 3
-                    boolean isClientPacket = (byte6 == (byte) 0x8b);
-                    boolean isClientReady = isClientPacket && ((byte4 & 0x08) != 0);
-
-                    // HOST Ready: byte6 bit 4 is set (0x9d, 0x9b, etc all have bit 4 = 0x10)
-                    // Note: CLIENT byte6=0x8b does NOT have bit 4 set, so this won't false-positive
-                    boolean isHostReady = !isClientPacket && ((byte6 & 0x10) != 0);
-
-                    isPlayerReady = isHostReady || isClientReady;
-
-                    if (isHostReady) {
-                        readyMechanism = String.format("HOST(byte6=0x%02x,bit4set)", byte6);
-                        // HOST needs full normalization for UI checkmark to appear:
-                        // 1. byte4 bit 3 must be set (checkmark detection)
-                        // 2. byte6 must be 0x8b (CLIENT format)
-                        byte[] userparamsBytes = userparams.getBytes(java.nio.charset.StandardCharsets.ISO_8859_1);
-                        userparamsBytes[4] |= (byte) 0x08;  // Set bit 3
-                        userparamsBytes[6] = (byte) 0x8b;   // Convert to CLIENT format
-                        normalizedUserparams = new String(userparamsBytes, java.nio.charset.StandardCharsets.ISO_8859_1);
-                        log.info("[FIFA07-DEBUG] Normalized HOST USERPARAMS: byte4 0x{} → 0x{}, byte6 0x{} → 0x8b",
-                                String.format("%02x", byte4), String.format("%02x", userparamsBytes[4]), String.format("%02x", byte6));
-                    } else if (isClientReady) {
-                        readyMechanism = String.format("CLIENT(byte4=0x%02x,bit3set)", byte4);
-                    }
-
-                    log.info("[FIFA07-DEBUG] USERPARAMS bytes from {}: byte4=0x{}, byte5=0x{}, byte6=0x{} (isClient={}, isHostReady={}, isClientReady={})",
-                            socketWrapper.getPersonaEntity().getPers(),
-                            String.format("%02x", byte4), String.format("%02x", byte5), String.format("%02x", byte6),
-                            isClientPacket, isHostReady, isClientReady);
-                }
-
-                log.info("[FIFA07-DEBUG] gset received USERPARAMS from {} - isReady={} mechanism={}",
-                        socketWrapper.getPersonaEntity().getPers(), isPlayerReady, readyMechanism);
+                // Normalize USERPARAMS  (HOST Ready button fix)
+                String normalizedUserparams = normalizeUserparams(userparams, personaConnectionEntity.getVers());
 
                 synchronized (this) {
                     socketWrapper.setUserparams(normalizedUserparams);
-
-                    // FIFA 07: Update OPFLAG based on Ready status
-                    // Set OPFLAG=1 when Ready, reset to 0 when not Ready (allows toggle)
-                    if (isPlayerReady) {
-                        socketWrapper.setUserflags("1");
-                        log.info("[FIFA07-DEBUG] Set OPFLAG=1 for {} (Ready via {})",
-                                socketWrapper.getPersonaEntity().getPers(), readyMechanism);
-                    } else if ("1".equals(socketWrapper.getUserflags())) {
-                        // Player was Ready but is no longer Ready - reset OPFLAG
-                        socketWrapper.setUserflags("0");
-                        log.info("[FIFA07-DEBUG] Reset OPFLAG=0 for {} (no longer Ready)",
-                                socketWrapper.getPersonaEntity().getPers());
-                    }
                 }
-                // Broadcast the userparams to all players in the game (FIFA 07 uses USERPARAMS instead of USERFLAGS)
+                // Broadcast the userparams to all players in the game
                 broadcastGameStateToPlayers(personaConnectionEntity);
             }
             if (sysflags != null) {
@@ -504,14 +441,9 @@ public class GameService {
 
         String userparams = getValueFromSocket(socketData.getInputMessage(), "USERPARAMS");
         if (userparams != null) {
-            log.info("[FIFA07-DEBUG] gjoi received USERPARAMS from CLIENT {}: '{}' (length: {})",
-                    socketWrapper.getPersonaEntity().getPers(), userparams, userparams.length());
             synchronized (this) {
                 socketWrapper.setUserparams(userparams);
             }
-        } else {
-            log.info("[FIFA07-DEBUG] gjoi NO USERPARAMS from CLIENT {}, using default: ''",
-                    socketWrapper.getPersonaEntity().getPers());
         }
 
         String ident = getValueFromSocket(socketData.getInputMessage(), "IDENT");
@@ -551,12 +483,6 @@ public class GameService {
                 return;
             }
 
-            // Reset userflags and userparams for clients joining the game BEFORE building the packet
-            synchronized (this) {
-                socketWrapper.setUserflags("0");
-//                socketWrapper.setUserparams("0");
-            }
-
             startGameConnection(socketWrapper, gameEntity, false);
 
             socketData.setOutputData(gameUtils.getGameInfo(gameEntity)); // Required for NFS:MW on PC/PS2
@@ -564,6 +490,10 @@ public class GameService {
 
             // Check if game is P2P
             if (gameServerService.isP2P(gameEntity.getVers())) {
+                // Reset userflags
+                synchronized (this) {
+                    socketWrapper.setUserflags("0");
+                }
 
                 // Send who to the joining client
                 personaService.who(socket, socketWrapper);
@@ -723,14 +653,9 @@ public class GameService {
 
         String userparams = getValueFromSocket(socketData.getInputMessage(), "USERPARAMS");
         if (userparams != null) {
-            log.info("[FIFA07-DEBUG] gcre received USERPARAMS from HOST {}: '{}' (length: {})",
-                    socketWrapper.getPersonaEntity().getPers(), userparams, userparams.length());
             synchronized (this) {
                 socketWrapper.setUserparams(userparams);
             }
-        } else {
-            log.info("[FIFA07-DEBUG] gcre NO USERPARAMS from HOST {}, using default: ''",
-                    socketWrapper.getPersonaEntity().getPers());
         }
 
         // Some games don't provide a game name, so we set it to the persona name
@@ -1009,6 +934,35 @@ public class GameService {
                 socketWriter.write(socketWrapper.getSocket(), new SocketData("+mgm", null, mgmContent));
             }
         }
+    }
+
+    /**
+     * Normalize USERPARAMS (HOST Ready button fix)
+     * By e.g. FIFA 07 PS2 the HOST sends byte6 with bit 4 set when Ready, but the game UI expects byte6=0x8b
+     *
+     * @param userparams Original USERPARAMS string
+     * @param vers       Game version
+     * @return Normalized USERPARAMS or original if not applicable
+     */
+    private String normalizeUserparams(String userparams, String vers) {
+        if (!ALL_PS2_FIFA.contains(vers) || userparams == null || userparams.length() < 7) {
+            return userparams;
+        }
+
+        byte byte6 = (byte) userparams.charAt(6);
+
+        // Check if HOST is Ready: byte6 bit 4 set (0x9d, 0x9b, etc) and not CLIENT (0x8b)
+        boolean isHostReady = (byte6 != (byte) 0x8b) && ((byte6 & 0x10) != 0);
+
+        if (isHostReady) {
+            // Normalize: set byte4 bit 3 + convert byte6 to CLIENT format (0x8b)
+            byte[] userparamsBytes = userparams.getBytes(StandardCharsets.ISO_8859_1);
+            userparamsBytes[4] |= (byte) 0x08;  // Set bit 3 for checkmark
+            userparamsBytes[6] = (byte) 0x8b;   // Convert to CLIENT format
+            return new String(userparamsBytes, StandardCharsets.ISO_8859_1);
+        }
+
+        return userparams;
     }
 
     /**

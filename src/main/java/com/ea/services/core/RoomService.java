@@ -157,9 +157,9 @@ public class RoomService {
      */
     public void rcat(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         /**
-         * "LVL" - Level (niveau du joueur)
-         * "CNT" - Country (pays)
-         * "CLB" - Club (nom du club)
+         * "LVL" - Level
+         * "CNT" - Country
+         * "CLB" - Club
          */
         Map<String, String> content = Stream.of(new String[][]{
                 {"CAT0", "Default,Global,LVL,,,,,1"},
@@ -197,35 +197,6 @@ public class RoomService {
         socketWriter.write(socket, socketData);
 
         rom(socket, socketData);
-
-        // Send +rom for each category
-//        String vers = socketWrapper.getPersonaConnectionEntity().getVers();
-//        Room room = getRoomByVers(vers);
-//
-//        if (room != null) {
-//            for (int i = 0; i < count; i++) {
-//                String catPrefix = getValueFromSocket(socketData.getInputMessage(), "cat" + i);
-//                String parms = getValueFromSocket(socketData.getInputMessage(), "parm" + i);
-//
-//                // CRITICAL: Room name must start with category prefix + "."
-//                // Example: catPrefix="LVL", parms="1" → N="LVL.1" or "LVL.Level1"
-//                Map<String, String> romInfo = Stream.of(new String[][]{
-//                        {"I", String.valueOf(100 + i)}, // Unique ID for each auto-room
-//                        {"N", catPrefix + "." + parms}, // Name MUST start with prefix!
-//                        {"DN", "Level" + parms}, // Display name shown to user
-//                        {"H", "Server"},
-//                        {"D", "level" + parms},
-//                        {"F", "A"}, // Flag A (bit 1) = room persists
-//                        {"T", "0"}, // Current population
-//                        {"GT", "1"}, // Game type
-//                        {"G", "0"}, // Game count
-//                        {"L", "50"}, // Max players
-//                        {"C", "0"}, // Category (ignored, always 0)
-//                }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
-//
-//                socketWriter.write(socket, new SocketData("+rom", null, romInfo));
-//            }
-//        }
     }
 
     /**
@@ -295,7 +266,7 @@ public class RoomService {
             // Private message: ATTR + P (priv flag)
             // The client expects F to contain the original ATTR flags plus P for private routing
             flags = (attr != null ? attr : "") + "P";
-            log.info("Private mesg from {} to {}: ATTR={}, F={}, TEXT={}", 
+            log.info("Private mesg from {} to {}: ATTR={}, F={}, TEXT={}",
                     socketWrapper.getPersonaEntity().getPers(), priv, attr, flags, text);
         } else {
             // Public/broadcast message: use ATTR as-is
