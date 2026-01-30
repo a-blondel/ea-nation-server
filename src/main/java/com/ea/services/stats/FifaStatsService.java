@@ -226,9 +226,12 @@ public class FifaStatsService {
      */
     @Transactional
     public void rank(SocketData socketData) {
-        String startTime = getValueFromSocket(socketData.getInputMessage(), "WHEN", TAB_CHAR);
-        String name0 = getValueFromSocket(socketData.getInputMessage(), "NAME0", TAB_CHAR);
-        String name1 = getValueFromSocket(socketData.getInputMessage(), "NAME1", TAB_CHAR);
+        // Determine the splitter used in the input message
+        String splitter = socketData.getInputMessage().contains(TAB_CHAR) ? TAB_CHAR : RETURN_CHAR;
+        
+        String startTime = getValueFromSocket(socketData.getInputMessage(), "WHEN", splitter);
+        String name0 = getValueFromSocket(socketData.getInputMessage(), "NAME0", splitter);
+        String name1 = getValueFromSocket(socketData.getInputMessage(), "NAME1", splitter);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATETIME_FORMAT);
         LocalDateTime parsedStartTime = LocalDateTime.parse(startTime, formatter);
@@ -238,8 +241,8 @@ public class FifaStatsService {
         List<GameConnectionEntity> gameConnectionsPlayer1 = gameConnectionRepository.findMatchingGameConnections(name1, parsedStartTime, true);
 
         // Extract player stats from the packet
-        Map<String, Object> player0Stats = extractPlayerStats(socketData.getInputMessage(), "0");
-        Map<String, Object> player1Stats = extractPlayerStats(socketData.getInputMessage(), "1");
+        Map<String, Object> player0Stats = extractPlayerStats(socketData.getInputMessage(), "0", splitter);
+        Map<String, Object> player1Stats = extractPlayerStats(socketData.getInputMessage(), "1", splitter);
 
         // Process Player 0 if game connection found and report doesn't exist
         if (!gameConnectionsPlayer0.isEmpty()) {
@@ -285,41 +288,41 @@ public class FifaStatsService {
      * @param playerIndex  The player index ("0" or "1")
      * @return Map containing the player's stats
      */
-    private Map<String, Object> extractPlayerStats(String inputMessage, String playerIndex) {
+    private Map<String, Object> extractPlayerStats(String inputMessage, String playerIndex, String splitter) {
         Map<String, Object> stats = new HashMap<>();
 
         // Extract all stats for the specified player
-        stats.put("TEAM", parseIntOrDefault(getValueFromSocket(inputMessage, "TEAM" + playerIndex, TAB_CHAR), 0));
-        stats.put("SHT", parseIntOrDefault(getValueFromSocket(inputMessage, "SHT" + playerIndex, TAB_CHAR), 0));
-        stats.put("PASM", parseIntOrDefault(getValueFromSocket(inputMessage, "PASM" + playerIndex, TAB_CHAR), 0));
-        stats.put("PASS", parseIntOrDefault(getValueFromSocket(inputMessage, "PASS" + playerIndex, TAB_CHAR), 0));
-        stats.put("COR", parseIntOrDefault(getValueFromSocket(inputMessage, "COR" + playerIndex, TAB_CHAR), 0));
-        stats.put("OFF", parseIntOrDefault(getValueFromSocket(inputMessage, "OFF" + playerIndex, TAB_CHAR), 0));
-        stats.put("POS", parseIntOrDefault(getValueFromSocket(inputMessage, "POS" + playerIndex, TAB_CHAR), 0));
-        stats.put("TCM", parseIntOrDefault(getValueFromSocket(inputMessage, "TCM" + playerIndex, TAB_CHAR), 0));
-        stats.put("TCS", parseIntOrDefault(getValueFromSocket(inputMessage, "TCS" + playerIndex, TAB_CHAR), 0));
-        stats.put("FLS", parseIntOrDefault(getValueFromSocket(inputMessage, "FLS" + playerIndex, TAB_CHAR), 0));
-        stats.put("YLW", parseIntOrDefault(getValueFromSocket(inputMessage, "YLW" + playerIndex, TAB_CHAR), 0));
-        stats.put("RED", parseIntOrDefault(getValueFromSocket(inputMessage, "RED" + playerIndex, TAB_CHAR), 0));
-        stats.put("DISC", parseIntOrDefault(getValueFromSocket(inputMessage, "DISC" + playerIndex, TAB_CHAR), 0));
-        stats.put("QUIT", parseIntOrDefault(getValueFromSocket(inputMessage, "QUIT" + playerIndex, TAB_CHAR), 0));
-        stats.put("CHEAT", parseIntOrDefault(getValueFromSocket(inputMessage, "CHEAT" + playerIndex, TAB_CHAR), 0));
-        stats.put("SCORE", parseIntOrDefault(getValueFromSocket(inputMessage, "SCORE" + playerIndex, TAB_CHAR), 0));
-        stats.put("WEIGHT", parseIntOrDefault(getValueFromSocket(inputMessage, "WEIGHT" + playerIndex, TAB_CHAR), -1));
-        stats.put("DSCORE", parseIntOrDefault(getValueFromSocket(inputMessage, "DSCORE" + playerIndex, TAB_CHAR), 0));
-        stats.put("HOME", parseIntOrDefault(getValueFromSocket(inputMessage, "HOME" + playerIndex, TAB_CHAR), 0));
+        stats.put("TEAM", parseIntOrDefault(getValueFromSocket(inputMessage, "TEAM" + playerIndex, splitter), 0));
+        stats.put("SHT", parseIntOrDefault(getValueFromSocket(inputMessage, "SHT" + playerIndex, splitter), 0));
+        stats.put("PASM", parseIntOrDefault(getValueFromSocket(inputMessage, "PASM" + playerIndex, splitter), 0));
+        stats.put("PASS", parseIntOrDefault(getValueFromSocket(inputMessage, "PASS" + playerIndex, splitter), 0));
+        stats.put("COR", parseIntOrDefault(getValueFromSocket(inputMessage, "COR" + playerIndex, splitter), 0));
+        stats.put("OFF", parseIntOrDefault(getValueFromSocket(inputMessage, "OFF" + playerIndex, splitter), 0));
+        stats.put("POS", parseIntOrDefault(getValueFromSocket(inputMessage, "POS" + playerIndex, splitter), 0));
+        stats.put("TCM", parseIntOrDefault(getValueFromSocket(inputMessage, "TCM" + playerIndex, splitter), 0));
+        stats.put("TCS", parseIntOrDefault(getValueFromSocket(inputMessage, "TCS" + playerIndex, splitter), 0));
+        stats.put("FLS", parseIntOrDefault(getValueFromSocket(inputMessage, "FLS" + playerIndex, splitter), 0));
+        stats.put("YLW", parseIntOrDefault(getValueFromSocket(inputMessage, "YLW" + playerIndex, splitter), 0));
+        stats.put("RED", parseIntOrDefault(getValueFromSocket(inputMessage, "RED" + playerIndex, splitter), 0));
+        stats.put("DISC", parseIntOrDefault(getValueFromSocket(inputMessage, "DISC" + playerIndex, splitter), 0));
+        stats.put("QUIT", parseIntOrDefault(getValueFromSocket(inputMessage, "QUIT" + playerIndex, splitter), 0));
+        stats.put("CHEAT", parseIntOrDefault(getValueFromSocket(inputMessage, "CHEAT" + playerIndex, splitter), 0));
+        stats.put("SCORE", parseIntOrDefault(getValueFromSocket(inputMessage, "SCORE" + playerIndex, splitter), 0));
+        stats.put("WEIGHT", parseIntOrDefault(getValueFromSocket(inputMessage, "WEIGHT" + playerIndex, splitter), -1));
+        stats.put("DSCORE", parseIntOrDefault(getValueFromSocket(inputMessage, "DSCORE" + playerIndex, splitter), 0));
+        stats.put("HOME", parseIntOrDefault(getValueFromSocket(inputMessage, "HOME" + playerIndex, splitter), 0));
 
         // Extract common fields
-        stats.put("VENUE", parseIntOrDefault(getValueFromSocket(inputMessage, "VENUE", TAB_CHAR), 0));
-        stats.put("TYPE", parseIntOrDefault(getValueFromSocket(inputMessage, "TYPE", TAB_CHAR), 0));
-        stats.put("TIME", parseIntOrDefault(getValueFromSocket(inputMessage, "TIME", TAB_CHAR), 0));
-        stats.put("SKIL", parseIntOrDefault(getValueFromSocket(inputMessage, "SKIL", TAB_CHAR), 0));
-        stats.put("PLEN", parseIntOrDefault(getValueFromSocket(inputMessage, "PLEN", TAB_CHAR), 0));
-        stats.put("PNUM", parseIntOrDefault(getValueFromSocket(inputMessage, "PNUM", TAB_CHAR), 0));
-        stats.put("RNK", parseIntOrDefault(getValueFromSocket(inputMessage, "RNK", TAB_CHAR), 0));
-        stats.put("PK", parseIntOrDefault(getValueFromSocket(inputMessage, "PK", TAB_CHAR), 0));
-        stats.put("GLD", parseIntOrDefault(getValueFromSocket(inputMessage, "GLD", TAB_CHAR), 0));
-        stats.put("DTIME", parseIntOrDefault(getValueFromSocket(inputMessage, "DTIME", TAB_CHAR), 0));
+        stats.put("VENUE", parseIntOrDefault(getValueFromSocket(inputMessage, "VENUE", splitter), 0));
+        stats.put("TYPE", parseIntOrDefault(getValueFromSocket(inputMessage, "TYPE", splitter), 0));
+        stats.put("TIME", parseIntOrDefault(getValueFromSocket(inputMessage, "TIME", splitter), 0));
+        stats.put("SKIL", parseIntOrDefault(getValueFromSocket(inputMessage, "SKIL", splitter), 0));
+        stats.put("PLEN", parseIntOrDefault(getValueFromSocket(inputMessage, "PLEN", splitter), 0));
+        stats.put("PNUM", parseIntOrDefault(getValueFromSocket(inputMessage, "PNUM", splitter), 0));
+        stats.put("RNK", parseIntOrDefault(getValueFromSocket(inputMessage, "RNK", splitter), 0));
+        stats.put("PK", parseIntOrDefault(getValueFromSocket(inputMessage, "PK", splitter), 0));
+        stats.put("GLD", parseIntOrDefault(getValueFromSocket(inputMessage, "GLD", splitter), 0));
+        stats.put("DTIME", parseIntOrDefault(getValueFromSocket(inputMessage, "DTIME", splitter), 0));
 
         return stats;
     }
