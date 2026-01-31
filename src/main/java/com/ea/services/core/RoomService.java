@@ -117,7 +117,10 @@ public class RoomService {
                         // Also notify each client in the room about the new user
                         if (!clientWrapper.getSocket().equals(socket)) {
                             socketWriter.write(clientWrapper.getSocket(), new SocketData("+usr", null, personaUtils.getPersonaInfo(socket, socketWrapper, room)));
+                            socketWriter.write(clientWrapper.getSocket(), new SocketData("+who", null, personaUtils.getPersonaInfo(clientWrapper.getSocket(), clientWrapper, room)));
                         }
+                        // Remember the player who he is... (FIFA on PS2 forget about his country otherwise)
+                        socketWriter.write(socket, new SocketData("+who", null, personaUtils.getPersonaInfo(socket, socketWrapper, room)));
                     }
                 }
             }
@@ -402,6 +405,11 @@ public class RoomService {
                             }
                         }
                     }
+                    // Send +who to the player themselves with their own persona info
+                    // Remember the player who he is... (FIFA on PS2 forget about his country otherwise)
+                    socketWriter.write(playerWrapper.getSocket(),
+                            new SocketData("+who", null,
+                                    personaUtils.getPersonaInfo(playerWrapper.getSocket(), playerWrapper, room)));
                 }
             }
         }
