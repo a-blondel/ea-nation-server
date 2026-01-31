@@ -88,10 +88,9 @@ public class FifaStatsService {
     /**
      * Retrieve ranking categories
      *
-     * @param socketData    The socket data
-     * @param socketWrapper The socket wrapper
+     * @param socketData The socket data
      */
-    public void cate(SocketData socketData, SocketWrapper socketWrapper) {
+    public void cate(SocketData socketData) {
         Map<String, String> content = Stream.of(new String[][]{
                 {"CC", "2"}, // <total # of categories in this view>
                 {"IC", "2"}, // <total # of indices in this view>
@@ -228,7 +227,7 @@ public class FifaStatsService {
     public void rank(SocketData socketData) {
         // Determine the splitter used in the input message
         String splitter = socketData.getInputMessage().contains(TAB_CHAR) ? TAB_CHAR : RETURN_CHAR;
-        
+
         String startTime = getValueFromSocket(socketData.getInputMessage(), "WHEN", splitter);
         String name0 = getValueFromSocket(socketData.getInputMessage(), "NAME0", splitter);
         String name1 = getValueFromSocket(socketData.getInputMessage(), "NAME1", splitter);

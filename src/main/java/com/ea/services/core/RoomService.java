@@ -266,8 +266,6 @@ public class RoomService {
             // Private message: ATTR + P (priv flag)
             // The client expects F to contain the original ATTR flags plus P for private routing
             flags = (attr != null ? attr : "") + "P";
-            log.info("Private mesg from {} to {}: ATTR={}, F={}, TEXT={}",
-                    socketWrapper.getPersonaEntity().getPers(), priv, attr, flags, text);
         } else {
             // Public/broadcast message: use ATTR as-is
             flags = attr != null ? attr : "Z"; // NHL07 uses "Z" for lobby messages (no ATTR specified)
@@ -365,6 +363,43 @@ public class RoomService {
                         if (clientRoom != null && clientRoom.getId().equals(oldRoom.getId())) {
                             Map<String, String> content = Collections.singletonMap("I", wrapper.getPersonaEntity().getId().toString());
                             socketWriter.write(clientWrapper.getSocket(), new SocketData("+usr", null, content));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Broadcast room users to all online players in a room
+     *
+     * @param vers   The game version
+     * @param roomId The room ID
+     */
+    public void broadcastRoomUsers(String vers, Long roomId) {
+        Room room = getRoomById(roomId);
+        if (room == null) {
+            return;
+        }
+
+        // Get all online players for this game version
+        List<SocketWrapper> onlinePlayers = socketManager.getSocketWrapperByVers(vers);
+
+        for (SocketWrapper playerWrapper : onlinePlayers) {
+            if (playerWrapper.getPersonaEntity() != null) {
+                Room playerRoom = getRoomByPersonaId(playerWrapper.getPersonaEntity().getId());
+
+                // Only broadcast to players in the same room
+                if (playerRoom != null && playerRoom.getId().equals(roomId)) {
+                    // Send +usr for all players in the room
+                    for (SocketWrapper roomPlayerWrapper : onlinePlayers) {
+                        if (roomPlayerWrapper.getPersonaEntity() != null) {
+                            Room roomPlayerRoom = getRoomByPersonaId(roomPlayerWrapper.getPersonaEntity().getId());
+                            if (roomPlayerRoom != null && roomPlayerRoom.getId().equals(roomId)) {
+                                socketWriter.write(playerWrapper.getSocket(),
+                                        new SocketData("+usr", null,
+                                                personaUtils.getPersonaInfo(roomPlayerWrapper.getSocket(), roomPlayerWrapper, room)));
+                            }
                         }
                     }
                 }

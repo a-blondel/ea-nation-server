@@ -47,7 +47,7 @@ public class StatsService {
         } else if (ALL_PSP_NFS.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             nfsStatsService.cate(socketData, socketWrapper);
         } else if (ALL_FIFA.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
-            fifaStatsService.cate(socketData, socketWrapper);
+            fifaStatsService.cate(socketData);
         }
         socketWriter.write(socket, socketData);
     }

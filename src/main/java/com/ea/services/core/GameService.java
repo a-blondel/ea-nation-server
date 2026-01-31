@@ -917,6 +917,7 @@ public class GameService {
         List<GameEntity> gameEntity = gameRepository.findCurrentGameOfPersona(socketWrapper.getPersonaConnectionEntity().getId());
         if (!gameEntity.isEmpty()) {
             GameEntity game = gameEntity.getFirst();
+            String vers = game.getVers();
             LocalDateTime now = LocalDateTime.now();
             game.setEndTime(now);
             gameRepository.save(game);
@@ -929,6 +930,14 @@ public class GameService {
             // But for USERSETS_GAMES, do not broadcast game removal - players should stay in the UserSet lobby
             if (gameServerService.isP2P(game.getVers()) && !USERSETS_GAMES.contains(game.getVers())) {
                 roomService.removeGameFromRoom(game, socketWrapper);
+
+                // For PS2 FIFA games, broadcast room users to all remaining online players
+                if (ALL_PS2_FIFA.contains(vers) && socketWrapper.getPersonaEntity() != null) {
+                    Room room = roomService.getRoomByPersonaId(socketWrapper.getPersonaEntity().getId());
+                    if (room != null) {
+                        roomService.broadcastRoomUsers(vers, room.getId());
+                    }
+                }
             } else if (USERSETS_GAMES.contains(game.getVers())) {
                 Map<String, String> mgmContent = Collections.singletonMap("IDENT", String.valueOf(game.getId()));
                 socketWriter.write(socketWrapper.getSocket(), new SocketData("+mgm", null, mgmContent));
