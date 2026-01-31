@@ -10,6 +10,10 @@ import com.ea.repositories.core.GameConnectionRepository;
 import com.ea.repositories.stats.FifaGameReportRepository;
 import com.ea.repositories.stats.FifaPersonaStatsRepository;
 import com.ea.steps.SocketWriter;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.LockTimeoutException;
+import jakarta.persistence.PessimisticLockException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +43,7 @@ public class FifaStatsService {
     private final GameConnectionRepository gameConnectionRepository;
     private final FifaPersonaStatsRepository fifaPersonaStatsRepository;
     private final FifaGameReportRepository fifaGameReportRepository;
+    private final EntityManager entityManager;
 
     private static String getStats(boolean hasStats, FifaPersonaStatsEntity fifaPersonaStatsEntity) {
         long totalGames = hasStats ? (fifaPersonaStatsEntity.getWins() + fifaPersonaStatsEntity.getLosses() + fifaPersonaStatsEntity.getDraw()) : 0;
@@ -225,58 +230,71 @@ public class FifaStatsService {
      */
     @Transactional
     public void rank(SocketData socketData) {
-        // Determine the splitter used in the input message
-        String splitter = socketData.getInputMessage().contains(TAB_CHAR) ? TAB_CHAR : RETURN_CHAR;
+        try {
+            // Determine the splitter used in the input message
+            String splitter = socketData.getInputMessage().contains(TAB_CHAR) ? TAB_CHAR : RETURN_CHAR;
 
-        String startTime = getValueFromSocket(socketData.getInputMessage(), "WHEN", splitter);
-        String name0 = getValueFromSocket(socketData.getInputMessage(), "NAME0", splitter);
-        String name1 = getValueFromSocket(socketData.getInputMessage(), "NAME1", splitter);
+            String startTime = getValueFromSocket(socketData.getInputMessage(), "WHEN", splitter);
+            String name0 = getValueFromSocket(socketData.getInputMessage(), "NAME0", splitter);
+            String name1 = getValueFromSocket(socketData.getInputMessage(), "NAME1", splitter);
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATETIME_FORMAT);
-        LocalDateTime parsedStartTime = LocalDateTime.parse(startTime, formatter);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATETIME_FORMAT);
+            LocalDateTime parsedStartTime = LocalDateTime.parse(startTime, formatter);
 
-        // Find game connections for both players
-        List<GameConnectionEntity> gameConnectionsPlayer0 = gameConnectionRepository.findMatchingGameConnections(name0, parsedStartTime, true);
-        List<GameConnectionEntity> gameConnectionsPlayer1 = gameConnectionRepository.findMatchingGameConnections(name1, parsedStartTime, true);
+            // Find game connections for both players
+            List<GameConnectionEntity> gameConnectionsPlayer0 = gameConnectionRepository.findMatchingGameConnections(name0, parsedStartTime, true);
+            List<GameConnectionEntity> gameConnectionsPlayer1 = gameConnectionRepository.findMatchingGameConnections(name1, parsedStartTime, true);
 
-        // Extract player stats from the packet
-        Map<String, Object> player0Stats = extractPlayerStats(socketData.getInputMessage(), "0", splitter);
-        Map<String, Object> player1Stats = extractPlayerStats(socketData.getInputMessage(), "1", splitter);
+            // Apply pessimistic lock to prevent concurrent updates
+            if (!gameConnectionsPlayer0.isEmpty()) {
+                GameConnectionEntity gc = gameConnectionsPlayer0.getFirst();
+                entityManager.find(gc.getGame().getClass(), gc.getGame().getId(), LockModeType.PESSIMISTIC_WRITE);
+            } else if (!gameConnectionsPlayer1.isEmpty()) {
+                GameConnectionEntity gc = gameConnectionsPlayer1.getFirst();
+                entityManager.find(gc.getGame().getClass(), gc.getGame().getId(), LockModeType.PESSIMISTIC_WRITE);
+            }
 
-        // Process Player 0 if game connection found and report doesn't exist
-        if (!gameConnectionsPlayer0.isEmpty()) {
-            GameConnectionEntity gameConnection0 = gameConnectionsPlayer0.getFirst();
-            if (!fifaGameReportRepository.existsById(gameConnection0.getId())) {
-                // Create and save game report for Player 0
-                FifaGameReportEntity gameReport0 = new FifaGameReportEntity();
-                gameReport0.setGameConnection(gameConnection0);
-                populateGameReportFromStats(gameReport0, player0Stats);
-                fifaGameReportRepository.save(gameReport0);
+            // Extract player stats from the packet
+            Map<String, Object> player0Stats = extractPlayerStats(socketData.getInputMessage(), "0", splitter);
+            Map<String, Object> player1Stats = extractPlayerStats(socketData.getInputMessage(), "1", splitter);
 
-                // Update persona stats if ranked
-                int rnk = (Integer) player0Stats.get("RNK");
-                if (rnk == 1) {
-                    updatePersonaStats(gameConnection0, player0Stats, player1Stats);
+            // Process Player 0 if game connection found and report doesn't exist
+            if (!gameConnectionsPlayer0.isEmpty()) {
+                GameConnectionEntity gameConnection0 = gameConnectionsPlayer0.getFirst();
+                if (!fifaGameReportRepository.existsById(gameConnection0.getId())) {
+                    // Create and save game report for Player 0
+                    FifaGameReportEntity gameReport0 = new FifaGameReportEntity();
+                    gameReport0.setGameConnection(gameConnection0);
+                    populateGameReportFromStats(gameReport0, player0Stats);
+                    fifaGameReportRepository.save(gameReport0);
+
+                    // Update persona stats if ranked
+                    int rnk = (Integer) player0Stats.get("RNK");
+                    if (rnk == 1) {
+                        updatePersonaStats(gameConnection0, player0Stats, player1Stats);
+                    }
                 }
             }
-        }
 
-        // Process Player 1 if game connection found and report doesn't exist
-        if (!gameConnectionsPlayer1.isEmpty()) {
-            GameConnectionEntity gameConnection1 = gameConnectionsPlayer1.getFirst();
-            if (!fifaGameReportRepository.existsById(gameConnection1.getId())) {
-                // Create and save game report for Player 1
-                FifaGameReportEntity gameReport1 = new FifaGameReportEntity();
-                gameReport1.setGameConnection(gameConnection1);
-                populateGameReportFromStats(gameReport1, player1Stats);
-                fifaGameReportRepository.save(gameReport1);
+            // Process Player 1 if game connection found and report doesn't exist
+            if (!gameConnectionsPlayer1.isEmpty()) {
+                GameConnectionEntity gameConnection1 = gameConnectionsPlayer1.getFirst();
+                if (!fifaGameReportRepository.existsById(gameConnection1.getId())) {
+                    // Create and save game report for Player 1
+                    FifaGameReportEntity gameReport1 = new FifaGameReportEntity();
+                    gameReport1.setGameConnection(gameConnection1);
+                    populateGameReportFromStats(gameReport1, player1Stats);
+                    fifaGameReportRepository.save(gameReport1);
 
-                // Update persona stats if ranked
-                int rnk = (Integer) player1Stats.get("RNK");
-                if (rnk == 1) {
-                    updatePersonaStats(gameConnection1, player1Stats, player0Stats);
+                    // Update persona stats if ranked
+                    int rnk = (Integer) player1Stats.get("RNK");
+                    if (rnk == 1) {
+                        updatePersonaStats(gameConnection1, player1Stats, player0Stats);
+                    }
                 }
             }
+        } catch (PessimisticLockException | LockTimeoutException e) {
+            log.warn("Error processing rank packet (pessimistic lock): {}", e.getMessage());
         }
     }
 
