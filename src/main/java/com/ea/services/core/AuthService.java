@@ -244,7 +244,8 @@ public class AuthService {
 
     /**
      * slst - Stats List -- load the list of available stats views.
-     * No idea what these are used for.
+     * No idea how to get career stats to work, but it is required to set at least one view to access online.
+     * The view name is displayed in the "Stats > My Carrer" screen.
      *
      * @param socket     the socket
      * @param socketData the socket data
@@ -252,7 +253,7 @@ public class AuthService {
     public void slst(Socket socket, SocketData socketData) {
         Map<String, String> content = Stream.of(new String[][]{
                 {"COUNT", "1"},
-                {"VIEW0", "lobby,\"Lobby Stats View\"", "1"}
+                {"VIEW0", "Career,\"My Carrer\"", "1"},
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
         socketData.setOutputData(content);

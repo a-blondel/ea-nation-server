@@ -22,6 +22,7 @@ public class SocketProcessor {
     private final PersonaService personaService;
     private final StatsService statsService;
     private final GameService gameService;
+    private final LeagueService leagueService;
     private final SocketWriter socketWriter;
     private final SocketManager socketManager;
     private final BuddyService buddyService;
@@ -218,7 +219,19 @@ public class SocketProcessor {
                 gameService.filt(socket, socketData);
                 break;
             case ("ilgs"):
-                gameService.ilgs(socket, socketData);
+                leagueService.ilgs(socket, socketData);
+                break;
+            case ("ilgf"):
+                leagueService.ilgf(socket, socketData);
+                break;
+            case ("ilgt"):
+                leagueService.ilgt(socket, socketData);
+                break;
+            case ("ilsc"):
+                leagueService.ilsc(socket, socketData);
+                break;
+            case ("ilou"):
+                leagueService.ilou(socket, socketData);
                 break;
             case ("ucre"):
                 userSetService.ucre(socket, socketData, socketWrapper);
