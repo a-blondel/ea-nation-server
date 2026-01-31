@@ -154,6 +154,9 @@ public class SocketProcessor {
             case ("usld"):
                 personaService.usld(socket, socketData);
                 break;
+            case ("ussv"):
+                personaService.ussv(socket, socketData);
+                break;
             case ("rcat"):
                 roomService.rcat(socket, socketData, socketWrapper);
                 break;

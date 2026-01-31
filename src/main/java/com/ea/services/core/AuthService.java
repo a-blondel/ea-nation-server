@@ -216,32 +216,43 @@ public class AuthService {
         socketWriter.write(socket, socketData);
     }
 
-    // TODO - confirm which fields are expected
+    /**
+     * qdef - Quick Message Defaults -- load a user's default quick messages.
+     *
+     * @param socket     the socket
+     * @param socketData the socket data
+     */
     public void qdef(Socket socket, SocketData socketData) {
         Map<String, String> content = Stream.of(new String[][]{
                 {"IMGATE", "0"},
-                {"QMSG0", "0"},
-                {"QMSG1", "1"},
-                {"QMSG2", "2"},
-                {"QMSG3", "3"},
-                {"QMSG4", "4"},
-                {"QMSG5", "5"},
+                {"QMSG0", "\"Do you want to play a game?\""},
+                {"QMSG1", "Yes"},
+                {"QMSG2", "No"},
+                {"QMSG3", "\"OK, let's start\""},
+                {"QMSG4", "\"Have fun!\""},
+                {"QMSG5", "\"Good game!\""},
+                {"QMSG6", "Thanks!"},
+                {"QMSG7", "\"Catch you later\""},
+                {"QMSG8", "\"See Ya!\""},
                 {"SPM_EA", "0"},
                 {"SPM_PART", "0"},
-                {"UID", "$000000000b32588d"},
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
         socketData.setOutputData(content);
         socketWriter.write(socket, socketData);
     }
 
-    // TODO - confirm which fields are expected
+    /**
+     * slst - Stats List -- load the list of available stats views.
+     * No idea what these are used for.
+     *
+     * @param socket     the socket
+     * @param socketData the socket data
+     */
     public void slst(Socket socket, SocketData socketData) {
         Map<String, String> content = Stream.of(new String[][]{
-                {"COUNT", "3"},
-                {"VIEW0", "lobby,\"Online Lobby Stats View\"", "1"},
-                {"VIEW1", "DLC,\"DLC Lobby Stats View\"", "1"},
-                {"VIEW2", "RoadRules,\"Road Rules\"", "1"},
+                {"COUNT", "1"},
+                {"VIEW0", "lobby,\"Lobby Stats View\"", "1"}
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
         socketData.setOutputData(content);
