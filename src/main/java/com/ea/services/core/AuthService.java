@@ -208,6 +208,12 @@ public class AuthService {
         }
     }
 
+    /**
+     * Set private message mode.
+     *
+     * @param socket     the socket
+     * @param socketData the socket data
+     */
     public void priv(Socket socket, SocketData socketData) {
         String mode = getValueFromSocket(socketData.getInputMessage(), "MODE");
         String result = mode.equals("off") ? "0" : "1";
@@ -261,6 +267,20 @@ public class AuthService {
     }
 
 
+    /**
+     * uatr - Update user attributes and hardware flags
+     * User attributes are stored as bitfields in a 32 bit unsigned integer and
+     * are non-persistent between logins.  These attributes can be used in
+     * conjunction with room entry filtering to control user access to certain
+     * rooms.  Hardware flags indicate which hardware the user has available
+     * (such as a headset or keyboard).  The HWMASK parameter is used to filter
+     * out attributes which aren't appropriate for the client's hardware.
+     * A user's flags (LOBBYAPI_USER_FL_xxx) may be set with this command as
+     * well.  Only the FILT, PRIV, and ATTR[0-3] flags may be modified though.
+     *
+     * @param socket     the socket
+     * @param socketData the socket data
+     */
     public void uatr(Socket socket, SocketData socketData) {
         // Should update user attributes with HWFLAG and HWMASK and send back +who and +usr
         socketWriter.write(socket, socketData);

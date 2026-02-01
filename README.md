@@ -22,7 +22,7 @@ Fell free to join !
 | Game                              | Platform(s)     | Region(s) | Status                        |
 |-----------------------------------|-----------------|-----------|-------------------------------|
 | UEFA Champions League 2006-2007   | PSP             | EU, US    | Playable, partial support     |
-| FIFA 07, 08                       | PS2             | EU, US    | Playable, partial support     |
+| FIFA 07, 08                       | PS2             | EU        | Playable, partial support     |
 | FIFA 07, 08, 09, 10               | PSP             | EU, US    | Playable, partial support     |
 | FIFA World Cup Germany 2006       | PSP             | EU, US    | Playable, partial support     |
 | FIFA World Cup South Africa 2010  | PSP             | EU, US    | Playable, partial support     |
@@ -52,6 +52,8 @@ Notes:
 - **The PS2 version of NFS MW 2005 requires a DNAS patch. Either
   use [DNAS-net Patcher](https://www.psx-place.com/threads/dnas-net-patcher.22813/) or the
   provided [Xdelta patch](https://github.com/a-blondel/ea-nation-server/tree/main/patches/PS2/Xdelta/NFS-Most-Wanted)**
+- All the other PS2 games requires a DNAS patch unless they are supported by DNASrep.
+  See [pnach](https://github.com/a-blondel/ea-nation-server/tree/main/patches/PS2/pnach) folder for your specific game
 - Partial support means that some features are not implemented yet, like:
     - Leaderboards
     - Roster download

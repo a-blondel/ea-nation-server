@@ -105,14 +105,15 @@ game:
           slus:
             - 'ULUS-10029' # Actual SLUS used by the game (PSP/FIFA06)
     - vers: 'PS2/FIFA08'
-      sdk: '4.6.3.0'
+      sdk: '5.4.3.0' # 4.6.3.0 for the dashboard
       ssl:
         domain: 'ps2fifa08.ea.com'
       regions:
         - name: 'EU'
           port: 20400
           slus:
-            - '1.00' # SLES-54874
+            - '1.00' # Dashboard
+            - 'SLES_548.74'
     - vers: 'PSP/FIFA08'
       sdk: '5.5.0.0'
       ssl:

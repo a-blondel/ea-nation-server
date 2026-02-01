@@ -788,11 +788,11 @@ public class BuddyService {
     /**
      * GNOT - Send a Game Notification packet to a client
      * <p>
-     * Based on reverse engineering of _BuddyApiHandleGNOTMsg in FIFA 07 PS2:
      * - TYPE: Status character (I=Invite, A=Accept, D=Decline, R=Revoke, G=Game)
      * - HOST: Sender username (used when TYPE='I' or 'R')
      * - GSTR: Game session identifier (used when TYPE='I' or 'R')
      * - USER: Related username (used when TYPE='A' or 'D')
+     * </p>
      *
      * @param socket the socket to send to
      * @param type   the status (I, A, D, R, G)

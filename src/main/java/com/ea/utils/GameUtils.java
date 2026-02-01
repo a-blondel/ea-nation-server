@@ -134,9 +134,9 @@ public class GameUtils {
                             {"LADDR" + idx[0], ipAddr},
                             {"MADDR" + idx[0], ""},
                             {"OPPART" + idx[0], "0"},
+                            {"OPPARAM" + idx[0], opparamValue},
                             {"OPFLAG" + idx[0], socketWrapper.getUserflags()},
                             {"PRES" + idx[0], "0"},
-                            {"OPPARAM" + idx[0], opparamValue},
                             {"PARTSIZE" + idx[0], String.valueOf(gameEntity.getMaxsize())},
                             {"PARTPARAMS" + idx[0], ""},
                     }).collect(Collectors.toMap(data -> data[0], data -> data[1])));

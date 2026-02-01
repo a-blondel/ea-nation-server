@@ -261,8 +261,6 @@ public class RoomService {
         String priv = getValueFromSocket(socketData.getInputMessage(), "PRIV");
 
         // ATTR contains encoded flags using the table @ABCDEFGHIJKLMNOPQRSTUVWXYZ0123- where each char is a bit
-        // Examples: ENX = E(bit5) + N(bit14) + X(bit24) = 0x1004020
-        //           EN0 = E(bit5) + N(bit14) + 0(bit27) = 0x8004020
         // For private messages, add P (bit 16 = 0x10000) to the flags
         String flags;
         if (priv != null) {
