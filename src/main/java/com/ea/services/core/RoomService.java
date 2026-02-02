@@ -23,6 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.ea.services.server.GameServerService.PS2_FIFA_08;
 import static com.ea.utils.SocketUtils.TAB_CHAR;
 import static com.ea.utils.SocketUtils.getValueFromSocket;
 
@@ -57,7 +58,7 @@ public class RoomService {
                     {"N", "LVL.1"}, // Room name
                     {"DN", room.getName()}, // Actual room name displayed
                     {"D", ""}, // Description (132 bytes max)
-                    {"F", "ACK"}, // Room flags
+                    {"F", "A"}, // Room flags
                     {"T", String.valueOf(room.getPersonaIds().size())}, // Current room population
                     {"L", "50"}, // Max users allowed in room
             }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
@@ -168,6 +169,11 @@ public class RoomService {
                 {"CAT0", "Default,Global,LVL,,,,,1"},
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
+        // PS2/FIFA08 wants at least 2 categories with one having auto_create=0
+        if (PS2_FIFA_08.equals(socketWrapper.getPersonaConnectionEntity().getVers())) {
+            content.put("CAT1", "Manual,Local,LVL,,,,,0");
+        }
+
         socketData.setOutputData(content);
 
         socketWriter.write(socket, socketData);
@@ -181,11 +187,10 @@ public class RoomService {
      * Expected request args: CAT<x>=<prefix>, PARM<x>=<params>
      * Expected response: COUNT=<n> followed by n +rom async messages
      *
-     * @param socket        The socket to write the response to
-     * @param socketData    The socket data
-     * @param socketWrapper The socket wrapper of current connection
+     * @param socket     The socket to write the response to
+     * @param socketData The socket data
      */
-    public void arom(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+    public void arom(Socket socket, SocketData socketData) {
 
         // Count how many CAT/PARM pairs we received by checking cat0, cat1, cat2...
         int count = 0;

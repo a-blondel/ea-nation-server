@@ -162,7 +162,7 @@ public class SocketProcessor {
                 roomService.rcat(socket, socketData, socketWrapper);
                 break;
             case ("arom"):
-                roomService.arom(socket, socketData, socketWrapper);
+                roomService.arom(socket, socketData);
                 break;
             case ("room"):
                 roomService.room(socket, socketData);
