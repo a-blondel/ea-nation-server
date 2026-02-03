@@ -11,12 +11,12 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.9</version>
+        <version>3.5.10</version>
     </parent>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <org.springframework.boot.version>3.5.9</org.springframework.boot.version>
+        <org.springframework.boot.version>3.5.10</org.springframework.boot.version>
         <org.springframework.data.version>3.5.7</org.springframework.data.version>
         <org.springframework.version>6.2.15</org.springframework.version>
         <org.springframework.security.version>6.5.7</org.springframework.security.version>
@@ -30,7 +30,7 @@
         <postgresql.version>42.7.8</postgresql.version>
         <com.h2database.version>2.4.240</com.h2database.version>
         <snakeyaml.version>2.5</snakeyaml.version>
-        <logback.version>1.5.23</logback.version>
+        <logback.version>1.5.27</logback.version>
         <netty.version>4.2.9.Final</netty.version>
     </properties>
 
