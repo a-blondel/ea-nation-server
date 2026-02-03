@@ -22,6 +22,7 @@ public class SocketProcessor {
     private final PersonaService personaService;
     private final StatsService statsService;
     private final GameService gameService;
+    private final LeagueService leagueService;
     private final SocketWriter socketWriter;
     private final SocketManager socketManager;
     private final BuddyService buddyService;
@@ -85,6 +86,15 @@ public class SocketProcessor {
             case ("SEND"):
                 buddyService.send(socket, socketData, buddySocketWrapper);
                 break;
+            case ("GINV"):
+                buddyService.ginv(socket, socketData, buddySocketWrapper);
+                break;
+            case ("GRSP"):
+                buddyService.grsp(socket, socketData, buddySocketWrapper);
+                break;
+            case ("GRVK"):
+                buddyService.grvk(socket, socketData, buddySocketWrapper);
+                break;
             case ("DISC"):
                 buddyService.disc(buddySocketWrapper);
                 break;
@@ -99,6 +109,18 @@ public class SocketProcessor {
                 break;
             case ("sele"):
                 authService.sele(socket, socketData, socketWrapper);
+                break;
+            case ("priv"):
+                authService.priv(socket, socketData);
+                break;
+            case ("qdef"):
+                authService.qdef(socket, socketData);
+                break;
+            case ("slst"):
+                authService.slst(socket, socketData);
+                break;
+            case ("uatr"):
+                authService.uatr(socket, socketData);
                 break;
             case ("user"):
                 accountService.user(socket, socketData, socketWrapper);
@@ -130,8 +152,20 @@ public class SocketProcessor {
             case ("rept"):
                 personaService.rept(socket, socketData, socketWrapper);
                 break;
+            case ("usld"):
+                personaService.usld(socket, socketData);
+                break;
+            case ("ussv"):
+                personaService.ussv(socket, socketData);
+                break;
             case ("rcat"):
                 roomService.rcat(socket, socketData, socketWrapper);
+                break;
+            case ("arom"):
+                roomService.arom(socket, socketData);
+                break;
+            case ("room"):
+                roomService.room(socket, socketData);
                 break;
             case ("move"):
                 roomService.move(socket, socketData, socketWrapper);
@@ -183,6 +217,21 @@ public class SocketProcessor {
                 break;
             case ("filt"):
                 gameService.filt(socket, socketData);
+                break;
+            case ("ilgs"):
+                leagueService.ilgs(socket, socketData);
+                break;
+            case ("ilgf"):
+                leagueService.ilgf(socket, socketData);
+                break;
+            case ("ilgt"):
+                leagueService.ilgt(socket, socketData);
+                break;
+            case ("ilsc"):
+                leagueService.ilsc(socket, socketData);
+                break;
+            case ("ilou"):
+                leagueService.ilou(socket, socketData);
                 break;
             case ("ucre"):
                 userSetService.ucre(socket, socketData, socketWrapper);

@@ -75,10 +75,24 @@ public class SocketManager {
     }
 
     public SocketWrapper getAriesSocketWrapperByLkey(String lkey) {
-        return sockets.values().stream()
+        SocketWrapper result = sockets.values().stream()
                 .filter(wrapper -> lkey.equals(wrapper.getLkey()))
                 .findFirst()
                 .orElse(null);
+
+        // If no exact match, try partial match by removing last character (bug from FIFA on PS2)
+        if (result == null && lkey.length() > 1) {
+            result = sockets.values().stream()
+                    .filter(wrapper -> {
+                        String wrapperLkey = wrapper.getLkey();
+                        return wrapperLkey != null &&
+                                wrapperLkey.length() > 1 &&
+                                lkey.equals(wrapperLkey.substring(0, wrapperLkey.length() - 1));
+                    })
+                    .findFirst()
+                    .orElse(null);
+        }
+        return result;
     }
 
     public Set<String> getActiveSocketIdentifiers() {

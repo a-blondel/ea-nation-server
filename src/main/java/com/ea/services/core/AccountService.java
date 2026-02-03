@@ -188,7 +188,8 @@ public class AccountService {
                         {"PERSONAS", personas},
                         {"LOC", accountEntity.getLoc() != null ? accountEntity.getLoc() : "enUS"},
                         {"MAIL", accountEntity.getMail() != null ? accountEntity.getMail() : ""},
-                        {"SPAM", "NN"}
+                        {"SPAM", "NN"},
+                        {"TOS", "1"},
                 }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
                 socketData.setOutputData(content);
 

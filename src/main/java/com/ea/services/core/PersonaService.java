@@ -427,4 +427,76 @@ public class PersonaService {
         roomService.rom(socket, socketData);
     }
 
+    /**
+     * usld - User Settings Load -- load a user's (persona's) common game specific settings
+     * The attributes are supposed to be stored per persona (uses ussv, overrides qdef), but for simplicity we return static values.
+     *
+     * @param socket     the socket to write into
+     * @param socketData the socket data
+     */
+    public void usld(Socket socket, SocketData socketData) {
+        PersonaEntity personaEntity = socketManager.getSocketWrapperBySocket(socket).getPersonaEntity();
+        Map<String, String> content = Stream.of(new String[][]{
+                {"IMGATE", "0"},
+                {"QMSG0", "\"Do you want to play a game?\""},
+                {"QMSG1", "Yes"},
+                {"QMSG2", "No"},
+                {"QMSG3", "\"OK, let's start\""},
+                {"QMSG4", "\"Have fun!\""},
+                {"QMSG5", "\"Good game!\""},
+                {"QMSG6", "Thanks!"},
+                {"QMSG7", "\"Catch you later\""},
+                {"QMSG8", "\"See Ya!\""},
+                {"SPM_EA", "0"},
+                {"SPM_PART", "0"},
+                {"UID", String.valueOf(personaEntity.getId())},
+        }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+
+        socketData.setOutputData(content);
+        socketWriter.write(socket, socketData);
+    }
+
+    /**
+     * ussv - User Settings Save -- Save this user's common and game specific settings to the db.
+     * For simplicity, we do not store the settings.
+     *
+     * @param socket     the socket to write into
+     * @param socketData the socket data
+     */
+    public void ussv(Socket socket, SocketData socketData) {
+        /**
+         * e.g. from FIFA 08:
+         * UID=$000000000b32588 (the User ID given in usld, but better not trust and use the logged in persona ID)
+         * dO_IGchat=1
+         * O_IGprof=1
+         * O_MusicVol=5
+         * SPM_EA=0
+         * SPM_PART=0
+         * EMAIL=
+         * SMS=
+         * O_Notify=2
+         * O_IMfwd=0
+         * O_EGstat=0
+         * O_IMaudio=0
+         * O_IMrumble=0
+         * O_IMchal=-1
+         * O_IMvoice=0
+         * O_IMonline=1
+         * O_TKfriend=1
+         * O_TKsport=1
+         * QMSG0=0aaa
+         * QMSG1=
+         * QMSG2=
+         * QMSG3=
+         * QMSG4=
+         * QMSG5=
+         * QMSG6=
+         * QMSG7=
+         * QMSG8=
+         * ALERTS=64
+         * IMGATE=0
+         */
+        socketWriter.write(socket, socketData);
+    }
+
 }

@@ -10,6 +10,10 @@ import com.ea.repositories.core.GameConnectionRepository;
 import com.ea.repositories.stats.FifaGameReportRepository;
 import com.ea.repositories.stats.FifaPersonaStatsRepository;
 import com.ea.steps.SocketWriter;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.LockTimeoutException;
+import jakarta.persistence.PessimisticLockException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +43,7 @@ public class FifaStatsService {
     private final GameConnectionRepository gameConnectionRepository;
     private final FifaPersonaStatsRepository fifaPersonaStatsRepository;
     private final FifaGameReportRepository fifaGameReportRepository;
+    private final EntityManager entityManager;
 
     private static String getStats(boolean hasStats, FifaPersonaStatsEntity fifaPersonaStatsEntity) {
         long totalGames = hasStats ? (fifaPersonaStatsEntity.getWins() + fifaPersonaStatsEntity.getLosses() + fifaPersonaStatsEntity.getDraw()) : 0;
@@ -88,10 +93,9 @@ public class FifaStatsService {
     /**
      * Retrieve ranking categories
      *
-     * @param socketData    The socket data
-     * @param socketWrapper The socket wrapper
+     * @param socketData The socket data
      */
-    public void cate(SocketData socketData, SocketWrapper socketWrapper) {
+    public void cate(SocketData socketData) {
         Map<String, String> content = Stream.of(new String[][]{
                 {"CC", "2"}, // <total # of categories in this view>
                 {"IC", "2"}, // <total # of indices in this view>
@@ -133,7 +137,7 @@ public class FifaStatsService {
 
         Map<String, String> content = Stream.of(new String[][]{
                 {"CHAN", chan},
-                {"START", start},
+                {"START", start != null ? start : "0"},
                 {"RANGE", String.valueOf(fifaPersonaStatsEntityList.size())},
                 {"SEQN", seqn},
                 {"CC", "11"},
@@ -226,55 +230,71 @@ public class FifaStatsService {
      */
     @Transactional
     public void rank(SocketData socketData) {
-        String startTime = getValueFromSocket(socketData.getInputMessage(), "WHEN", TAB_CHAR);
-        String name0 = getValueFromSocket(socketData.getInputMessage(), "NAME0", TAB_CHAR);
-        String name1 = getValueFromSocket(socketData.getInputMessage(), "NAME1", TAB_CHAR);
+        try {
+            // Determine the splitter used in the input message
+            String splitter = socketData.getInputMessage().contains(TAB_CHAR) ? TAB_CHAR : RETURN_CHAR;
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATETIME_FORMAT);
-        LocalDateTime parsedStartTime = LocalDateTime.parse(startTime, formatter);
+            String startTime = getValueFromSocket(socketData.getInputMessage(), "WHEN", splitter);
+            String name0 = getValueFromSocket(socketData.getInputMessage(), "NAME0", splitter);
+            String name1 = getValueFromSocket(socketData.getInputMessage(), "NAME1", splitter);
 
-        // Find game connections for both players
-        List<GameConnectionEntity> gameConnectionsPlayer0 = gameConnectionRepository.findMatchingGameConnections(name0, parsedStartTime, true);
-        List<GameConnectionEntity> gameConnectionsPlayer1 = gameConnectionRepository.findMatchingGameConnections(name1, parsedStartTime, true);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATETIME_FORMAT);
+            LocalDateTime parsedStartTime = LocalDateTime.parse(startTime, formatter);
 
-        // Extract player stats from the packet
-        Map<String, Object> player0Stats = extractPlayerStats(socketData.getInputMessage(), "0");
-        Map<String, Object> player1Stats = extractPlayerStats(socketData.getInputMessage(), "1");
+            // Find game connections for both players
+            List<GameConnectionEntity> gameConnectionsPlayer0 = gameConnectionRepository.findMatchingGameConnections(name0, parsedStartTime, true);
+            List<GameConnectionEntity> gameConnectionsPlayer1 = gameConnectionRepository.findMatchingGameConnections(name1, parsedStartTime, true);
 
-        // Process Player 0 if game connection found and report doesn't exist
-        if (!gameConnectionsPlayer0.isEmpty()) {
-            GameConnectionEntity gameConnection0 = gameConnectionsPlayer0.getFirst();
-            if (!fifaGameReportRepository.existsById(gameConnection0.getId())) {
-                // Create and save game report for Player 0
-                FifaGameReportEntity gameReport0 = new FifaGameReportEntity();
-                gameReport0.setGameConnection(gameConnection0);
-                populateGameReportFromStats(gameReport0, player0Stats);
-                fifaGameReportRepository.save(gameReport0);
+            // Apply pessimistic lock to prevent concurrent updates
+            if (!gameConnectionsPlayer0.isEmpty()) {
+                GameConnectionEntity gc = gameConnectionsPlayer0.getFirst();
+                entityManager.find(gc.getGame().getClass(), gc.getGame().getId(), LockModeType.PESSIMISTIC_WRITE);
+            } else if (!gameConnectionsPlayer1.isEmpty()) {
+                GameConnectionEntity gc = gameConnectionsPlayer1.getFirst();
+                entityManager.find(gc.getGame().getClass(), gc.getGame().getId(), LockModeType.PESSIMISTIC_WRITE);
+            }
 
-                // Update persona stats if ranked
-                int rnk = (Integer) player0Stats.get("RNK");
-                if (rnk == 1) {
-                    updatePersonaStats(gameConnection0, player0Stats, player1Stats);
+            // Extract player stats from the packet
+            Map<String, Object> player0Stats = extractPlayerStats(socketData.getInputMessage(), "0", splitter);
+            Map<String, Object> player1Stats = extractPlayerStats(socketData.getInputMessage(), "1", splitter);
+
+            // Process Player 0 if game connection found and report doesn't exist
+            if (!gameConnectionsPlayer0.isEmpty()) {
+                GameConnectionEntity gameConnection0 = gameConnectionsPlayer0.getFirst();
+                if (!fifaGameReportRepository.existsById(gameConnection0.getId())) {
+                    // Create and save game report for Player 0
+                    FifaGameReportEntity gameReport0 = new FifaGameReportEntity();
+                    gameReport0.setGameConnection(gameConnection0);
+                    populateGameReportFromStats(gameReport0, player0Stats);
+                    fifaGameReportRepository.save(gameReport0);
+
+                    // Update persona stats if ranked
+                    int rnk = (Integer) player0Stats.get("RNK");
+                    if (rnk == 1) {
+                        updatePersonaStats(gameConnection0, player0Stats, player1Stats);
+                    }
                 }
             }
-        }
 
-        // Process Player 1 if game connection found and report doesn't exist
-        if (!gameConnectionsPlayer1.isEmpty()) {
-            GameConnectionEntity gameConnection1 = gameConnectionsPlayer1.getFirst();
-            if (!fifaGameReportRepository.existsById(gameConnection1.getId())) {
-                // Create and save game report for Player 1
-                FifaGameReportEntity gameReport1 = new FifaGameReportEntity();
-                gameReport1.setGameConnection(gameConnection1);
-                populateGameReportFromStats(gameReport1, player1Stats);
-                fifaGameReportRepository.save(gameReport1);
+            // Process Player 1 if game connection found and report doesn't exist
+            if (!gameConnectionsPlayer1.isEmpty()) {
+                GameConnectionEntity gameConnection1 = gameConnectionsPlayer1.getFirst();
+                if (!fifaGameReportRepository.existsById(gameConnection1.getId())) {
+                    // Create and save game report for Player 1
+                    FifaGameReportEntity gameReport1 = new FifaGameReportEntity();
+                    gameReport1.setGameConnection(gameConnection1);
+                    populateGameReportFromStats(gameReport1, player1Stats);
+                    fifaGameReportRepository.save(gameReport1);
 
-                // Update persona stats if ranked
-                int rnk = (Integer) player1Stats.get("RNK");
-                if (rnk == 1) {
-                    updatePersonaStats(gameConnection1, player1Stats, player0Stats);
+                    // Update persona stats if ranked
+                    int rnk = (Integer) player1Stats.get("RNK");
+                    if (rnk == 1) {
+                        updatePersonaStats(gameConnection1, player1Stats, player0Stats);
+                    }
                 }
             }
+        } catch (PessimisticLockException | LockTimeoutException e) {
+            log.warn("Error processing rank packet (pessimistic lock): {}", e.getMessage());
         }
     }
 
@@ -285,41 +305,41 @@ public class FifaStatsService {
      * @param playerIndex  The player index ("0" or "1")
      * @return Map containing the player's stats
      */
-    private Map<String, Object> extractPlayerStats(String inputMessage, String playerIndex) {
+    private Map<String, Object> extractPlayerStats(String inputMessage, String playerIndex, String splitter) {
         Map<String, Object> stats = new HashMap<>();
 
         // Extract all stats for the specified player
-        stats.put("TEAM", parseIntOrDefault(getValueFromSocket(inputMessage, "TEAM" + playerIndex, TAB_CHAR), 0));
-        stats.put("SHT", parseIntOrDefault(getValueFromSocket(inputMessage, "SHT" + playerIndex, TAB_CHAR), 0));
-        stats.put("PASM", parseIntOrDefault(getValueFromSocket(inputMessage, "PASM" + playerIndex, TAB_CHAR), 0));
-        stats.put("PASS", parseIntOrDefault(getValueFromSocket(inputMessage, "PASS" + playerIndex, TAB_CHAR), 0));
-        stats.put("COR", parseIntOrDefault(getValueFromSocket(inputMessage, "COR" + playerIndex, TAB_CHAR), 0));
-        stats.put("OFF", parseIntOrDefault(getValueFromSocket(inputMessage, "OFF" + playerIndex, TAB_CHAR), 0));
-        stats.put("POS", parseIntOrDefault(getValueFromSocket(inputMessage, "POS" + playerIndex, TAB_CHAR), 0));
-        stats.put("TCM", parseIntOrDefault(getValueFromSocket(inputMessage, "TCM" + playerIndex, TAB_CHAR), 0));
-        stats.put("TCS", parseIntOrDefault(getValueFromSocket(inputMessage, "TCS" + playerIndex, TAB_CHAR), 0));
-        stats.put("FLS", parseIntOrDefault(getValueFromSocket(inputMessage, "FLS" + playerIndex, TAB_CHAR), 0));
-        stats.put("YLW", parseIntOrDefault(getValueFromSocket(inputMessage, "YLW" + playerIndex, TAB_CHAR), 0));
-        stats.put("RED", parseIntOrDefault(getValueFromSocket(inputMessage, "RED" + playerIndex, TAB_CHAR), 0));
-        stats.put("DISC", parseIntOrDefault(getValueFromSocket(inputMessage, "DISC" + playerIndex, TAB_CHAR), 0));
-        stats.put("QUIT", parseIntOrDefault(getValueFromSocket(inputMessage, "QUIT" + playerIndex, TAB_CHAR), 0));
-        stats.put("CHEAT", parseIntOrDefault(getValueFromSocket(inputMessage, "CHEAT" + playerIndex, TAB_CHAR), 0));
-        stats.put("SCORE", parseIntOrDefault(getValueFromSocket(inputMessage, "SCORE" + playerIndex, TAB_CHAR), 0));
-        stats.put("WEIGHT", parseIntOrDefault(getValueFromSocket(inputMessage, "WEIGHT" + playerIndex, TAB_CHAR), -1));
-        stats.put("DSCORE", parseIntOrDefault(getValueFromSocket(inputMessage, "DSCORE" + playerIndex, TAB_CHAR), 0));
-        stats.put("HOME", parseIntOrDefault(getValueFromSocket(inputMessage, "HOME" + playerIndex, TAB_CHAR), 0));
+        stats.put("TEAM", parseIntOrDefault(getValueFromSocket(inputMessage, "TEAM" + playerIndex, splitter), 0));
+        stats.put("SHT", parseIntOrDefault(getValueFromSocket(inputMessage, "SHT" + playerIndex, splitter), 0));
+        stats.put("PASM", parseIntOrDefault(getValueFromSocket(inputMessage, "PASM" + playerIndex, splitter), 0));
+        stats.put("PASS", parseIntOrDefault(getValueFromSocket(inputMessage, "PASS" + playerIndex, splitter), 0));
+        stats.put("COR", parseIntOrDefault(getValueFromSocket(inputMessage, "COR" + playerIndex, splitter), 0));
+        stats.put("OFF", parseIntOrDefault(getValueFromSocket(inputMessage, "OFF" + playerIndex, splitter), 0));
+        stats.put("POS", parseIntOrDefault(getValueFromSocket(inputMessage, "POS" + playerIndex, splitter), 0));
+        stats.put("TCM", parseIntOrDefault(getValueFromSocket(inputMessage, "TCM" + playerIndex, splitter), 0));
+        stats.put("TCS", parseIntOrDefault(getValueFromSocket(inputMessage, "TCS" + playerIndex, splitter), 0));
+        stats.put("FLS", parseIntOrDefault(getValueFromSocket(inputMessage, "FLS" + playerIndex, splitter), 0));
+        stats.put("YLW", parseIntOrDefault(getValueFromSocket(inputMessage, "YLW" + playerIndex, splitter), 0));
+        stats.put("RED", parseIntOrDefault(getValueFromSocket(inputMessage, "RED" + playerIndex, splitter), 0));
+        stats.put("DISC", parseIntOrDefault(getValueFromSocket(inputMessage, "DISC" + playerIndex, splitter), 0));
+        stats.put("QUIT", parseIntOrDefault(getValueFromSocket(inputMessage, "QUIT" + playerIndex, splitter), 0));
+        stats.put("CHEAT", parseIntOrDefault(getValueFromSocket(inputMessage, "CHEAT" + playerIndex, splitter), 0));
+        stats.put("SCORE", parseIntOrDefault(getValueFromSocket(inputMessage, "SCORE" + playerIndex, splitter), 0));
+        stats.put("WEIGHT", parseIntOrDefault(getValueFromSocket(inputMessage, "WEIGHT" + playerIndex, splitter), -1));
+        stats.put("DSCORE", parseIntOrDefault(getValueFromSocket(inputMessage, "DSCORE" + playerIndex, splitter), 0));
+        stats.put("HOME", parseIntOrDefault(getValueFromSocket(inputMessage, "HOME" + playerIndex, splitter), 0));
 
         // Extract common fields
-        stats.put("VENUE", parseIntOrDefault(getValueFromSocket(inputMessage, "VENUE", TAB_CHAR), 0));
-        stats.put("TYPE", parseIntOrDefault(getValueFromSocket(inputMessage, "TYPE", TAB_CHAR), 0));
-        stats.put("TIME", parseIntOrDefault(getValueFromSocket(inputMessage, "TIME", TAB_CHAR), 0));
-        stats.put("SKIL", parseIntOrDefault(getValueFromSocket(inputMessage, "SKIL", TAB_CHAR), 0));
-        stats.put("PLEN", parseIntOrDefault(getValueFromSocket(inputMessage, "PLEN", TAB_CHAR), 0));
-        stats.put("PNUM", parseIntOrDefault(getValueFromSocket(inputMessage, "PNUM", TAB_CHAR), 0));
-        stats.put("RNK", parseIntOrDefault(getValueFromSocket(inputMessage, "RNK", TAB_CHAR), 0));
-        stats.put("PK", parseIntOrDefault(getValueFromSocket(inputMessage, "PK", TAB_CHAR), 0));
-        stats.put("GLD", parseIntOrDefault(getValueFromSocket(inputMessage, "GLD", TAB_CHAR), 0));
-        stats.put("DTIME", parseIntOrDefault(getValueFromSocket(inputMessage, "DTIME", TAB_CHAR), 0));
+        stats.put("VENUE", parseIntOrDefault(getValueFromSocket(inputMessage, "VENUE", splitter), 0));
+        stats.put("TYPE", parseIntOrDefault(getValueFromSocket(inputMessage, "TYPE", splitter), 0));
+        stats.put("TIME", parseIntOrDefault(getValueFromSocket(inputMessage, "TIME", splitter), 0));
+        stats.put("SKIL", parseIntOrDefault(getValueFromSocket(inputMessage, "SKIL", splitter), 0));
+        stats.put("PLEN", parseIntOrDefault(getValueFromSocket(inputMessage, "PLEN", splitter), 0));
+        stats.put("PNUM", parseIntOrDefault(getValueFromSocket(inputMessage, "PNUM", splitter), 0));
+        stats.put("RNK", parseIntOrDefault(getValueFromSocket(inputMessage, "RNK", splitter), 0));
+        stats.put("PK", parseIntOrDefault(getValueFromSocket(inputMessage, "PK", splitter), 0));
+        stats.put("GLD", parseIntOrDefault(getValueFromSocket(inputMessage, "GLD", splitter), 0));
+        stats.put("DTIME", parseIntOrDefault(getValueFromSocket(inputMessage, "DTIME", splitter), 0));
 
         return stats;
     }

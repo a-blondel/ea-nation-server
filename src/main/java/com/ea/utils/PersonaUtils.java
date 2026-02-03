@@ -113,7 +113,7 @@ public class PersonaUtils {
                 {"RG", "0"},
                 {"RGC", "0"},
                 // 0x80021468 if RI != ?? then read RM and RF
-                {"RM", room != null ? room.getName() : "room"}, // Room name
+                {"RM", "LVL.1"}, // Room name
                 {"RF", room != null ? room.getFlags() : "CK"}, // Room flags
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
     }

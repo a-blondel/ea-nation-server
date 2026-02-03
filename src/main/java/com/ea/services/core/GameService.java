@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -204,6 +205,7 @@ public class GameService {
         if (gameServerService.isP2P(personaConnectionEntity.getVers())) {
             // On NHL, the value is 0 or 1 to know if the client is ready or not
             String userflags = getValueFromSocket(socketData.getInputMessage(), "USERFLAGS");
+            String userparams = getValueFromSocket(socketData.getInputMessage(), "USERPARAMS");
             String sysflags = getValueFromSocket(socketData.getInputMessage(), "SYSFLAGS");
             String params = getValueFromSocket(socketData.getInputMessage(), "PARAMS");
             String kick = getValueFromSocket(socketData.getInputMessage(), "KICK");
@@ -213,20 +215,17 @@ public class GameService {
                     socketWrapper.setUserflags(userflags);
                 }
                 // Broadcast the userflags to all players in the game
-                Optional<GameConnectionEntity> gameConnectionOpt = gameConnectionRepository.findByPersonaConnectionIdAndEndTimeIsNull(personaConnectionEntity.getId());
+                broadcastGameStateToPlayers(personaConnectionEntity);
+            }
+            if (userparams != null) {
+                // Normalize USERPARAMS  (HOST Ready button fix)
+                String normalizedUserparams = normalizeUserparams(userparams, personaConnectionEntity.getVers());
 
-                if (gameConnectionOpt.isPresent()) {
-                    GameConnectionEntity gameConnectionEntity = gameConnectionOpt.get();
-                    GameEntity gameEntity = gameConnectionEntity.getGame();
-                    List<GameConnectionEntity> gameConnections = gameConnectionRepository.findByGameIdAndEndTimeIsNull(gameEntity.getId());
-                    for (GameConnectionEntity gameConnection : gameConnections) { // For each player in the game, send +agm and +mgm
-                        SocketWrapper gameConnectionSocketWrapper = socketManager.getSocketWrapperByPersonaConnectionId(gameConnection.getPersonaConnection().getId());
-                        if (gameConnectionSocketWrapper != null) {
-                            agm(gameConnectionSocketWrapper.getSocket(), gameEntity);
-                            mgm(gameConnectionSocketWrapper.getSocket(), gameEntity);
-                        }
-                    }
+                synchronized (this) {
+                    socketWrapper.setUserparams(normalizedUserparams);
                 }
+                // Broadcast the userparams to all players in the game
+                broadcastGameStateToPlayers(personaConnectionEntity);
             }
             if (sysflags != null) {
                 // Update sysflags in the game entity
@@ -440,6 +439,13 @@ public class GameService {
             return;
         }
 
+        String userparams = getValueFromSocket(socketData.getInputMessage(), "USERPARAMS");
+        if (userparams != null) {
+            synchronized (this) {
+                socketWrapper.setUserparams(userparams);
+            }
+        }
+
         String ident = getValueFromSocket(socketData.getInputMessage(), "IDENT");
         Optional<GameEntity> gameEntityOpt;
         if (ident != null) {
@@ -644,6 +650,13 @@ public class GameService {
         String vers = socketWrapper.getPersonaConnectionEntity().getVers();
         String slus = socketWrapper.getPersonaConnectionEntity().getSlus();
         GameEntity gameEntity = socketMapper.toGameEntity(socketData.getInputMessage(), vers, slus);
+
+        String userparams = getValueFromSocket(socketData.getInputMessage(), "USERPARAMS");
+        if (userparams != null) {
+            synchronized (this) {
+                socketWrapper.setUserparams(userparams);
+            }
+        }
 
         // Some games don't provide a game name, so we set it to the persona name
         if (gameEntity.getName() == null || gameEntity.getName().isEmpty()) {
@@ -899,6 +912,7 @@ public class GameService {
         List<GameEntity> gameEntity = gameRepository.findCurrentGameOfPersona(socketWrapper.getPersonaConnectionEntity().getId());
         if (!gameEntity.isEmpty()) {
             GameEntity game = gameEntity.getFirst();
+            String vers = game.getVers();
             LocalDateTime now = LocalDateTime.now();
             game.setEndTime(now);
             gameRepository.save(game);
@@ -911,9 +925,72 @@ public class GameService {
             // But for USERSETS_GAMES, do not broadcast game removal - players should stay in the UserSet lobby
             if (gameServerService.isP2P(game.getVers()) && !USERSETS_GAMES.contains(game.getVers())) {
                 roomService.removeGameFromRoom(game, socketWrapper);
+
+                // For PS2 FIFA games, broadcast room users to all remaining online players
+                if (ALL_PS2_FIFA.contains(vers) && socketWrapper.getPersonaEntity() != null) {
+                    Room room = roomService.getRoomByPersonaId(socketWrapper.getPersonaEntity().getId());
+                    if (room != null) {
+                        roomService.broadcastRoomUsers(vers, room.getId());
+                    }
+                }
             } else if (USERSETS_GAMES.contains(game.getVers())) {
                 Map<String, String> mgmContent = Collections.singletonMap("IDENT", String.valueOf(game.getId()));
                 socketWriter.write(socketWrapper.getSocket(), new SocketData("+mgm", null, mgmContent));
+            }
+        }
+    }
+
+    /**
+     * Normalize USERPARAMS (HOST Ready button fix)
+     * By e.g. FIFA 07 PS2 the HOST sends byte6 with bit 4 set when Ready, but the game UI expects byte6=0x8b
+     *
+     * @param userparams Original USERPARAMS string
+     * @param vers       Game version
+     * @return Normalized USERPARAMS or original if not applicable
+     */
+    private String normalizeUserparams(String userparams, String vers) {
+        if (!ALL_PS2_FIFA.contains(vers) || userparams == null || userparams.length() < 7) {
+            return userparams;
+        }
+
+        byte byte6 = (byte) userparams.charAt(6);
+
+        // Check if HOST is Ready: byte6 bit 4 set (0x9d, 0x9b, etc) and not CLIENT (0x8b)
+        boolean isHostReady = (byte6 != (byte) 0x8b) && ((byte6 & 0x10) != 0);
+
+        if (isHostReady) {
+            // Normalize: set byte4 bit 3 + convert byte6 to CLIENT format (0x8b)
+            byte[] userparamsBytes = userparams.getBytes(StandardCharsets.ISO_8859_1);
+            userparamsBytes[4] |= (byte) 0x08;  // Set bit 3 for checkmark
+            userparamsBytes[6] = (byte) 0x8b;   // Convert to CLIENT format
+            return new String(userparamsBytes, StandardCharsets.ISO_8859_1);
+        }
+
+        return userparams;
+    }
+
+    /**
+     * Broadcast game state to all players in the game
+     * This is used when a player changes their state (ready, team selection, etc.)
+     *
+     * @param personaConnectionEntity The persona connection entity of the player who changed their state
+     */
+    private void broadcastGameStateToPlayers(PersonaConnectionEntity personaConnectionEntity) {
+        Optional<GameConnectionEntity> gameConnectionOpt = gameConnectionRepository
+                .findByPersonaConnectionIdAndEndTimeIsNull(personaConnectionEntity.getId());
+
+        if (gameConnectionOpt.isPresent()) {
+            GameConnectionEntity gameConnectionEntity = gameConnectionOpt.get();
+            GameEntity gameEntity = gameConnectionEntity.getGame();
+            List<GameConnectionEntity> gameConnections = gameConnectionRepository
+                    .findByGameIdAndEndTimeIsNull(gameEntity.getId());
+            for (GameConnectionEntity gameConnection : gameConnections) {
+                SocketWrapper gameConnectionSocketWrapper = socketManager
+                        .getSocketWrapperByPersonaConnectionId(gameConnection.getPersonaConnection().getId());
+                if (gameConnectionSocketWrapper != null) {
+                    agm(gameConnectionSocketWrapper.getSocket(), gameEntity);
+                    mgm(gameConnectionSocketWrapper.getSocket(), gameEntity);
+                }
             }
         }
     }
