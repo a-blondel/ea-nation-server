@@ -90,7 +90,14 @@ game:
           port: 10400
           slus:
             - '1.00' # dashboard
+            - 'SLAJ_250.88'
+            - 'SLES_542.40'
+            - 'SLES_542.41'
+            - 'SLES_542.43'
+            - 'SLES_542.44'
             - 'SLES_542.46'
+            - 'SLKA_253.96'
+            - 'SLUS_214.33'
     - vers: 'PSP/FIFA07'
       sdk: '4.3.2.0'
       ssl:
@@ -113,7 +120,13 @@ game:
           port: 20400
           slus:
             - '1.00' # Dashboard
+            - 'SLES_548.70'
+            - 'SLES_548.71'
+            - 'SLES_548.72'
+            - 'SLES_548.73'
             - 'SLES_548.74'
+            - 'SLKA_254.08'
+            - 'SLUS_216.48'
     - vers: 'PSP/FIFA08'
       sdk: '5.5.0.0'
       ssl:
