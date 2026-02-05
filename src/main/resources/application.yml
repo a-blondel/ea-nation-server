@@ -127,6 +127,15 @@ game:
             - 'SLES_548.74'
             - 'SLKA_254.08'
             - 'SLUS_216.48'
+    - vers: 'PS3/FIFA08'
+      sdk: '5.6.0.0'
+      ssl:
+        domain: 'ps3fifa08.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 20450
+          slus:
+            - 'BLES00133'
     - vers: 'PSP/FIFA08'
       sdk: '5.5.0.0'
       ssl:
