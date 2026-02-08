@@ -58,6 +58,28 @@ game:
       regions:
         - name: 'GLOBAL'
           port: 5000 # Arbitrary buddy port, set anything you want
+    #    - vers: 'PS2/DEV' # Arena Football
+    #      sdk: '3.9.5.1'
+    #      ssl:
+    #        enabled: false # Use SSLv2 stunnel
+    #        domain: 'ps2afl06.ea.com'
+    #      regions:
+    #        - name: 'GLOBAL'
+    #          port: 31400
+    #          slus:
+    #            - '1.00'
+    #            - 'BASLUS-21337'
+    - vers: 'PS2/DEV' # Arena Footbal Road To Glory
+      sdk: '3.9.5.1'
+      ssl:
+        enabled: false # Use SSLv2 stunnel
+        domain: 'ps2afl07.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 12400
+          slus:
+            - '1.00'
+            - 'BASLUS-21568'
     - vers: 'PSP/UEFA07' # UEFA Champions League 2006-2007
       sdk: '4.3.2.0'
       ssl:
@@ -66,7 +88,17 @@ game:
         - name: 'GLOBAL'
           port: 11270
           slus:
+            - '1.00'
             - 'ULUS-10221'
+    - vers: 'PS2/UEFA07' # UEFA Champions League 2006-2007
+      sdk: '4.10.2.0'
+      ssl:
+        domain: 'ps2uefa07.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 11200
+          slus:
+            - 'SLUS_215.81'
     #    - vers: 'FLM' # FIFA 06 - Too risky given the collision with World Cup 06 VERS
     #      sdk: '3.7.2.0'
     #      ssl:
@@ -81,12 +113,23 @@ game:
     #          port: 30480
     #          slus:
     #            - 'ULUS-10029'
+    - vers: 'PS2/FIFA06'
+      sdk: '3.6.3.0'
+      ssl:
+        enabled: false # Use SSLv2 stunnel
+        domain: 'ps2fifa06.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 30400
+          slus:
+            - '1.00' # dashboard
+            - 'SLUS_212.80'
     - vers: 'PS2/FIFA07'
       sdk: '4.7.1.0' # 4.6.3.0 for the dashboard
       ssl:
         domain: 'ps2fifa07.ea.com'
       regions:
-        - name: 'EU'
+        - name: 'GLOBAL'
           port: 10400
           slus:
             - '1.00' # dashboard
@@ -116,7 +159,7 @@ game:
       ssl:
         domain: 'ps2fifa08.ea.com'
       regions:
-        - name: 'EU'
+        - name: 'GLOBAL'
           port: 20400
           slus:
             - '1.00' # Dashboard
@@ -191,6 +234,17 @@ game:
           port: 31590
           slus:
             - 'ULUS10066'
+    - vers: 'PS2/MARVEL06' # Marvel Nemesis: Rise of the Imperfects
+      sdk: '3.7.4.1'
+      ssl:
+        enabled: false # Use SSLv2 stunnel
+        domain: 'ps2marvel06.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 31700
+          slus:
+            - '1.00'
+            - 'SLUS_212.81'
     #    - vers: 'PSP/DEV' # Madden NFL 06 - Doesn't work (fails at persona selection), and uses madden 09 US port
     #      sdk: '3.7.1.1'
     #      ssl:
@@ -273,6 +327,16 @@ game:
           port: 20190
           slus:
             - 'ULUS10294'
+    - vers: 'PS2/NBA08'
+      sdk: '5.4.3.0'
+      ssl:
+        domain: 'ps2nba08.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 20100
+          slus:
+            - '1.00'
+            - 'SLUS_216.49'
     - vers: 'PSP/NCAA07'
       sdk: '4.2.2.0'
       ssl:
@@ -363,6 +427,16 @@ game:
           slus:
             - 'ULES00477'
             - 'ULUS10131'
+    - vers: 'PS2/NHL08'
+      sdk: '5.4.3.0'
+      ssl:
+        domain: 'ps2nhl08.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 20300
+          slus:
+            - '1.00'
+            - 'SLUS_216.47'
     - vers: 'PSP/MOH07' # Medal of Honor: Heroes
       sdk: '4.7.0.0'
       p2p: false
@@ -454,6 +528,47 @@ game:
           port: 25290
           slus:
             - 'SLUS-FLAME'
+    - vers: 'FLM/A1' # PS2/TW08
+      sdk: '4.11.11.0'
+      ssl:
+        domain: 'ps2tw08.ea.com'
+      regions:
+        - name: 'US'
+          port: 20200
+          slus:
+            - '1.00'
+            - 'SLUS_21483'
+    #    - vers: 'XBOX/ALPHA' # NASCAR 07
+    #      sdk: '3.7.3.0'
+    #      ssl:
+    #        enabled: false # Use SSLv2 stunnel
+    #        domain: 'ps2nascar07.ea.com'
+    #      regions:
+    #        - name: 'GLOBAL'
+    #          port: 10600
+    #          slus:
+    #            - '1.00'
+    #            - 'SLUS_214.61'
+    #    - vers: 'XBOX/ALPHA' # NASCAR 08
+    #      sdk: '4.11.0.0'
+    #      ssl:
+    #        domain: 'ps2nascar08.ea.com'
+    #      regions:
+    #        - name: 'GLOBAL'
+    #          port: 20600
+    #          slus:
+    #            - '1.00'
+    #            - 'SLUS_216.39'
+    - vers: 'XBOX/ALPHA' # NASCAR 09
+      sdk: '4.11.0.0'
+      ssl:
+        domain: 'ps2nascar09.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 30600
+          slus:
+            - '1.00'
+            - 'SLUS_217.44'
 
 ---
 
