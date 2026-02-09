@@ -47,11 +47,18 @@ public class BuddyService {
         String prod = getValueFromSocket(socketData.getInputMessage(), "PROD");
         String vers = getValueFromSocket(socketData.getInputMessage(), "VERS");
         String lkey = getValueFromSocket(socketData.getInputMessage(), "LKEY");
+        String name = getValueFromSocket(socketData.getInputMessage(), "NAME");
 
         synchronized (this) {
             buddySocketWrapper.setLkey(lkey);
             buddySocketWrapper.setVers(vers);
-            buddySocketWrapper.setPersonaEntity(getPersonaFromAriesSocket(buddySocketWrapper));
+            PersonaEntity persona = getPersonaFromAriesSocket(buddySocketWrapper);
+            if (persona == null && name != null) {
+                personaRepository.findByPers(name).ifPresent(buddySocketWrapper::setPersonaEntity);
+            } else {
+                buddySocketWrapper.setPersonaEntity(persona);
+            }
+
         }
 
         Map<String, String> content = Stream.of(new String[][]{
@@ -940,6 +947,9 @@ public class BuddyService {
      */
     private PersonaEntity getPersonaFromAriesSocket(BuddySocketWrapper buddySocketWrapper) {
         String lkey = buddySocketWrapper.getLkey();
+        if (lkey == null) {
+            return null; // SSX3 clients don't have an LKEY
+        }
         SocketWrapper ariesSocketWrapper = socketManager.getAriesSocketWrapperByLkey(lkey);
         return ariesSocketWrapper != null ? ariesSocketWrapper.getPersonaEntity() : null;
     }

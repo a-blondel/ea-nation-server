@@ -78,12 +78,21 @@ public class RoomService {
      */
     public void move(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         String ident = getValueFromSocket(socketData.getInputMessage(), "IDENT");
-        // String name = getValueFromSocket(socketData.getInputMessage(), "NAME");
+        String name = getValueFromSocket(socketData.getInputMessage(), "NAME");
 
         if (ident == null) {
-            socketData.setIdMessage("movenfnd");
-            socketWriter.write(socket, socketData);
-            return;
+            if (name != null) {
+                // SSX3 only sends the NAME field with the value "LVL.1" (fixed name for every game),
+                // then we use the game version to determine the room name instead of relying on the IDENT field
+                ident = rooms.stream()
+                        .filter(r -> r.getName().equals(socketWrapper.getPersonaConnectionEntity().getVers()))
+                        .findFirst()
+                        .map(r -> r.getId().toString())
+                        .orElse(null);
+            }
+            if (ident == null) {
+                ident = "0"; // Default to room 0 to leave room (SSX3 sends empty instead of 0 when leaving room)
+            }
         }
 
         long roomId = Long.parseLong(ident);
@@ -331,7 +340,16 @@ public class RoomService {
                 }
             }
         }
+    }
 
+    /**
+     * Peek in a room
+     *
+     * @param socket     The socket to write the response to
+     * @param socketData The socket data
+     */
+    public void peek(Socket socket, SocketData socketData) {
+        socketWriter.write(socket, socketData);
     }
 
     /**

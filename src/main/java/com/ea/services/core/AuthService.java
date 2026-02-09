@@ -78,7 +78,9 @@ public class AuthService {
         }
         Map<String, String> content = Stream.of(new String[][]{
                 {"BUDDY_SERVER", props.getTcpHost()},
+                {"BUDDYSERVERNAME", props.getTcpHost()}, // For SSX3
                 {"BUDDY_PORT", String.valueOf(props.getTcpBuddyPort())},
+                {"BUDDYPORT", String.valueOf(props.getTcpBuddyPort())}, // For SSX3
                 {"CONTEXT", "buddy"},
                 {"TOSAC_URL", tosUrl},
                 {"TOSA_URL", tosUrl},
@@ -91,7 +93,9 @@ public class AuthService {
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
         String name = getValueFromSocket(socketData.getInputMessage(), "NAME");
-        if (name != null && name.equals("7")) {
+        if (name != null && name.equals("0")) {
+            socketData.setIdMessage("newsnew0");
+        } else if (name != null && name.equals("7")) {
             socketData.setIdMessage("newsnew7");
         }
 

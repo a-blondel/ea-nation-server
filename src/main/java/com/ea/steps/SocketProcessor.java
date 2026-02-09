@@ -173,6 +173,9 @@ public class SocketProcessor {
             case ("mesg"):
                 roomService.mesg(socket, socketData, socketWrapper);
                 break;
+            case ("peek"):
+                roomService.peek(socket, socketData);
+                break;
             case ("cate"):
                 statsService.cate(socket, socketData, socketWrapper);
                 break;

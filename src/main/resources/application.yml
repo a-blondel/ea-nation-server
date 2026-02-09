@@ -569,6 +569,16 @@ game:
           slus:
             - '1.00'
             - 'SLUS_217.44'
+    - vers: '"PS2/Beta 1.04-Sep 17 2003"' # SSX3
+      sdk: '' # Not specified
+      ssl:
+        enabled: false # Use SSLv2 stunnel
+        domain: 'ps2ssx04.ea.com'
+      regions:
+        - name: 'GLOBAL'
+          port: 11000
+          slus:
+            - 'SLUS_20772'
 
 ---
 
