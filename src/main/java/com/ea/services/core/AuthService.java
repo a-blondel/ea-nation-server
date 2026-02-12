@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.ea.services.server.GameServerService.CUSTOM_TOS_GAMES;
 import static com.ea.utils.SocketUtils.SPACE_CHAR;
 import static com.ea.utils.SocketUtils.getValueFromSocket;
 
@@ -73,7 +72,7 @@ public class AuthService {
 
         String vers = gameServerService.getVersByPort(socket.getLocalPort());
         log.debug("Detected VERS={} for port {}", vers, socket.getLocalPort());
-        if (!vers.isEmpty() && CUSTOM_TOS_GAMES.contains(vers)) {
+        if (vers.contains("PS2")) {
             tosUrl = props.getDnsName() + "/tos-ps2/";
         }
         Map<String, String> content = Stream.of(new String[][]{

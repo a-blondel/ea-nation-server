@@ -926,8 +926,8 @@ public class GameService {
             if (gameServerService.isP2P(game.getVers()) && !USERSETS_GAMES.contains(game.getVers())) {
                 roomService.removeGameFromRoom(game, socketWrapper);
 
-                // For PS2 FIFA games, broadcast room users to all remaining online players
-                if (ALL_PS2_FIFA.contains(vers) && socketWrapper.getPersonaEntity() != null) {
+                // For PS2 games, broadcast room users to all remaining online players
+                if (vers.contains("PS2") && socketWrapper.getPersonaEntity() != null) {
                     Room room = roomService.getRoomByPersonaId(socketWrapper.getPersonaEntity().getId());
                     if (room != null) {
                         roomService.broadcastRoomUsers(vers, room.getId());
@@ -949,7 +949,7 @@ public class GameService {
      * @return Normalized USERPARAMS or original if not applicable
      */
     private String normalizeUserparams(String userparams, String vers) {
-        if (!ALL_PS2_FIFA.contains(vers) || userparams == null || userparams.length() < 7) {
+        if (!vers.contains("PS2") || userparams == null || userparams.length() < 7) {
             return userparams;
         }
 
