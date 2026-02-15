@@ -92,10 +92,9 @@ public class AuthService {
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
         String name = getValueFromSocket(socketData.getInputMessage(), "NAME");
-        if (name != null && name.equals("0")) {
-            socketData.setIdMessage("newsnew0");
-        } else if (name != null && name.equals("7")) {
-            socketData.setIdMessage("newsnew7");
+        // if name exists and is a number
+        if (name != null && name.matches("\\d+")) {
+            socketData.setIdMessage("newsnew" + name);
         }
 
         socketData.setOutputData(content);
@@ -201,7 +200,7 @@ public class AuthService {
         socketData.setOutputData(content);
         socketWriter.write(socket, socketData, SPACE_CHAR);
 
-        if (null != stats || null != inGame) {
+        if ((null != stats || null != inGame) && socketWrapper.getPersonaEntity() != null) {
             personaService.who(socket, socketWrapper);
         }
 

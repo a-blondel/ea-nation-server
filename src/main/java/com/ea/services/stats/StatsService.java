@@ -130,4 +130,24 @@ public class StatsService {
         }
     }
 
+    /**
+     * sviw - Request names for each fields in a user's stats record.
+     *
+     * @param socket     The socket to write the response to
+     * @param socketData The socket data
+     */
+    public void sviw(Socket socket, SocketData socketData) {
+        // Dummy data from ghostline, requires analysis to understand the fields and populate them correctly
+        Map<String, String> content = Stream.of(new String[][]{
+                {"N", "16"},
+                {"NAMES", "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16"},
+                {"DESCS", "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"},
+                {"PARAMS", "2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2"},
+                {"WIDTHS", "5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5"},
+        }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+
+        socketData.setOutputData(content);
+        socketWriter.write(socket, socketData);
+    }
+
 }

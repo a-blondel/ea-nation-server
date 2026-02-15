@@ -237,6 +237,9 @@ public class PersonaService {
             // Some games don't use pre-match rooms but requires a room ID in order to work so we add one by default,
             // even if we receive sele with ROOMS=0
             addRoomInfo(socket, socketData, socketWrapper);
+
+            // Required by Burnout 3
+            who(socket, socketWrapper);
         }
     }
 

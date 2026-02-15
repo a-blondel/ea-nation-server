@@ -185,6 +185,9 @@ public class SocketProcessor {
             case ("rank"):
                 statsService.rank(socket, socketData, socketWrapper);
                 break;
+            case ("sviw"):
+                statsService.sviw(socket, socketData);
+                break;
             case ("gqwk"):
                 gameService.gqwk(socket, socketData, socketWrapper);
                 break;
