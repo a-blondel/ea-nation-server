@@ -46,7 +46,7 @@ public class PersonaUtils {
         String rank = "";
 
         // MoHH specific stats
-        if (MOH07_OR_MOH08.contains(vers)) {
+        if (ALL_MOH.contains(vers)) {
             Map<String, String> mohhData = mohhStatsService.getStatsAndRank(personaEntity, vers);
             stats = mohhData.get("stats");
             rank = mohhData.get("rank");

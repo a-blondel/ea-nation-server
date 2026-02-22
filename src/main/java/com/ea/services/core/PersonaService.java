@@ -35,7 +35,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.ea.services.server.GameServerService.GAMES_WITHOUT_ROOM;
+import static com.ea.services.server.GameServerService.ALL_MOH;
 import static com.ea.utils.HexUtils.formatHexString;
 import static com.ea.utils.SocketUtils.getValueFromSocket;
 
@@ -172,9 +172,8 @@ public class PersonaService {
 
         // Check if the persona is already connected (allowed for host only)
         List<PersonaConnectionEntity> existingPersonaConnections =
-                personaConnectionRepository.findByVersAndSlusAndPersonaPersAndIsHostFalseAndEndTimeIsNull(
+                personaConnectionRepository.findByVersAndPersonaPersAndIsHostFalseAndEndTimeIsNull(
                         socketWrapper.getPersonaConnectionEntity().getVers(),
-                        socketWrapper.getPersonaConnectionEntity().getSlus(),
                         pers);
         for (PersonaConnectionEntity personaConnectionEntity : existingPersonaConnections) {
 //            socketData.setIdMessage("perspset");
@@ -417,7 +416,7 @@ public class PersonaService {
 
     public void addRoomInfo(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         // Some games don't use pre-match rooms but requires a room ID in order to work so we add one by default
-        if (GAMES_WITHOUT_ROOM.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+        if (ALL_MOH.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             Long roomId = roomService.getRoomByVers(socketWrapper.getPersonaConnectionEntity().getVers()).getId();
             roomService.addPersonaToRoom(roomId, socketWrapper);
             who(socket, socketWrapper); // Used to set the room info

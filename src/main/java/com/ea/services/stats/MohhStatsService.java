@@ -51,7 +51,7 @@ public class MohhStatsService {
 
     private static List<String> getSyms(String vers) {
         List<String> syms;
-        if (vers.equals(PSP_MOH_07)) {
+        if (vers.equals(PSP_MOH07)) {
             syms = List.of(LeaderboardLabel.MY_LEADERBOARD.name, LeaderboardLabel.MY_COMMUNITY_LEADERBOARD.name,
                     LeaderboardLabel.TOP_100.name, LeaderboardLabel.COMMUNITY_TOP_100.name,
                     LeaderboardLabel.WEAPON_LEADERS.name, LeaderboardLabel.COMMUNITY_WEAPON_LEADERS.name);
@@ -74,13 +74,13 @@ public class MohhStatsService {
         String rData = "0,1,1,1,1,1,1,1," +
                 "1,1,1,1,1,1,1,1," +
                 "2,1,1,1,1,1,1,1";
-        if (vers.equals(PSP_MOH_07)) {
+        if (vers.equals(PSP_MOH07)) {
             rData += ",3,1,1,1,1,1,1,1" +
                     ",4,1,1,1,1,1,1,1" +
                     ",5,1,1,1,1,1,1,1";
         }
 
-        String categoryCount = vers.equals(PSP_MOH_07) ? "6" : "3";
+        String categoryCount = vers.equals(PSP_MOH07) ? "6" : "3";
         List<String> syms = getSyms(vers);
         String categoryNames = "\"" + String.join("\",\"", syms) + "\"";
 
@@ -110,8 +110,8 @@ public class MohhStatsService {
         String start = getValueFromSocket(socketData.getInputMessage(), "START"); // <start ranking> (index)
         String categoryIndex = getValueFromSocket(socketData.getInputMessage(), "CI"); // <category-index>
 
-        List<String> relatedVers = gameServerService.getRelatedVers(socketWrapper.getPersonaConnectionEntity().getVers());
-        boolean isMohh = relatedVers.equals(MOH07_OR_UHS);
+        String name = socketWrapper.getPersonaConnectionEntity().getVers();
+        boolean isMohh = PSP_MOH07.equals(name);
         String rankingCategory = getRankingCategory(isMohh, categoryIndex).mohh2Id;
 
         String columnNumber = isMohh ? "21" : "18";
@@ -412,14 +412,13 @@ public class MohhStatsService {
             // Update PersonaStats with the new game report (ranked only)
             if (mohhGameReportEntity.getRnk() == 1) {
                 GameConnectionEntity gameConnection = mohhGameReportEntity.getGameConnection();
-                MohhPersonaStatsEntity mohhPersonaStatsEntity = mohhPersonaStatsRepository.findByPersonaIdAndVersIn(
-                        gameConnectionEntity.getPersonaConnection().getPersona().getId(), gameServerService.getRelatedVers(gameConnectionEntity.getGame().getVers()));
+                MohhPersonaStatsEntity mohhPersonaStatsEntity = mohhPersonaStatsRepository.findByPersonaIdAndVers(
+                        gameConnectionEntity.getPersonaConnection().getPersona().getId(), gameConnectionEntity.getGame().getVers());
 
                 if (mohhPersonaStatsEntity == null) {
                     mohhPersonaStatsEntity = new MohhPersonaStatsEntity();
                     mohhPersonaStatsEntity.setPersona(gameConnection.getPersonaConnection().getPersona());
                     mohhPersonaStatsEntity.setVers(gameConnection.getPersonaConnection().getVers());
-                    mohhPersonaStatsEntity.setSlus(gameConnection.getPersonaConnection().getSlus());
                 }
 
                 updatePersonaStats(mohhPersonaStatsEntity, mohhGameReportEntity);
@@ -607,23 +606,23 @@ public class MohhStatsService {
 
         String aimDb = null, ctrlDb = null, tbDb = null, akDb = null;
         switch (vers) {
-            case PSP_MOH_07 -> aimDb = params[3];
-            case PSP_MOH_08 -> {
+            case PSP_MOH07 -> aimDb = params[3];
+            case PSP_MOH08 -> {
                 aimDb = params[3];
                 tbDb = params[4];
                 akDb = params[9];
             }
-            case WII_MOH_08 -> {
+            case WII_MOH08 -> {
                 tbDb = params[3];
                 akDb = params[8];
                 ctrlDb = params[9];
             }
         }
 
-        boolean isRankedDb = vers.equals(PSP_MOH_07) ? StringUtils.isNotEmpty(params[8]) : StringUtils.isNotEmpty(params[17]);
+        boolean isRankedDb = vers.equals(PSP_MOH07) ? StringUtils.isNotEmpty(params[8]) : StringUtils.isNotEmpty(params[17]);
 
         String smgDb = null, hmgDb = null, rifDb = null, snipDb = null, shotgDb = null, bazDb = null, grenDb = null;
-        if (vers.equals(PSP_MOH_08) || vers.equals(WII_MOH_08)) {
+        if (vers.equals(PSP_MOH08) || vers.equals(WII_MOH08)) {
             smgDb = params[10];
             hmgDb = params[11];
             rifDb = params[12];

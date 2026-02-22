@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.ea.services.server.GameServerService.PSP_MOH_07;
+import static com.ea.services.server.GameServerService.PSP_MOH07;
 
 @Slf4j
 @RestController
@@ -29,7 +29,7 @@ public class LeaderboardAPI {
 
     @GetMapping("/api/leaderboard")
     public ResponseEntity<List<DTO.LeaderboardPlayerDTO>> getLeaderboardPlayers(
-            @RequestParam(defaultValue = PSP_MOH_07) String vers,
+            @RequestParam(defaultValue = PSP_MOH07) String vers,
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "100") int limit) {
         List<MohhPersonaStatsEntity> allPlayers = mohhPersonaStatsRepository.getLeaderboardByVers(vers, limit, offset);

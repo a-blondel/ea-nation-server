@@ -44,7 +44,7 @@ public class StatsService {
      * @param socketWrapper The socket wrapper of current connection
      */
     public void cate(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
-        if (MOH07_OR_MOH08.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+        if (ALL_MOH.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             mohhStatsService.cate(socketData, socketWrapper);
         } else if (ALL_NHL.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             nhlStatsService.cate(socketData);
@@ -75,7 +75,7 @@ public class StatsService {
      * @param socketWrapper The socket wrapper of current connection
      */
     public void snap(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
-        if (MOH07_OR_MOH08.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+        if (ALL_MOH.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             mohhStatsService.snap(socket, socketData, socketWrapper);
         } else if (ALL_NHL.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             nhlStatsService.snap(socket, socketData, socketWrapper);
@@ -104,7 +104,7 @@ public class StatsService {
         }
 
         String vers = socketWrapper.getPersonaConnectionEntity().getVers();
-        if (MOH07_OR_UHS.contains(vers)) {
+        if (PSP_MOH07.equals(vers)) {
             mohhStatsService.rank(socketData);
         } else {
             if (gameServerService.isP2P(vers)) {
