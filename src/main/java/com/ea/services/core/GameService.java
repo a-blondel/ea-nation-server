@@ -90,12 +90,11 @@ public class GameService {
 
             // Create a new thread to handle the game search with timer
             Thread searchThread = new Thread(() -> {
-                String vers = socketWrapper.getPersonaConnectionEntity().getVers();
-                List<String> relatedVers = gameServerService.getRelatedVers(vers);
+                String name = socketWrapper.getPersonaConnectionEntity().getVers();
 
                 while (!Thread.currentThread().isInterrupted() && !socket.isClosed()) {
                     log.debug("Searching for game for socket: {}", socket.getRemoteSocketAddress());
-                    List<GameEntity> gameEntities = gameRepository.findByVersInAndEndTimeIsNull(relatedVers);
+                    List<GameEntity> gameEntities = gameRepository.findByVersAndEndTimeIsNull(name);
 
                     // Game must not be full, not use pw, not be started, and have at least one active game connection
                     gameEntities = gameEntities.stream()
@@ -271,7 +270,7 @@ public class GameService {
 
         // For MoHH dedicated server, gset means a map rotation, but instead of just updating the game parameters,
         // we end the current game and create a new one with the new parameters.
-        if (MOH07_OR_UHS.contains(personaConnectionEntity.getVers())) {
+        if (PSP_MOH07.equals(personaConnectionEntity.getVers())) {
             handleMapRotation(socketData, socketWrapper);
         }
     }
@@ -309,7 +308,6 @@ public class GameService {
                     GameEntity newGameEntity = new GameEntity();
                     newGameEntity.setOriginalId(Optional.ofNullable(gameEntity.getOriginalId()).orElse(gameEntity.getId()));
                     newGameEntity.setVers(gameEntity.getVers());
-                    newGameEntity.setSlus(gameEntity.getSlus());
                     newGameEntity.setName(gameEntity.getName());
                     newGameEntity.setParams(params);
                     newGameEntity.setSysflags(sysflags);
@@ -345,12 +343,11 @@ public class GameService {
      * @param socketWrapper The socket wrapper of current connection
      */
     public void gsea(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
-        String vers = socketWrapper.getPersonaConnectionEntity().getVers();
-        List<String> relatedVers = gameServerService.getRelatedVers(vers);
-        List<GameEntity> gameEntities = gameRepository.findByVersInAndEndTimeIsNull(relatedVers);
+        String name = socketWrapper.getPersonaConnectionEntity().getVers();
+        List<GameEntity> gameEntities = gameRepository.findByVersAndEndTimeIsNull(name);
 
         Map<String, String> paramsMap = SocketUtils.getMapFromSocket(socketData.getInputMessage());
-        List<GameEntity> filteredGameEntities = filterGameEntities(gameEntities, paramsMap, vers);
+        List<GameEntity> filteredGameEntities = filterGameEntities(gameEntities, paramsMap, name);
 
         Map<String, String> content = Collections.singletonMap("COUNT", String.valueOf(filteredGameEntities.size()));
         socketData.setOutputData(content);
@@ -386,7 +383,7 @@ public class GameService {
      * @return true if the game entity matches the criteria, false otherwise
      */
     private boolean matchesCriteria(GameEntity gameEntity, Map<String, String> paramsMap, String vers) {
-        if (vers.equals(PSP_MOH_07_UHS) || MOH07_OR_MOH08.contains(vers)) {
+        if (ALL_MOH.contains(vers)) {
             return mohhStatsService.matchesCriteria(gameEntity, paramsMap, vers);
         } else {
             return true;
@@ -453,7 +450,7 @@ public class GameService {
         } else {
             // Some games don't provide an identifier, so we need to find the game by name and version
             String name = getValueFromSocket(socketData.getInputMessage(), "NAME");
-            gameEntityOpt = gameRepository.findByNameAndVersInAndEndTimeIsNull(name, List.of(socketWrapper.getPersonaConnectionEntity().getVers()));
+            gameEntityOpt = gameRepository.findByNameAndVersAndEndTimeIsNull(name, socketWrapper.getPersonaConnectionEntity().getVers());
         }
 
         if (gameEntityOpt.isPresent()) {
@@ -471,7 +468,7 @@ public class GameService {
         }
         if (gameEntity.getEndTime() == null) {
             // Check if game allows joining mid-game
-            if (gameEntity.isStarted() && !PSP_MOH_07_UHS.equals(gameEntity.getVers())) {
+            if (gameEntity.isStarted() && !PSP_MOH07.equals(gameEntity.getVers())) {
                 socketWriter.write(socket, new SocketData("gjoiasta", null, null)); // Game already started
                 return;
             }
@@ -550,14 +547,12 @@ public class GameService {
             return;
         }
 
-        String vers = socketWrapper.getPersonaConnectionEntity().getVers();
-        String slus = socketWrapper.getPersonaConnectionEntity().getSlus();
+        String name = socketWrapper.getPersonaConnectionEntity().getVers();
 
-        GameEntity gameEntityToCreate = socketMapper.toGameEntity(socketData.getInputMessage(), vers, slus);
+        GameEntity gameEntityToCreate = socketMapper.toGameEntity(socketData.getInputMessage(), name);
 
-        List<String> relatedVers = gameServerService.getRelatedVers(vers);
-        boolean isMohh = relatedVers.equals(MOH07_OR_UHS);
-        boolean duplicateName = gameRepository.existsByNameAndVersInAndEndTimeIsNull(gameEntityToCreate.getName(), relatedVers);
+        boolean isMohh = PSP_MOH07.equals(name);
+        boolean duplicateName = gameRepository.existsByNameAndVersAndEndTimeIsNull(gameEntityToCreate.getName(), name);
         if (duplicateName) {
             socketData.setIdMessage("gpscdupl");
             socketWriter.write(socket, socketData);
@@ -586,7 +581,7 @@ public class GameService {
                         } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
                         }
-                        Optional<GameEntity> gameEntityOpt = gameRepository.findByNameAndVersInAndEndTimeIsNull(gameEntityToCreate.getName(), relatedVers);
+                        Optional<GameEntity> gameEntityOpt = gameRepository.findByNameAndVersAndEndTimeIsNull(gameEntityToCreate.getName(), name);
                         if (gameEntityOpt.isPresent()) {
                             GameEntity gameEntity = gameEntityOpt.get();
                             startGameConnection(socketWrapper, gameEntity, false);
@@ -647,9 +642,8 @@ public class GameService {
      * @param socketWrapper The socket wrapper of current connection
      */
     public void gcre(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
-        String vers = socketWrapper.getPersonaConnectionEntity().getVers();
-        String slus = socketWrapper.getPersonaConnectionEntity().getSlus();
-        GameEntity gameEntity = socketMapper.toGameEntity(socketData.getInputMessage(), vers, slus);
+        String name = socketWrapper.getPersonaConnectionEntity().getVers();
+        GameEntity gameEntity = socketMapper.toGameEntity(socketData.getInputMessage(), name);
 
         String userparams = getValueFromSocket(socketData.getInputMessage(), "USERPARAMS");
         if (userparams != null) {
@@ -663,12 +657,11 @@ public class GameService {
             gameEntity.setName(socketWrapper.getPersonaEntity().getPers());
         }
 
-        List<String> relatedVers = gameServerService.getRelatedVers(vers);
-        boolean duplicateName = gameRepository.existsByNameAndVersInAndEndTimeIsNull(gameEntity.getName(), relatedVers);
+        boolean duplicateName = gameRepository.existsByNameAndVersAndEndTimeIsNull(gameEntity.getName(), name);
 
         // Custom logic for NFS Most Wanted clients allowing to create custom ranked games based on unranked game parameters
         // To do so, a specific password ("ranked") must be provided, then we set the sysflags to 262144 (ranked) and remove the password
-        if (PSP_NFS_06.equals(vers) && gameEntity.getSysflags().equals("0")
+        if (PSP_NFS06.equals(name) && gameEntity.getSysflags().equals("0")
                 && gameEntity.getPass() != null && gameEntity.getPass().equals(NFS_MW_CONVERT_TO_RANKED_PASSWORD)) {
             gameEntity.setSysflags("262144");
             gameEntity.setPass(null);
@@ -678,7 +671,7 @@ public class GameService {
             socketData.setIdMessage("gcredupl");
             socketWriter.write(socket, socketData);
         } else {
-            gameEntity.setStarted(!gameServerService.isP2P(vers));
+            gameEntity.setStarted(!gameServerService.isP2P(name));
 
             synchronized (this) {
                 // Set userflags directly to 1 (ready) for the host
@@ -689,7 +682,7 @@ public class GameService {
             startGameConnection(socketWrapper, gameEntity, true);
             socketWriter.write(socket, new SocketData("gcre", null, gameUtils.getGameInfo(gameEntity)));
 
-            if (gameServerService.isP2P(vers)) {
+            if (gameServerService.isP2P(name)) {
                 if (USERSETS_GAMES.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
                     // Broadcast +who and +usm with G= attribute to all UserSet members
                     userSetService.broadcastUserSetStateAfterGameCreation(socketWrapper);
@@ -697,11 +690,11 @@ public class GameService {
                     personaService.usr(socket, socketWrapper);
 
                     // Add the game to the room
-                    Room room = roomService.getRoomByVers(vers);
+                    Room room = roomService.getRoomByVers(name);
                     room.getGameIds().add(gameEntity.getId());
 
                     // Broadcast the game creation to people inside the room
-                    socketManager.getSocketWrapperByVers(vers).stream()
+                    socketManager.getSocketWrapperByVers(name).stream()
                             .filter(wrapper -> null != wrapper.getPersonaEntity() && room.getPersonaIds().contains(wrapper.getPersonaEntity().getId()))
                             .forEach(wrapper -> socketWriter.write(wrapper.getSocket(), new SocketData("+agm", null, gameUtils.getGameInfo(gameEntity))));
                 }
@@ -927,7 +920,7 @@ public class GameService {
                 roomService.removeGameFromRoom(game, socketWrapper);
 
                 // For PS2 games, broadcast room users to all remaining online players
-                if (vers.contains("PS2") && socketWrapper.getPersonaEntity() != null) {
+                if (vers.startsWith("PS2_") && socketWrapper.getPersonaEntity() != null) {
                     Room room = roomService.getRoomByPersonaId(socketWrapper.getPersonaEntity().getId());
                     if (room != null) {
                         roomService.broadcastRoomUsers(vers, room.getId());
@@ -949,7 +942,7 @@ public class GameService {
      * @return Normalized USERPARAMS or original if not applicable
      */
     private String normalizeUserparams(String userparams, String vers) {
-        if (!vers.contains("PS2") || userparams == null || userparams.length() < 7) {
+        if (!vers.startsWith("PS2_") || userparams == null || userparams.length() < 7) {
             return userparams;
         }
 

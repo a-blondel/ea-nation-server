@@ -6,150 +6,88 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
 public class GameServerService {
 
     //    MOH
-    public static final String PSP_MOH_07_UHS = "PSP/MOHGPS071";
-    public static final String PSP_MOH_07 = "PSP/MOH07";
-    public static final String PSP_MOH_08 = "PSP/MOH08";
-    public static final String WII_MOH_08 = "WII/MOH08";
-    public static final List<String> MOH07_OR_UHS = List.of(PSP_MOH_07, PSP_MOH_07_UHS);
-    public static final List<String> MOH07_OR_MOH08 = List.of(PSP_MOH_07, PSP_MOH_08, WII_MOH_08);
-    public static final List<String> GAMES_WITHOUT_ROOM = List.of(PSP_MOH_07_UHS, PSP_MOH_07, PSP_MOH_08, WII_MOH_08);
+    public static final String PSP_MOH07 = "PSP_MOH07";
+    public static final String PSP_MOH08 = "PSP_MOH08";
+    public static final String WII_MOH08 = "WII_MOH08";
+    public static final List<String> ALL_MOH = List.of(PSP_MOH07, PSP_MOH08, WII_MOH08);
 
     //    NFS
-    public static final String PC_NFS_06 = "\"pc/1.3-Nov 21 2005\"";
-    public static final String PS2_NFS_06 = "\"ps2/1.2-Sep 20 2005\"";
-    public static final String PSP_NFS_06 = "PSP/NFS06";
-    public static final String PSP_NFS_07 = "PSP/NFS07";
-    public static final String PSP_NFS_08 = "PSP/NFS08";
-    public static final String PSP_NFS_09 = "PSP/NFS09";
-    public static final List<String> ALL_PSP_NFS = List.of(PSP_NFS_06, PSP_NFS_07, PSP_NFS_08, PSP_NFS_09);
+    public static final String PC_NFS06 = "PC_NFS06";
+    public static final String PS2_NFS06 = "PS2_NFS06";
+    public static final String PSP_NFS06 = "PSP_NFS06";
+    public static final String PSP_NFS07 = "PSP_NFS07";
+    public static final String PSP_NFS08 = "PSP_NFS08";
+    public static final String PSP_NFS09 = "PSP_NFS09";
+    public static final List<String> ALL_PSP_NFS = List.of(PSP_NFS06, PSP_NFS07, PSP_NFS08, PSP_NFS09);
 
     //    NHL
-    public static final String PSP_NHL_07 = "PSP/NHL07";
-    public static final String PS2_NHL_08 = "PS2/NHL08";
-
-    public static final List<String> ALL_NHL = List.of(PSP_NHL_07, PS2_NHL_08);
+    public static final String PSP_NHL07 = "PSP_NHL07";
+    public static final String PS2_NHL08 = "PS2_NHL08";
+    public static final List<String> ALL_NHL = List.of(PSP_NHL07, PS2_NHL08);
 
     //    FIFA
-    public static final String PS2_FIFA_06 = "PS2/FIFA06";
-    public static final String PS2_FIFA_07 = "PS2/FIFA07";
-    public static final String PS2_FIFA_08 = "PS2/FIFA08";
-    public static final String PSP_UEFA_07 = "PSP/UEFA07";
-    public static final String PSP_FIFA_07 = "PSP/FIFA07";
-    public static final String PSP_FIFA_08 = "PSP/FIFA08";
-    public static final String PSP_FIFA_09 = "PSP/FIFA09";
-    public static final String PSP_FIFA_10 = "PSP/FIFA10";
-    public static final String PSP_WOLRDCUP_06 = "FLM";
-    public static final String PSP_WORLDCUP_10 = "PSP/WORLDCUP10";
-    public static final List<String> ALL_FIFA = List.of(PS2_FIFA_06, PS2_FIFA_07, PS2_FIFA_08, PSP_UEFA_07, PSP_FIFA_07, PSP_FIFA_08, PSP_FIFA_09, PSP_FIFA_10, PSP_WOLRDCUP_06, PSP_WORLDCUP_10);
+    public static final String PS2_FIFA06 = "PS2_FIFA06";
+    public static final String PS2_FIFA07 = "PS2_FIFA07";
+    public static final String PS2_FIFA08 = "PS2_FIFA08";
+    public static final String PSP_UEFA07 = "PSP_UEFA07";
+    public static final String PSP_FIFA07 = "PSP_FIFA07";
+    public static final String PSP_FIFA08 = "PSP_FIFA08";
+    public static final String PSP_FIFA09 = "PSP_FIFA09";
+    public static final String PSP_FIFA10 = "PSP_FIFA10";
+    public static final String PSP_WORLDCUP06 = "PSP_WORLDCUP06";
+    public static final String PSP_WORLDCUP10 = "PSP_WORLDCUP10";
+    public static final List<String> ALL_FIFA = List.of(PS2_FIFA06, PS2_FIFA07, PS2_FIFA08, PSP_UEFA07, PSP_FIFA07, PSP_FIFA08, PSP_FIFA09, PSP_FIFA10, PSP_WORLDCUP06, PSP_WORLDCUP10);
 
     // Games using usersets instead of rooms
-    public static final List<String> USERSETS_GAMES = List.of(PC_NFS_06, PS2_NFS_06);
+    public static final List<String> USERSETS_GAMES = List.of(PC_NFS06, PS2_NFS06);
 
     private final GameServerConfig gameServerConfig;
 
     /**
-     * Get TCP port for a given VERS and SLUS
-     *
-     * @param vers Version identifier
-     * @param slus SLUS identifier
-     * @return TCP port number or -1 if not found
-     */
-    public int getTcpPort(String vers, String slus) {
-        // First, check if VERS and SLUS match a region
-        Optional<Integer> regionPortOpt = gameServerConfig.getServers().stream()
-                .filter(GameServerConfig.GameServer::isEnabled)
-                .filter(server -> server.getVers().equals(vers))
-                .flatMap(server -> server.getRegions().stream())
-                .filter(region -> region.getSlus() != null && region.getSlus().contains(slus))
-                .map(GameServerConfig.RegionConfig::getPort)
-                .findFirst();
-
-        // Otherwise, check if VERS and SLUS match a dedicated server
-        return regionPortOpt.orElseGet(() -> gameServerConfig.getServers().stream()
-                .filter(GameServerConfig.GameServer::isEnabled)
-                .filter(server -> server.getDedicated() != null &&
-                        server.getDedicated().getVers() != null &&
-                        server.getDedicated().getVers().equals(vers) &&
-                        server.getDedicated().getSlus() != null &&
-                        server.getDedicated().getSlus().equals(slus))
-                .map(server -> server.getDedicated().getPort())
-                .findFirst()
-                .orElse(-1));
-    }
-
-    /**
-     * Get all related versions for a given version
-     *
-     * @param vers Version identifier
-     * @return List of related versions
-     */
-    public List<String> getRelatedVers(String vers) {
-        return gameServerConfig.getServers().stream()
-                .filter(GameServerConfig.GameServer::isEnabled)
-                .filter(server -> server.getVers().equals(vers) ||
-                        (server.getDedicated() != null && server.getDedicated().getVers().equals(vers)))
-                .flatMap(server -> {
-                    // Always include the main server version
-                    Stream<String> mainVersion = Stream.of(server.getVers());
-
-                    // Include dedicated server version if it exists
-                    Stream<String> dedicatedVersion = server.getDedicated() != null && server.getDedicated().getVers() != null
-                            ? Stream.of(server.getDedicated().getVers())
-                            : Stream.empty();
-
-                    return Stream.concat(mainVersion, dedicatedVersion);
-                })
-                .distinct()
-                .toList();
-    }
-
-    /**
-     * Get game version by TCP port
+     * Get game name by TCP port
      *
      * @param port TCP port number
-     * @return Version identifier or empty string if not found
+     * @return Game name or empty string if not found
      */
-    public String getVersByPort(int port) {
+    public String getNameByPort(int port) {
         return gameServerConfig.getServers().stream()
                 .filter(GameServerConfig.GameServer::isEnabled)
-                .filter(server -> server.getRegions().stream()
-                        .anyMatch(region -> region.getPort() == port) ||
-                        (server.getDedicated() != null && server.getDedicated().getPort() == port))
-                .map(GameServerConfig.GameServer::getVers)
+                .filter(server -> server.getPorts().stream()
+                        .anyMatch(portConfig -> portConfig.getPort() == port))
+                .map(GameServerConfig.GameServer::getName)
                 .findFirst()
                 .orElse("");
     }
 
     /**
-     * Get a server by its version
+     * Get a server by its name
      *
-     * @param vers Version identifier
+     * @param name Game name (arbitrary identifier)
      * @return Optional containing the server if found, otherwise empty
      */
-    public Optional<GameServerConfig.GameServer> getServerByVers(String vers) {
+    public Optional<GameServerConfig.GameServer> getServerByName(String name) {
         return gameServerConfig.getServers().stream()
                 .filter(GameServerConfig.GameServer::isEnabled)
-                .filter(server -> server.getVers().equals(vers))
+                .filter(server -> server.getName().equals(name))
                 .findFirst();
     }
 
     /**
-     * Check if a given version is P2P
+     * Check if a given game name is P2P
      *
-     * @param vers Version identifier
-     * @return true if the version is P2P, false otherwise
+     * @param name Game name
+     * @return true if the game is P2P, false otherwise
      */
-    public boolean isP2P(String vers) {
+    public boolean isP2P(String name) {
         return gameServerConfig.getServers().stream()
                 .filter(GameServerConfig.GameServer::isEnabled)
-                .filter(server -> server.getVers().equals(vers))
+                .filter(server -> server.getName().equals(name))
                 .anyMatch(GameServerConfig.GameServer::isP2p);
     }
 

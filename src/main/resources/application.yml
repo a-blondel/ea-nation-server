@@ -1,4 +1,4 @@
-server:
+﻿server:
   port: ${SERVER_PORT:8080} # Local port
 
 http:
@@ -51,1148 +51,742 @@ spring:
 
 game:
   servers:
-    - vers: 'BUDDY'
+    - name: 'BUDDY'
       aries: false
       ssl:
         enabled: false
-      regions:
-        - name: 'GLOBAL'
-          port: 5000 # Arbitrary buddy port, set anything you want
-    - vers: '"Build version%3a Jan  4 2004 21%3a12%3a49"' # James Bond 007: Everything or Nothing
+      ports:
+        - port: 5000 # Arbitrary buddy port
+    - name: 'PS2_BOND04' # James Bond 007: Everything or Nothing
       enabled: false
       sdk: '' # Not specified
       ssl:
         enabled: false
         domain: 'ps2bond04.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 11600
-          slus:
-            - 'SLUS_20751'
-    - vers: 'PS2/DEV' # Arena Football
+      ports:
+        - port: 11600
+    - name: 'PS2_AFL06' # Arena Football
       enabled: false
       sdk: '3.9.5.1'
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2afl06.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 31400
-          slus:
-            - '1.00'
-            - 'BASLUS-21337'
-    - vers: 'PS2/DEV' # Arena Football Road To Glory
+      ports:
+        - port: 31400
+    - name: 'PS2_AFL07' # Arena Football Road To Glory
       enabled: false
       sdk: '3.9.5.1'
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2afl07.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 12400
-          slus:
-            - '1.00'
-            - 'BASLUS-21568'
-    - vers: 'PSP/UEFA07' # UEFA Champions League 2006-2007
+      ports:
+        - port: 12400
+    - name: 'PSP_UEFA07' # UEFA Champions League 2006-2007
       sdk: '4.3.2.0'
       ssl:
         domain: 'pspuefa07.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 11270
-          slus:
-            - '1.00'
-            - 'ULUS-10221'
-    - vers: 'PS2/UEFA07' # UEFA Champions League 2006-2007
+      ports:
+        - port: 11270
+    - name: 'PS2_UEFA07' # UEFA Champions League 2006-2007
       sdk: '4.10.2.0'
       ssl:
         domain: 'ps2uefa07.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 11200
-          slus:
-            - 'SLUS_215.81'
-    #        - vers: 'FLM' # FIFA 06 on PSP
-    #          enabled: false
-    #          sdk: '3.7.2.0'
-    #          ssl:
-    #            enabled: false # Use SSLv2 stunnel
-    #            domain: 'pspfifa06.ea.com'
-    #          regions:
-    #            #        - name: 'EU' # Disabled as it uses same port as FIFA 09
-    #            #          port: 30490
-    #            #          slus:
-    #            #            - 'ULUS-10029'
-    #            - name: 'US'
-    #              port: 30480
-    #              slus:
-    #                - 'ULUS-10029'
-    - vers: 'PS2/FIFA06'
+      ports:
+        - port: 11200
+    #    - name: 'PSP_FIFA06' # FIFA 06 on PSP
+    #      enabled: false
+    #      sdk: '3.7.2.0'
+    #      ssl:
+    #        enabled: false # Use SSLv2 stunnel
+    #        domain: 'pspfifa06.ea.com'
+    #      ports:
+    #        #- port: 30490 # Disabled as it uses same port as FIFA 09
+    #        - port: 30480
+    - name: 'PS2_FIFA06'
       sdk: '3.6.3.0'
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2fifa06.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 30400
-          slus:
-            - '1.00' # dashboard
-            - 'SLUS_212.80'
-    - vers: 'PS2/FIFA07'
+      ports:
+        - port: 30400
+    - name: 'PS2_FIFA07'
       sdk: '4.7.1.0' # 4.6.3.0 for the dashboard
       ssl:
         domain: 'ps2fifa07.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 10400
-          slus:
-            - '1.00' # dashboard
-            - 'SLAJ_250.88'
-            - 'SLES_542.40'
-            - 'SLES_542.41'
-            - 'SLES_542.43'
-            - 'SLES_542.44'
-            - 'SLES_542.46'
-            - 'SLKA_253.96'
-            - 'SLUS_214.33'
-    - vers: 'PSP/FIFA07'
+      ports:
+        - port: 10400
+    - name: 'PSP_FIFA07'
       sdk: '4.3.2.0'
       ssl:
         domain: 'pspfifa07.ea.com'
-      regions:
-        - name: 'EU'
-          port: 10490
-          slus:
-            - 'ULUS-10029' # Actual SLUS used by the game (PSP/FIFA06)
-        - name: 'US'
-          port: 10480
-          slus:
-            - 'ULUS-10029' # Actual SLUS used by the game (PSP/FIFA06)
-    - vers: 'PS2/FIFA08'
+      ports:
+        - port: 10490 # EU
+        - port: 10480 # US
+    - name: 'PS2_FIFA08'
       sdk: '5.4.3.0' # 4.6.3.0 for the dashboard
       ssl:
         domain: 'ps2fifa08.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 20400
-          slus:
-            - '1.00' # Dashboard
-            - 'SLES_548.70'
-            - 'SLES_548.71'
-            - 'SLES_548.72'
-            - 'SLES_548.73'
-            - 'SLES_548.74'
-            - 'SLKA_254.08'
-            - 'SLUS_216.48'
-    - vers: 'PSP/FIFA08'
+      ports:
+        - port: 20400
+    - name: 'PSP_FIFA08'
       sdk: '5.5.0.0'
       ssl:
         domain: 'pspfifa08.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 20490
-          slus:
-            - 'ULUS-10293'
-    - vers: 'PSP/FIFA09'
+      ports:
+        - port: 20490
+    - name: 'PSP_FIFA09'
       sdk: '6.3.1.0'
       ssl:
         domain: 'pspfifa09.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 30490
-          slus:
-            - 'ULUX-80340'
-    - vers: 'PSP/FIFA10'
+      ports:
+        - port: 30490
+    - name: 'PSP_FIFA10'
       sdk: '7.5.3.0'
       ssl:
         domain: 'pspfifa10.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 25490
-          slus:
-            - 'ULUS-10464'
-    - vers: 'FLM' # FIFA World Cup Germany 2006
+      ports:
+        - port: 25490
+    - name: 'PSP_WORLDCUP06' # FIFA World Cup Germany 2006
       sdk: '3.9.5.1'
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'pspuefa06.ea.com' # Yes, uefa06 for world cup 2006
-      regions:
-        - name: 'US'
-          port: 31280
-          slus:
-            - 'ULUS-10029'
-        - name: 'EU'
-          port: 31290
-          slus:
-            - 'ULUS-10029'
-    - vers: 'PS2/UEFA06' # FIFA World Cup Germany 2006
+      ports:
+        - port: 31280 # US
+        - port: 31290 # EU
+    - name: 'PS2_WORLDCUP06' # FIFA World Cup Germany 2006
       sdk: '3.6.3.0'
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2uefa06.ea.com' # Yes, uefa06 for world cup 2006
-      regions:
-        - name: 'GLOBAL'
-          port: 31200
-          slus:
-            - 'SLUS_214.08'
-    - vers: 'PSP/WORLDCUP10' # FIFA World Cup South Africa 2010
+      ports:
+        - port: 31200
+    - name: 'PSP_WORLDCUP10' # FIFA World Cup South Africa 2010
       sdk: '7.5.3.0'
       ssl:
         domain: 'pspworldcup10.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 28390
-          slus:
-            - 'ULUS-10504'
-    - vers: 'PSP/KOK06' # Fight Night Round 3
+      ports:
+        - port: 28390
+    - name: 'PSP_KOK06' # Fight Night Round 3
       sdk: '3.9.5.1'
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'pspkok06.ea.com'
-      regions:
-        - name: 'EU'
-          port: 31570
-          slus:
-            - 'ULES00270'
-        - name: 'US'
-          port: 31590
-          slus:
-            - 'ULUS10066'
-    - vers: 'PS2/MARVEL06' # Marvel Nemesis: Rise of the Imperfects
+      ports:
+        - port: 31570 # EU
+        - port: 31590 # US
+    - name: 'PS2_MARVEL06' # Marvel Nemesis: Rise of the Imperfects
       sdk: '3.7.4.1'
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2marvel06.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 31700
-          slus:
-            - '1.00'
-            - 'SLUS_212.81'
-    #    - vers: 'PSP/DEV' # Madden NFL 06 - Doesn't work (fails at persona selection), and uses madden 09 US port
+      ports:
+        - port: 31700
+    #    - name: 'PSP_MADDEN06' # Madden NFL 06 - Doesn't work (fails at persona selection), and uses madden 09 US port
     #      sdk: '3.7.1.1'
     #      ssl:
     #        enabled: false # Use SSLv2 stunnel
     #        domain: 'pspmadden06.ea.com'
-    #      regions:
-    #        - name: 'US'
-    #          port: 30090
-    #          slus:
-    #            - 'ULUS10024'
-    - vers: 'PSP/MADDEN07'
+    #      ports:
+    #        - port: 30090
+    - name: 'PSP_MADDEN07'
       sdk: '4.3.2.0'
       ssl:
         domain: 'pspmadden07.ea.com'
-      regions:
-        - name: 'US'
-          port: 10090
-          slus:
-            - 'SLUS-ULUS10117'
-    - vers: 'PSP/MADDEN-2008'
+      ports:
+        - port: 10090 # US
+    - name: 'PSP_MADDEN08'
       sdk: '5.3.2.1'
       ssl:
         domain: 'pspmadden08.ea.com'
-      regions:
-        - name: 'EU'
-          port: 20080
-          slus:
-            - 'SLUS-ULES00867'
-        - name: 'US'
-          port: 20090
-          slus:
-            - 'SLUS-ULUS10275'
-    - vers: 'PSP/MADDEN-2009'
+      ports:
+        - port: 20080 # EU
+        - port: 20090 # US
+    - name: 'PSP_MADDEN09'
       sdk: '5.6.5.7'
       ssl:
         domain: 'pspmadden09.ea.com'
-      regions:
-        - name: 'EU'
-          port: 30080
-          slus:
-            - 'SLUS-ULES01093'
-        - name: 'US'
-          port: 30090
-          slus:
-            - 'SLUS-ULUS10352'
-    - vers: 'PSP/MADDEN-2010'
+      ports:
+        - port: 30080 # EU
+        - port: 30090 # US
+    - name: 'PSP_MADDEN10'
       sdk: '7.3.1.1'
       ssl:
         domain: 'pspmadden10.ea.com'
-      regions:
-        - name: 'US'
-          port: 25090
-          slus:
-            - 'SLUS-ULUS10441'
-    - vers: 'PSP/NBA06'
+      ports:
+        - port: 25090 # US
+    - name: 'PSP_NBA06'
       sdk: '3.7.2.0'
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'pspnba06.ea.com'
-      regions:
-        - name: 'US'
-          port: 30190
-          slus:
-            - 'ULUS10030'
-    - vers: 'PSP/NBA07'
+      ports:
+        - port: 30190 # US
+    - name: 'PSP_NBA07'
       sdk: '4.3.2.0'
       ssl:
         domain: 'pspnba07.ea.com'
-      regions:
-        - name: 'US'
-          port: 10190
-          slus:
-            - 'ULUS10113'
-    - vers: 'PSP/NBA08'
+      ports:
+        - port: 10190 # US
+    - name: 'PSP_NBA08'
       sdk: '5.5.0.0'
       ssl:
         domain: 'pspnba08.ea.com'
-      regions:
-        - name: 'US'
-          port: 20190
-          slus:
-            - 'ULUS10294'
-    - vers: 'PS2/NBA08'
+      ports:
+        - port: 20190 # US
+    - name: 'PS2_NBA08'
       sdk: '5.4.3.0'
       ssl:
         domain: 'ps2nba08.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 20100
-          slus:
-            - '1.00'
-            - 'SLUS_216.49'
-    - vers: 'PSP/NCAA07'
+      ports:
+        - port: 20100
+    - name: 'PSP_NCAA07'
       sdk: '4.2.2.0'
       ssl:
         domain: 'pspncaa07.ea.com'
-      regions:
-        - name: 'US-1'
-          port: 10580
-          slus:
-            - 'ULUS10116'
-        - name: 'US-2'
-          port: 10590
-          slus:
-            - 'ULUS10116'
-    - vers: '"pc/1.3-Nov 21 2005"' # Need for Speed: Most Wanted (PC)
+      ports:
+        - port: 10580 # US-1
+        - port: 10590 # US-2
+    - name: 'PC_NFS06' # Need for Speed: Most Wanted (PC)
       sdk: '3.9.3.0'
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'pcnfs06.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 30920
-          slus:
-            - 'SLUS_21351'
-    - vers: '"ps2/1.2-Sep 20 2005"' # Need for Speed: Most Wanted (PS2)
+      ports:
+        - port: 30920
+    - name: 'PS2_NFS06' # Need for Speed: Most Wanted (PS2)
       sdk: '3.8.4.0'
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2nfs06.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 30900
-          slus:
-            - 'SLES_53558'
-    - vers: 'PSP/NFS06' # Need for Speed: Most Wanted 5-1-0
+      ports:
+        - port: 30900
+    - name: 'PSP_NFS06' # Need for Speed: Most Wanted 5-1-0
       sdk: '3.7.2.0'
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'pspnfs06.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 30980 # default is 30990 for EU, but as it's duplicating PSP/NFS09 then it's patched to 30980 to match US version
-          slus:
-            - 'ULES00196'
-            - 'ULUS10036'
-    - vers: 'PSP/NFS07' # Need for Speed: Carbon - Own the City
+      ports:
+        - port: 30980 # default is 30990 for EU, but as it's duplicating PSP/NFS09 then it's patched to 30980 to match US version
+    - name: 'PSP_NFS07' # Need for Speed: Carbon - Own the City
       sdk: '4.3.2.0'
       ssl:
         domain: 'pspnfs07.ea.com'
-      regions:
-        - name: 'EU'
-          port: 10980
-          slus:
-            - 'ULES00577'
-        - name: 'US'
-          port: 10990
-          slus:
-            - 'ULUS10114'
-    - vers: 'PSP/NFS08' # Need for Speed: ProStreet
+      ports:
+        - port: 10980 # EU
+        - port: 10990 # US
+    - name: 'PSP_NFS08' # Need for Speed: ProStreet
       sdk: '5.6.3.1'
       ssl:
         domain: 'pspnfs08.ea.com'
-      regions:
-        - name: 'EU'
-          port: 20980
-          slus:
-            - 'SLUS-80296'
-        - name: 'US'
-          port: 20990
-          slus:
-            - 'SLUS-80296'
-    - vers: 'PSP/NFS09' # Need for Speed: Undercover
+      ports:
+        - port: 20980 # EU
+        - port: 20990 # US
+    - name: 'PSP_NFS09' # Need for Speed: Undercover
       sdk: '4.3.2.0' # Yes, outdated SDK
       ssl:
         domain: 'pspnfs09.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 30990
-          slus:
-            - 'ULES01145'
-            - 'ULUS10376'
-    - vers: 'PSP/NHL07'
+      ports:
+        - port: 30990
+    - name: 'PSP_NHL07'
       sdk: '4.3.2.0'
       ssl:
         domain: 'pspnhl07.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 10390
-          slus:
-            - 'ULES00477'
-            - 'ULUS10131'
-    - vers: 'PS2/NHL08'
+      ports:
+        - port: 10390
+    - name: 'PS2_NHL08'
       sdk: '5.4.3.0'
       ssl:
         domain: 'ps2nhl08.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 20300
-          slus:
-            - '1.00'
-            - 'SLUS_216.47'
-    - vers: 'PSP/MOH07' # Medal of Honor: Heroes
+      ports:
+        - port: 20300
+    - name: 'PSP_MOH07' # Medal of Honor: Heroes
       sdk: '4.7.0.0'
       p2p: false
-      dedicated:
-        vers: 'PSP/MOHGPS071'
-        slus: 'MOHA10000'
-        port: 11190
       ssl:
         domain: 'pspmoh07.ea.com'
-      regions:
-        - name: "EU"
-          port: 11180
-          slus:
-            - 'ULES00557'
-            - 'ULES00558'
-            - 'ULES00559'
-            - 'ULES00560'
-            - 'ULES00561'
-            - 'ULES00562'
-        - name: "US"
-          port: 11190
-          slus:
-            - 'ULUS10141'
-    - vers: 'PSP/MOH08' # Medal of Honor: Heroes 2
+      ports:
+        - port: 11180 # EU
+        - port: 11190 # US + GPS dedicated server
+    - name: 'PSP_MOH08' # Medal of Honor: Heroes 2
       sdk: '5.6.2.0'
       p2p: false
       ssl:
         domain: 'pspmoh08.ea.com'
-      regions:
-        - name: 'EU'
-          port: 21180
-          slus:
-            - 'ULES00955'
-            - 'ULES00956'
-            - 'ULES00988'
-        - name: 'US'
-          port: 21190
-          slus:
-            - 'ULUS10310'
-    - vers: 'WII/MOH08' # Medal of Honor: Heroes 2
+      ports:
+        - port: 21180 # EU
+        - port: 21190 # US
+    - name: 'WII_MOH08' # Medal of Honor: Heroes 2
       sdk: '5.6.2.0'
       p2p: false
       ssl:
         domain: 'wiimoh08.ea.com'
-      regions:
-        - name: 'EU'
-          port: 21170
-          slus:
-            - 'RM2X'
-            - 'RM2P'
-        - name: 'US'
-          port: 21120
-          slus:
-            - 'RM2E'
-    - vers: 'PSP/TW07'
+      ports:
+        - port: 21170 # EU
+        - port: 21120 # US
+    - name: 'PSP_TW07'
       sdk: '4.3.2.0'
       ssl:
         domain: 'psptw07.ea.com'
-      regions:
-        - name: 'EU'
-          port: 10280
-          slus:
-            - 'ULES00455'
-            - 'ULES00456'
-        - name: 'US'
-          port: 10290
-          slus:
-            - 'ULUS10115'
-    - vers: 'PSP/TW08'
+      ports:
+        - port: 10280 # EU
+        - port: 10290 # US
+    - name: 'PSP_TW08'
       sdk: '5.4.1.0'
       ssl:
         domain: 'psptw08.ea.com'
-      regions:
-        - name: 'EU'
-          port: 20280
-          slus:
-            - 'ULES00845'
-            - 'ULES00846'
-        - name: 'US'
-          port: 20290
-          slus:
-            - 'ULUS10276'
-    - vers: 'PSP/TEST10' # Tiger woods PGA Tour 10
+      ports:
+        - port: 20280 # EU
+        - port: 20290 # US
+    - name: 'PSP_TW10' # Tiger Woods PGA Tour 10
       sdk: '7.0.0.0'
       ssl:
         domain: 'psptw10.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 25290
-          slus:
-            - 'SLUS-FLAME'
-    - vers: 'FLM/A1' # PS2/TW08
+      ports:
+        - port: 25290
+    - name: 'PS2_TW08' # Tiger Woods PGA Tour 08
       enabled: false
       sdk: '4.11.11.0'
       ssl:
         domain: 'ps2tw08.ea.com'
-      regions:
-        - name: 'US'
-          port: 20200
-          slus:
-            - '1.00'
-            - 'SLUS_21483'
-    - vers: 'XBOX/ALPHA' # NASCAR 07
+      ports:
+        - port: 20200 # US
+    - name: 'PS2_NASCAR07' # NASCAR 07
       enabled: false
       sdk: '3.7.3.0'
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2nascar07.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 10600
-          slus:
-            - '1.00'
-            - 'SLUS_214.61'
-    - vers: 'XBOX/ALPHA' # NASCAR 08
+      ports:
+        - port: 10600
+    - name: 'PS2_NASCAR08' # NASCAR 08
       enabled: false
       sdk: '4.11.0.0'
       ssl:
         domain: 'ps2nascar08.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 20600
-          slus:
-            - '1.00'
-            - 'SLUS_216.39'
-    - vers: 'XBOX/ALPHA' # NASCAR 09
+      ports:
+        - port: 20600
+    - name: 'PS2_NASCAR09' # NASCAR 09
       sdk: '4.11.0.0'
       ssl:
         domain: 'ps2nascar09.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 30600
-          slus:
-            - '1.00'
-            - 'SLUS_217.44'
-    - vers: '"PS2/Beta 1.04-Sep 17 2003"' # SSX3
+      ports:
+        - port: 30600
+    - name: 'PS2_SSX04' # SSX3
       enabled: false
       sdk: '' # Not specified
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2ssx04.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 11000
-          slus:
-            - 'SLUS_20772'
-    - vers: 'FLM/A1' # Burnout 3 - Takedown
+      ports:
+        - port: 11000
+    - name: 'PS2_BURNOUT05' # Burnout 3 - Takedown
       enabled: false
       sdk: '' # Not specified
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2burnout05.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 21800
-          slus:
-            - 'SLUS-FLAME' #SLUS_21050
-    - vers: 'FLM/A1' # Burnout Revenge
+      ports:
+        - port: 21800
+    - name: 'PS2_BURNOUT06' # Burnout Revenge
       enabled: false
       sdk: '' # Not specified
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2burnout06.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 31800
-          slus:
-            - 'SLUS-FLAME' #SLUS_21242
-    - vers: '"ps2/1.1001-Oct 15 2003"' # Need for Speed: Underground
+      ports:
+        - port: 31800
+    - name: 'PS2_NFS04' # Need for Speed: Underground
       enabled: false
       sdk: '' # Not specified
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2nfs04.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 10900
-          slus:
-            - 'SLUS_20811'
-    - vers: '"ps2/1.0-Oct 15 2004"' # Need for Speed: Underground 2
+      ports:
+        - port: 10900
+    - name: 'PS2_NFS05' # Need for Speed: Underground 2
       sdk: '' # Not specified
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2nfs05.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 20900
-          slus:
-            - 'SLUS_21065'
-    #    - vers: 'PS2/FIFA05'
+      ports:
+        - port: 20900
+    #    - name: 'PS2_FIFA05'
     #      enabled: false
     #      sdk: '' # Not specified
     #      ssl:
     #        enabled: false # Use SSLv2 stunnel
     #        domain: 'ps2fifa05east.ea.com'
-    #      regions:
-    #        - name: 'GLOBAL'
-    #          port: 20400 # Same as FIFA08, should be patched to avoid conflicts
-    #          slus:
-    #            - 'SLUS_21051'
-    - vers: 'PS2/KOK05' # Fight Night Round 2
+    #      ports:
+    #        - port: 20400 # Same as FIFA08, should be patched to avoid conflicts
+    - name: 'PS2_KOK05' # Fight Night Round 2
       enabled: false
       sdk: '' # Not specified
       ssl:
         enabled: false # No SSL
-        domain: 'ps2kok05.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 21500
-          slus:
-            - 'FN2K5-VER-1.0' # SLUS_21161
-    - vers: 'PS2/DEV' # Fight Night Round 3
+        domain: 'ps2kok05.ea.com' # Likely based on "Knockout Kings" so the domain is kok05
+      ports:
+        - port: 21500
+    - name: 'PS2_KOK06' # Fight Night Round 3
       enabled: false
       sdk: '3.9.5.0'
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2kok06.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 31500
-          slus:
-            - 'SLUS_213.83'
-    - vers: '"Build version%3a Sep 15 2003 18%3a12%3a51"' # The Lord of the Rings: The Return of the King (PS2)
+      ports:
+        - port: 31500
+    - name: 'PS2_ROTK04' # The Lord of the Rings: The Return of the King (PS2)
       enabled: false
       sdk: '' # Not specified
       ssl:
         enabled: false # No SSL
         domain: 'ps2rotk04.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 11200 # Same as UEFA07, should be patched to avoid conflicts
-          slus:
-            - 'SLUS_20770'
-    - vers: '"PS2/MS5-Jun 17 2003"' # Madden NFL 2004
+      ports:
+        - port: 11200 # Same as UEFA07, should be patched to avoid conflicts
+    - name: 'PS2_MADDEN04' # Madden NFL 2004
       enabled: false
       sdk: '' # Not specified
       ssl:
         enabled: false # No SSL
         domain: 'ps2madden04.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 10000 # Same as Madden 07, should be patched to avoid conflicts
-          slus:
-            - 'BASLUS-20752' # SLUS_20752
-    - vers: '"PS2/ALPHA-Jun  9 2004"' # Madden NFL 2005
+      ports:
+        - port: 10000 # Same as Madden 07, should be patched to avoid conflicts
+    - name: 'PS2_MADDEN05' # Madden NFL 2005
       enabled: false
       sdk: '' # Not specified
       ssl:
         enabled: false # No SSL
         domain: 'ps2madden05.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 20000 # Same as Madden 08, should be patched to avoid conflicts
-          slus:
-            - 'BASLUS-21000' # SLUS_21000
-    - vers: 'PS2/DEV' # Madden NFL 06
+      ports:
+        - port: 20000 # Same as Madden 08, should be patched to avoid conflicts
+    - name: 'PS2_MADDEN06' # Madden NFL 06
       enabled: false
       sdk: '3.6.1.0'
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2madden06.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 30000 # Same as Madden 09, should be patched to avoid conflicts
-          slus:
-            - 'BASLUS-21213' # SLUS_21213
-    - vers: 'PS2/DEV' # Madden NFL 07
+      ports:
+        - port: 30000 # Same as Madden 09, should be patched to avoid conflicts
+    - name: 'PS2_MADDEN07' # Madden NFL 07
       enabled: false
       sdk: '4.6.1.0'
       ssl:
         domain: 'ps2madden07.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 10000
-          slus:
-            - 'BASLUS-21476' # SLUS_21476
-    - vers: 'PS2/DEV' # Madden NFL 08
+      ports:
+        - port: 10000
+    - name: 'PS2_MADDEN08' # Madden NFL 08
       enabled: false
       sdk: '4.11.11.0'
       ssl:
         domain: 'ps2madden08.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 20000
-          slus:
-            - 'BASLUS-21638' # SLUS_21638
-    - vers: 'PS2/DEV' # Madden NFL 09
+      ports:
+        - port: 20000
+    - name: 'PS2_MADDEN09' # Madden NFL 09
       enabled: false
       sdk: '5.6.0.0'
       ssl:
         domain: 'ps2madden09.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 30000
-          slus:
-            - 'BASLUS-21770' # SLUS_21770
-    - vers: 'PS2/DEV' # Madden NFL 10
+      ports:
+        - port: 30000
+    - name: 'PS2_MADDEN10' # Madden NFL 10
       enabled: false
       sdk: '5.6.0.0'
       ssl:
         domain: 'ps2madden10.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 25000
-          slus:
-            - 'BASLUS-21893' # SLUS_21893
-    - vers: '"FLM/A1-Jan 29 2004"' # MVP Baseball 2004
+      ports:
+        - port: 25000
+    - name: 'PS2_MVP04' # MVP Baseball 2004
       enabled: false
       sdk: '' # Not specified
       ssl:
         enabled: false
         domain: 'ps2mvp04.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 30800 # Same as MVP06, should be patched to avoid conflicts
-          slus:
-            - 'SLUS_20755' # SLUS_20868
-    - vers: 'PS2/MVPFINAL' # MVP Baseball 2005
+      ports:
+        - port: 30800 # Same as MVP06, should be patched to avoid conflicts
+    - name: 'PS2_MVP05' # MVP Baseball 2005
       enabled: false
       sdk: ''
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2mvp05.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 20800
-          slus:
-            - 'SLUS_211.35'
-    - vers: 'PS2/MVPFINAL' # MVP 06 NCAA Baseball
+      ports:
+        - port: 20800
+    - name: 'PS2_MVP06' # MVP 06 NCAA Baseball
       enabled: false
       sdk: '3.9.5.1'
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2mvp06.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 30800
-          slus:
-            - 'SLUS_213.67'
-    - vers: 'PS2/MVP07' # MVP 07 NCAA Baseball
+      ports:
+        - port: 30800
+    - name: 'PS2_MVP07' # MVP 07 NCAA Baseball
       enabled: false
       sdk: '4.10.2.0'
       ssl:
         enabled: true
         domain: 'ps2mvp07.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 10800
-          slus:
-            - 'SLUS_215.82'
-    - vers: 'XBOX/ALPHA' # NASCAR 06
+      ports:
+        - port: 10800
+    - name: 'PS2_NASCAR06' # NASCAR 06
       enabled: false
       sdk: '3.7.3.0'
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2nascar06.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 30600
-          slus:
-            - '1.00'
-            - 'SLUS_212.66'
-    - vers: '"PS2/ALPHA-Jun 30 2004"' # NASCAR 05
+      ports:
+        - port: 30600
+    - name: 'PS2_NASCAR05' # NASCAR 05
       enabled: false
       sdk: '' # Not specified
       ssl:
         enabled: false # No SSL
         domain: 'ps2nascar05.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 20600
-          slus:
-            - '1.00'
-            - 'BASLUS-21003' # SLUS_21003
-    - vers: '"PS2/XXX-Jul  2 2003"' # NASCAR 04
+      ports:
+        - port: 20600
+    - name: 'PS2_NASCAR04' # NASCAR 04
       enabled: false
       sdk: '' # Not specified
       ssl:
         enabled: false # No SSL
         domain: 'ps2nascar04.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 10600
-          slus:
-            - '1.00'
-            - 'BASLUS-20824' # SLUS_20824
-    - vers: '"NBAPS22004/M3-Sep 19 2003"' # NBA Live 2004
+      ports:
+        - port: 10600
+    - name: 'PS2_NBA04' # NBA Live 2004
       enabled: false
       sdk: '' # Not specified
       ssl:
         enabled: false # No SSL
         domain: 'ps2nba04.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 10100 # Same as NBA07, should be patched to avoid conflicts
-          slus:
-            - '1.00'
-            - 'SLUS_20755'
-    - vers: 'PS2/NBA05'
+      ports:
+        - port: 10100 # Same as NBA07, should be patched to avoid conflicts
+    - name: 'PS2_NBA05'
       enabled: false
       sdk: '' # Not specified
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2nba05.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 20100 # Same as NBA08, should be patched to avoid conflicts
-          slus:
-            - '1.00'
-            - 'SLUS_210.58'
-    - vers: 'PS2/NBA06'
+      ports:
+        - port: 20100 # Same as NBA08, should be patched to avoid conflicts
+    - name: 'PS2_NBA06'
       enabled: false
       sdk: '3.6.3.0'
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2nba06.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 30100
-          slus:
-            - '1.00'
-            - 'SLUS_212.79'
-    - vers: 'PS2/NBA07'
+      ports:
+        - port: 30100
+    - name: 'PS2_NBA07'
       enabled: false
       sdk: '4.7.3.0'
       ssl:
         domain: 'ps2nba07.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 10100
-          slus:
-            - '1.00'
-            - 'SLUS_214.60'
-    - vers: 'PS2/NBASTREET3'
+      ports:
+        - port: 10100
+    - name: 'PS2_NBASTREET05'
       enabled: false
       sdk: '' # Not specified
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2nbastreet05.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 21000
-          slus:
-            - '1.00'
-            - '1.10' # SLUS_211.26
-    - vers: '"PS2/ALPHA-Jun  1 2003"' # NCAA Football 2004
+      ports:
+        - port: 21000
+    - name: 'PS2_NCAA04' # NCAA Football 2004
       enabled: false
       sdk: '' # Not specified
       ssl:
         enabled: false # No SSL
         domain: 'ps2ncaa04.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 10500 # Same as NCAA07, should be patched to avoid conflicts
-          slus:
-            - 'BASLUS-20719'
-    - vers: '"PS2/ALPHA-Jun  1 2003"' # NCAA Football 2005
+      ports:
+        - port: 10500 # Same as NCAA07, should be patched to avoid conflicts
+    - name: 'PS2_NCAA05' # NCAA Football 2005
       enabled: false
       sdk: ''
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2ncaa05.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 20500 # Same as NCAA08, should be patched to avoid conflicts
-          slus:
-            - 'BASLUS-20991'
-    - vers: 'PS2/ALPHA' # NCAA Football 06
+      ports:
+        - port: 20500 # Same as NCAA08, should be patched to avoid conflicts
+    - name: 'PS2_NCAA06' # NCAA Football 06
       enabled: false
       sdk: '3.5.0.0'
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2ncaa06.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 30500 # Same as NCAA09, should be patched to avoid conflicts
-          slus:
-            - 'BASLUS-21214'
-    - vers: 'PS2/DEV' # NCAA Football 07
+      ports:
+        - port: 30500 # Same as NCAA09, should be patched to avoid conflicts
+    - name: 'PS2_NCAA07' # NCAA Football 07
       enabled: false
       sdk: '4.5.0.0'
       ssl:
         domain: 'ps2ncaa07.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 10500
-          slus:
-            - 'BASLUS-21459'
-    - vers: 'PS2/DEV' # NCAA Football 08
+      ports:
+        - port: 10500
+    - name: 'PS2_NCAA08' # NCAA Football 08
       enabled: false
       sdk: '4.11.11.0'
       ssl:
         domain: 'ps2ncaa08.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 20500
-          slus:
-            - 'BASLUS-21620'
-    - vers: 'PS2/DEV' # NCAA Football 09
+      ports:
+        - port: 20500
+    - name: 'PS2_NCAA09' # NCAA Football 09
       enabled: false
       sdk: '5.6.0.0'
       ssl:
         domain: 'ps2ncaa09.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 30500
-          slus:
-            - 'BASLUS-21752'
-    - vers: 'PS2/DEV' # NCAA Football 10
+      ports:
+        - port: 30500
+    - name: 'PS2_NCAA10' # NCAA Football 10
       enabled: false
       sdk: '5.6.0.0'
       ssl:
         domain: 'ps2ncaa10.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 25500
-          slus:
-            - 'BASLUS-21892'
-    - vers: '"MMPS22004/M3-Oct 19 2003"' # NCAA March Madness 2004
+      ports:
+        - port: 25500
+    - name: 'PS2_MM04' # NCAA March Madness 2004
       enabled: false
       sdk: ''
       ssl:
         enabled: false # No SSL
         domain: 'ps2mm04.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 10700 # Same as NCAA MM 07, should be patched to avoid conflicts
-          slus:
-            - 'SLUS_20771'
-    - vers: 'PS2/MM05' # NCAA March Madness 2005
+      ports:
+        - port: 10700 # Same as NCAA MM 07, should be patched to avoid conflicts
+    - name: 'PS2_MM05' # NCAA March Madness 2005
       enabled: false
       sdk: ''
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2mm05.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 20700
-          slus:
-            - 'SLUS_21100'
-    - vers: 'PS2/MM06' # NCAA March Madness 06
+      ports:
+        - port: 20700
+    - name: 'PS2_MM06' # NCAA March Madness 06
       sdk: '3.7.4.0'
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2mm06.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 30700
-          slus:
-            - 'SLUS_21298'
-    - vers: 'PS2/MM07' # NCAA March Madness 07
+      ports:
+        - port: 30700
+    - name: 'PS2_MM07' # NCAA March Madness 07
       sdk: '4.10.1.0'
       ssl:
         domain: 'ps2mm07.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 10700
-          slus:
-            - 'SLUS_21481'
-    - vers: 'PS2/UEFA05' # UEFA Champions League 2004-2005
+      ports:
+        - port: 10700
+    - name: 'PS2_UEFA05' # UEFA Champions League 2004-2005
       enabled: false
       sdk: ''
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2uefa05.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 20480
-          slus:
-            - 'SLES_529.09'
-    - vers: 'PS2/Final1' # PS2/TW04
+      ports:
+        - port: 20480
+    - name: 'PS2_TW04' # Tiger Woods PGA Tour 2004
       enabled: false
       sdk: ''
       ssl:
         enabled: false # No SSL
         domain: 'ps2tw04.ea.com'
-      regions:
-        - name: 'US'
-          port: 10200
-          slus:
-            - '1.00'
-            - 'SLUS_20757'
-    - vers: 'PS2/Final1' # PS2/TW05
+      ports:
+        - port: 10200 # US
+    - name: 'PS2_TW05' # Tiger Woods PGA Tour 2005
       enabled: false
       sdk: '' # Not specified
       ssl:
         enabled: false # No SSL
         domain: 'ps2tw05.ea.com'
-      regions:
-        - name: 'US'
-          port: 20200
-          slus:
-            - '1.00'
-            - 'SLUS_21002'
-    - vers: 'PS2/Final1' # PS2/TW06
+      ports:
+        - port: 20200 # US
+    - name: 'PS2_TW06' # Tiger Woods PGA Tour 06
       enabled: false
       sdk: '3.6.3.0'
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2tw06.ea.com'
-      regions:
-        - name: 'US'
-          port: 30200
-          slus:
-            - '1.00'
-            - 'SLUS_21264'
-    - vers: 'FLM/A1' # PS2/TW07
+      ports:
+        - port: 30200 # US
+    - name: 'PS2_TW07' # Tiger Woods PGA Tour 07
       enabled: false
       sdk: '4.6.2.0'
       ssl:
         domain: 'ps2tw07.ea.com'
-      regions:
-        - name: 'US'
-          port: 10200
-          slus:
-            - '1.00'
-            - 'SLUS_21483'
-    - vers: 'PS2/DEV' # NFL Head Coach
+      ports:
+        - port: 10200 # US
+    - name: 'PS2_COACH06' # NFL Head Coach
       enabled: false
       sdk: '3.9.5.2'
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2coach06.ea.com'
-      regions:
-        - name: 'US'
-          port: 31300
-          slus:
-            - '1.00'
-            - 'BASLUS-21407'
-    - vers: '"PS2/A13-Sep 20 2003"' # NFL Street (2004)
+      ports:
+        - port: 31300 # US
+    - name: 'PS2_NFLSTREET04' # NFL Street (2004)
       enabled: false
       sdk: ''
       ssl:
         enabled: false # No SSL
         domain: 'ps2nflstreet04.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 11300
-          slus:
-            - '1.00'
-            - 'BASLUS-20841'
-    - vers: '"PS2/BETA1-Oct 31 2004"' # NFL Street 2
+      ports:
+        - port: 11300
+    - name: 'PS2_NFLSTREET05' # NFL Street 2
       enabled: false
       sdk: ''
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2nflstreet05.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 21300
-          slus:
-            - '1.00'
-            - 'BASLUS-21118'
-    - vers: '"PS2/BETA1-Sep  7 2006"' # NFL Street 3
+      ports:
+        - port: 21300
+    - name: 'PS2_NFLSTREET07' # NFL Street 3
       enabled: false
       sdk: ''
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2nflstreet07.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 11700
-          slus:
-            - '1.00'
-            - 'BASLUS-21482'
-    - vers: 'PS2/NHL04'
+      ports:
+        - port: 11700
+    - name: 'PS2_NHL04'
       enabled: false
       sdk: ''
       ssl:
         enabled: false # No SSL
         domain: 'ps2nhl04.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 10300 # Same as NHL07, should be patched to avoid conflicts
-          slus:
-            - '1.00'
-            - 'SLUS_207.56'
-    - vers: 'PS2/NHL05'
+      ports:
+        - port: 10300 # Same as NHL07, should be patched to avoid conflicts
+    - name: 'PS2_NHL05'
       enabled: false
       sdk: ''
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2nhl05.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 20300 # Same as NHL08, should be patched to avoid conflicts
-          slus:
-            - '1.00'
-            - 'SLUS_210.01'
-    - vers: 'PS2/NHL06'
+      ports:
+        - port: 20300 # Same as NHL08, should be patched to avoid conflicts
+    - name: 'PS2_NHL06'
       sdk: '3.6.0.1'
       ssl:
         enabled: false # Use SSLv2 stunnel
         domain: 'ps2nhl06.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 30300
-          slus:
-            - '1.00'
-            - 'SLUS_212.41'
-    - vers: 'PS2/NHL07'
+      ports:
+        - port: 30300
+    - name: 'PS2_NHL07'
       sdk: '4.7.1.0'
       ssl:
         domain: 'ps2nhl07.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 10300
-          slus:
-            - '1.00'
-            - 'SLUS_214.58'
-    - vers: 'ps2/1.0-12-15-2003' # The Sims: Bustin' Out
+      ports:
+        - port: 10300
+    - name: 'PS2_SIMS04' # The Sims: Bustin' Out
       enabled: false
       sdk: '' # Not specified
       ssl:
         enabled: false # No SSL
         domain: 'ps2sims04.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 11100
-          slus:
-            - 'SLUS_208.42'
-    - vers: 'FIFA-PS2-2004' # FIFA Soccer 2004
+      ports:
+        - port: 11100
+    - name: 'PS2_FIFA04' # FIFA Soccer 2004
       enabled: false
       sdk: '' # Not specified
       ssl:
         enabled: false # No SSL
         domain: 'ps2fifa04east.ea.com'
-      regions:
-        - name: 'GLOBAL'
-          port: 10400 # Same as FIFA07, should be patched to avoid conflicts
-          slus:
-            - 'SLUS-20750'
+      ports:
+        - port: 10400 # Same as FIFA07, should be patched to avoid conflicts
 
 
 ---

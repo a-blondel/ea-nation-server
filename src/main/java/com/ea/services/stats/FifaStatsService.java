@@ -31,7 +31,7 @@ import java.util.stream.Stream;
 
 import static com.ea.enums.LeaderboardLabel.MY_LEADERBOARD;
 import static com.ea.enums.LeaderboardLabel.TOP_100;
-import static com.ea.services.server.GameServerService.PSP_WOLRDCUP_06;
+import static com.ea.services.server.GameServerService.PSP_WORLDCUP06;
 import static com.ea.utils.SocketUtils.*;
 
 @Slf4j
@@ -50,7 +50,7 @@ public class FifaStatsService {
         long dnf = totalGames > 0 ? Math.round(((double) fifaPersonaStatsEntity.getQuit() + fifaPersonaStatsEntity.getDisc()) / totalGames * 100) : 0;
         dnf = Math.min(dnf, 100); // Ensure DNF percentage does not exceed 100
 
-        if (hasStats && fifaPersonaStatsEntity.getVers().equals(PSP_WOLRDCUP_06)) {
+        if (hasStats && fifaPersonaStatsEntity.getVers().equals(PSP_WORLDCUP06)) {
             return ",," +
                     Long.toHexString(fifaPersonaStatsEntity.getWins()) +
                     "," +
@@ -388,7 +388,6 @@ public class FifaStatsService {
     private void updatePersonaStats(GameConnectionEntity gameConnection, Map<String, Object> playerStats, Map<String, Object> opponentStats) {
         PersonaEntity persona = gameConnection.getPersonaConnection().getPersona();
         String vers = gameConnection.getPersonaConnection().getVers();
-        String slus = gameConnection.getPersonaConnection().getSlus();
 
         FifaPersonaStatsEntity stats = fifaPersonaStatsRepository.findByPersonaIdAndVers(persona.getId(), vers);
 
@@ -396,7 +395,6 @@ public class FifaStatsService {
             stats = new FifaPersonaStatsEntity();
             stats.setPersona(persona);
             stats.setVers(vers);
-            stats.setSlus(slus);
         }
 
         int playerScore = (Integer) playerStats.get("SCORE");

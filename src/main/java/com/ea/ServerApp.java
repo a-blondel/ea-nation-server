@@ -83,21 +83,21 @@ public class ServerApp implements CommandLineRunner {
     }
 
     private void startGameServer(GameServerConfig.GameServer gameServer) throws Exception {
-        for (GameServerConfig.RegionConfig region : gameServer.getRegions()) {
+        for (GameServerConfig.PortConfig portConfig : gameServer.getPorts()) {
             // TCP server
-            ServerSocket tcpServerSocket = serverConfig.createTcpServerSocket(region.getPort());
+            ServerSocket tcpServerSocket = serverConfig.createTcpServerSocket(portConfig.getPort());
             startServerThread(tcpServerSocket, this::createTcpSocketThread, gameServer.isAries());
-            log.info("Started TCP server for {} {} on port {}", gameServer.getVers(), region.getName(), region.getPort());
+            log.info("Started TCP server for {} on port {}", gameServer.getName(), portConfig.getPort());
 
             // SSL server
             if (gameServer.getSsl() != null && gameServer.getSsl().isEnabled() && gameServer.getSsl().getDomain() != null) {
-                int sslPort = region.getPort() + 1;
+                int sslPort = portConfig.getPort() + 1;
                 String subject = gameServerService.generateSslSubject(gameServer.getSsl().getDomain());
                 String issuer = gameServerService.getSslIssuer();
 
-                SSLServerSocket sslServerSocket = serverConfig.createSslServerSocket(sslPort, subject, issuer, gameServer.getVers());
+                SSLServerSocket sslServerSocket = serverConfig.createSslServerSocket(sslPort, subject, issuer, gameServer.getName());
                 startServerThread(sslServerSocket, this::createSslSocketThread, true);
-                log.info("Started SSL server for {} {} on port {}", gameServer.getVers(), region.getName(), sslPort);
+                log.info("Started SSL server for {} on port {}", gameServer.getName(), sslPort);
             }
         }
     }

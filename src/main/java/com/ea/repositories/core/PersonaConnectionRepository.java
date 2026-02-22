@@ -23,9 +23,8 @@ public interface PersonaConnectionRepository extends JpaRepository<PersonaConnec
      */
     List<PersonaConnectionEntity> findByEndTimeIsNullAndAddressNotIn(Collection<String> addresses);
 
-    List<PersonaConnectionEntity> findByVersAndSlusAndPersonaPersAndIsHostFalseAndEndTimeIsNull(
+    List<PersonaConnectionEntity> findByVersAndPersonaPersAndIsHostFalseAndEndTimeIsNull(
             String vers,
-            String slus,
             String pers
     );
 
@@ -43,13 +42,13 @@ public interface PersonaConnectionRepository extends JpaRepository<PersonaConnec
                 FROM PersonaConnectionEntity pc
                 WHERE pc.endTime IS NULL
                 AND pc.isHost = false
-                AND pc.vers IN ( :vers )
+                AND pc.vers = :name
                 AND pc.id NOT IN (
                     SELECT gc.personaConnection.id
                     FROM GameConnectionEntity gc
                     WHERE gc.endTime IS NULL
                 )
             """)
-    int countPlayersInLobby(List<String> vers);
+    int countPlayersInLobby(String name);
 
 }

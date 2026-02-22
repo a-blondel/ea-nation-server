@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.Instant;
 import java.util.List;
 
-import static com.ea.services.server.GameServerService.PSP_MOH_07_UHS;
+import static com.ea.services.server.GameServerService.PSP_MOH07;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,7 +24,7 @@ public class ServerStatusAPI {
 
     @GetMapping("/api/games")
     public ResponseEntity<DTO.MonitorResponse> getGameMonitorJson() {
-        List<DTO.GameStatusDTO> gameStats = gameConnectionRepository.findAllActiveGamesWithStats(PSP_MOH_07_UHS);
+        List<DTO.GameStatusDTO> gameStats = gameConnectionRepository.findAllActiveGamesWithStats(PSP_MOH07);
 
         int playersInGame = api.getPlayersInGame();
         int playersInLobby = api.getPlayersInLobby();

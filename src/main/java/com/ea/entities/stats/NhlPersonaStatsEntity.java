@@ -23,8 +23,6 @@ public class NhlPersonaStatsEntity {
 
     private String vers;
 
-    private String slus;
-
     private int points;
 
     private int wins;

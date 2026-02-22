@@ -22,7 +22,6 @@ public class FifaPersonaStatsEntity {
     private PersonaEntity persona;
 
     private String vers;
-    private String slus;
 
     private int wins;           // total wins
     private int losses;         // total losses

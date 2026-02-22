@@ -33,10 +33,9 @@ public class AuthService {
         String vers = getValueFromSocket(socketData.getInputMessage(), "VERS");
         String slus = getValueFromSocket(socketData.getInputMessage(), "SLUS");
 
-        int port = gameServerService.getTcpPort(vers, slus);
-        if (port == -1) {
-            log.warn("No TCP port found for VERS={} SLUS={}", vers, slus);
-        }
+        int port = socket.getLocalPort() - 1;
+        String gameName = gameServerService.getNameByPort(port);
+        log.info("@dir: VERS={}, SLUS={}, game={}, port={}", vers, slus, gameName, port);
 
         Map<String, String> content = Stream.of(new String[][]{
                 // { "DIRECT", "0" }, // 0x8001FC04
@@ -70,9 +69,9 @@ public class AuthService {
         String eaconnectUrl = props.getDnsName() + "/eaconnect/";
         String rosterUrl = props.getDnsName() + "/roster";
 
-        String vers = gameServerService.getVersByPort(socket.getLocalPort());
-        log.debug("Detected VERS={} for port {}", vers, socket.getLocalPort());
-        if (vers.contains("PS2")) {
+        String name = gameServerService.getNameByPort(socket.getLocalPort());
+        log.debug("Detected game={} for port {}", name, socket.getLocalPort());
+        if (name.startsWith("PS2_")) {
             tosUrl = props.getDnsName() + "/tos-ps2/";
         }
         Map<String, String> content = Stream.of(new String[][]{
@@ -91,10 +90,10 @@ public class AuthService {
                 {"ROSTER_VER", "1.0"}, // Trick to skip roster download for NHL 07
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
-        String name = getValueFromSocket(socketData.getInputMessage(), "NAME");
+        String newsName = getValueFromSocket(socketData.getInputMessage(), "NAME");
         // if name exists and is a number
-        if (name != null && name.matches("\\d+")) {
-            socketData.setIdMessage("newsnew" + name);
+        if (newsName != null && newsName.matches("\\d+")) {
+            socketData.setIdMessage("newsnew" + newsName);
         }
 
         socketData.setOutputData(content);

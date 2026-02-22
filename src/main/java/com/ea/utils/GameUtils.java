@@ -20,7 +20,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.ea.services.server.GameServerService.MOH07_OR_MOH08;
+import static com.ea.services.server.GameServerService.ALL_MOH;
 import static com.ea.utils.HexUtils.*;
 import static com.ea.utils.SocketUtils.DATETIME_FORMAT;
 
@@ -153,7 +153,7 @@ public class GameUtils {
      * @return Base64 encoded OPPARAM string
      */
     private String generateOpParam(PersonaEntity personaEntity, String vers) {
-        if (!MOH07_OR_MOH08.contains(vers)) {
+        if (!ALL_MOH.contains(vers)) {
             return "";
         }
         MohhPersonaStatsEntity mohhPersonaStatsEntity = mohhPersonaStatsRepository.findByPersonaIdAndVers(personaEntity.getId(), vers);
