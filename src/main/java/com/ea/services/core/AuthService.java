@@ -33,8 +33,14 @@ public class AuthService {
         String vers = getValueFromSocket(socketData.getInputMessage(), "VERS");
         String slus = getValueFromSocket(socketData.getInputMessage(), "SLUS");
 
-        int port = socket.getLocalPort() - 1;
+        // Try current port first (non-SSL games connect directly on TCP port),
+        // then port - 1 (SSL games connect on TCP port + 1)
+        int port = socket.getLocalPort();
         String gameName = gameServerService.getNameByPort(port);
+        if (gameName.isEmpty()) {
+            port = socket.getLocalPort() - 1;
+            gameName = gameServerService.getNameByPort(port);
+        }
         log.info("@dir: VERS={}, SLUS={}, game={}, port={}", vers, slus, gameName, port);
 
         Map<String, String> content = Stream.of(new String[][]{
