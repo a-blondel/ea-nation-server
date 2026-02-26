@@ -16,8 +16,8 @@ public class Props {
     @Value("${http.port}")
     private int httpPort;
 
-    @Value("${http.dns_name}")
-    private String dnsName;
+    @Value("${http.content_url}")
+    private String contentUrl;
 
     @Value("${spring.mail.username}")
     private String emailUsername;

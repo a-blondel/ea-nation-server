@@ -1,7 +1,6 @@
 package com.ea.repositories.core;
 
 import com.ea.entities.core.GameConnectionEntity;
-import com.ea.frontend.DTO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -73,38 +72,5 @@ public interface GameConnectionRepository extends JpaRepository<GameConnectionEn
                 AND gc.game.vers = :name
             """)
     int countPlayersInGame(String name);
-
-    @Query("""
-                SELECT new com.ea.frontend.DTO$PlayerInfoDTO(
-                    gc.personaConnection.persona.pers,
-                    gc.isHost,
-                    gc.startTime
-                )
-                FROM GameConnectionEntity gc
-                WHERE gc.game.id = :gameId
-                AND gc.endTime IS NULL
-                AND gc.isHost = false
-            """)
-    List<DTO.PlayerInfoDTO> findActivePlayersByGameId(@Param("gameId") Long gameId);
-
-    @Query("""
-                SELECT new com.ea.frontend.DTO$GameStatusDTO(
-                    g.id,
-                    g.name,
-                    g.vers,
-                    g.params,
-                    g.pass,
-                    g.startTime,
-                    g.maxsize,
-                    h.personaConnection.persona.pers,
-                    COUNT(p)
-                )
-                FROM GameEntity g
-                LEFT JOIN GameConnectionEntity h ON h.game = g AND h.isHost = true AND h.endTime IS NULL
-                LEFT JOIN GameConnectionEntity p ON p.game = g AND p.isHost = false AND p.endTime IS NULL
-                WHERE g.vers = :vers AND g.endTime IS NULL
-                GROUP BY g.id, g.name, g.vers, g.startTime, g.maxsize, h.personaConnection.persona.pers
-            """)
-    List<DTO.GameStatusDTO> findAllActiveGamesWithStats(@Param("vers") String vers);
 
 }

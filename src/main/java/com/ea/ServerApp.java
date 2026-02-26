@@ -17,6 +17,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.HttpServerCodec;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -49,6 +50,9 @@ public class ServerApp implements CommandLineRunner {
     private final UserSetService userSetService;
     private ExecutorService clientHandlingExecutor = Executors.newFixedThreadPool(500);
 
+    @Value("${http.tunnel.enabled:true}")
+    private boolean tunnelEnabled;
+
     public static void main(String[] args) {
         SpringApplication.run(ServerApp.class, args);
     }
@@ -64,7 +68,9 @@ public class ServerApp implements CommandLineRunner {
 
         // Server configuration
         setupThreadPool();
-        startTcpTunnelServer();
+        if (tunnelEnabled) {
+            startTcpTunnelServer();
+        }
         addGracefulExitOnShutdown();
 
         // Data integrity
