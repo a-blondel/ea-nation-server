@@ -1,5 +1,6 @@
 package com.ea.ws;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 
+@Profile({"dev", "qa"})
 @RestController
 public class ResourceController {
 

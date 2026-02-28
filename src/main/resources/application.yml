@@ -3,7 +3,9 @@
 
 http:
   port: ${HTTP_PORT:80} # Tunnel port, exposed to the outside world
-  dns_name: ${DNS_NAME:http://localhost}
+  tunnel:
+    enabled: ${HTTP_TUNNEL_ENABLED:true}
+  content_url: ${CONTENT_URL:http://localhost}
 
 ssl:
   protocols: 'SSLv3,TLSv1.2'
@@ -808,3 +810,12 @@ spring:
     driver-class-name: org.h2.Driver
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master-populate.yaml
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: prod
+  main:
+    web-application-type: none

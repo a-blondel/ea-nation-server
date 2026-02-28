@@ -69,16 +69,17 @@ public class AuthService {
     }
 
     public void news(Socket socket, SocketData socketData) {
-        String tosUrl = props.getDnsName() + "/tos/";
-        String newsUrl = props.getDnsName() + "/news/";
-        String faqUrl = props.getDnsName() + "/faq/";
-        String eaconnectUrl = props.getDnsName() + "/eaconnect/";
-        String rosterUrl = props.getDnsName() + "/roster";
+        String contentUrl = props.getContentUrl();
+        String tosUrl = contentUrl + "/tos/";
+        String newsUrl = contentUrl + "/news/";
+        String faqUrl = contentUrl + "/faq/";
+        String eaconnectUrl = contentUrl + "/eaconnect/";
+        String rosterUrl = contentUrl + "/roster";
 
         String name = gameServerService.getNameByPort(socket.getLocalPort());
         log.debug("Detected game={} for port {}", name, socket.getLocalPort());
         if (name.startsWith("PS2_")) {
-            tosUrl = props.getDnsName() + "/tos-ps2/";
+            tosUrl = contentUrl + "/tos-ps2/";
         }
         Map<String, String> content = Stream.of(new String[][]{
                 {"BUDDY_SERVER", props.getTcpHost()},

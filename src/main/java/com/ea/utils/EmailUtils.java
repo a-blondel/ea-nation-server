@@ -51,7 +51,7 @@ public class EmailUtils {
      * @return the banner image URL
      */
     public String getBanner() {
-        return props.getDnsName() + "/images/logo.jpg";
+        return props.getContentUrl() + "/images/logo.jpg";
     }
 
     /**
