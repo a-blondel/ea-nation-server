@@ -6,7 +6,7 @@ RUN mvn clean package -pl gameserver -am -DskipTests
 
 # Run image
 FROM ibm-semeru-runtimes:open-21-jre-jammy
-COPY --from=build /usr/local/app/backend/target/ea-nation-gameserver-*.jar /ea-nation-gameserver.jar
+COPY --from=build /usr/local/app/gameserver/target/ea-nation-gameserver-*.jar /ea-nation-gameserver.jar
 
 EXPOSE 8080
 
