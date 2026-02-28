@@ -6,7 +6,7 @@
     <parent>
         <groupId>eu.eahub</groupId>
         <artifactId>ea-nation-server</artifactId>
-        <version>1.1.5-SNAPSHOT</version>
+        <version>1.2.0</version>
     </parent>
 
     <artifactId>ea-nation-core</artifactId>
