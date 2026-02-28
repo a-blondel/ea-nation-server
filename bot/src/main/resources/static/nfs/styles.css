@@ -1,0 +1,191 @@
+* {
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0 24px;
+    width: 100dvw;
+    height: 100dvh;
+    font-family: 'Arial', 'Helvetica', sans-serif;
+    position: relative;
+    background-color: #000;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+    color: #fff;
+}
+
+body:before {
+    content: '';
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #000;
+    opacity: 0.5;
+    z-index: 5;
+}
+
+h1 {
+    margin: 0 0 12px 0;
+    font-size: 36px;
+    line-height: 1.3;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+h3 {
+    color: #fff;
+    opacity: 0.85;
+    font-size: 14px;
+    line-height: 1.4;
+    font-weight: normal;
+    margin: 4px 0;
+}
+
+.wrap {
+    padding: 128px 0;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+    position: relative;
+    z-index: 10;
+}
+
+.race-header {
+    padding: 20px 24px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    text-align: center;
+    margin: 0 auto 32px auto;
+    border: 2px solid #ff6600;
+}
+
+.track-name {
+    font-size: 42px;
+    font-weight: bold;
+    color: #ff6600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+}
+
+.race-metadata {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.race-metadata .meta-item {
+    font-size: 13px;
+    opacity: 0.8;
+}
+
+.race-metadata .meta-item strong {
+    color: #ff6600;
+    font-weight: bold;
+}
+
+.scoreboard {
+    margin: 0 0 36px 0;
+}
+
+.scoreboard table {
+    width: 100%;
+    border-spacing: 0;
+    border-collapse: collapse;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+}
+
+.scoreboard table th,
+.scoreboard table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 18px;
+}
+
+.scoreboard table th {
+    background: rgba(255, 102, 0, 0.9);
+    color: #000;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 16px;
+    letter-spacing: 1px;
+    border-bottom: 2px solid #ff6600;
+}
+
+.scoreboard table tbody tr:nth-child(odd) {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.scoreboard table tbody tr:hover {
+    background: rgba(255, 102, 0, 0.15);
+}
+
+.scoreboard table tbody tr.winner {
+    background: rgba(255, 215, 0, 0.25);
+    border-left: 4px solid #ffd700;
+}
+
+.scoreboard table td.rank {
+    text-align: center;
+    font-weight: bold;
+    color: #ff6600;
+    width: 80px;
+    font-size: 22px;
+}
+
+.scoreboard table td.player-name {
+    font-weight: bold;
+    font-size: 20px;
+}
+
+.scoreboard table td.car {
+    color: #aaa;
+    font-weight: bold;
+}
+
+.scoreboard table td.time {
+    text-align: right;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    font-size: 20px;
+}
+
+.scoreboard table td.best-lap {
+    text-align: right;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    font-size: 20px;
+}
+
+.race-result {
+    text-align: center;
+    padding: 16px 24px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    border: 2px solid #ffd700;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.race-result p {
+    margin: 0;
+    font-weight: bold;
+    font-size: 28px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}

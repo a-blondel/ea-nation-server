@@ -1,0 +1,242 @@
+:root {
+    --axis: #b70604;
+    --allies: #497b4b;
+    --neutral: #666865;
+}
+
+* {
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0 24px;
+    width: 100dvw;
+    height: 100dvh;
+    font-family: 'Cormorant Garamond', serif;
+    position: relative;
+    background-color: #000;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+    color: #fff;
+}
+
+body:before {
+    content: '';
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #000;
+    opacity: 0.4;
+    z-index: 5;
+}
+
+h1 {
+    margin: 0 0 6px 0;
+    font-size: 42px;
+    line-height: 1.5;
+    font-weight: bold;
+}
+
+h3 {
+    font-family: "EB Garamond", serif;
+    color: #fff;
+    opacity: 0.75;
+    font-size: 16px;
+    line-height: 1.6;
+    font-weight: 500;
+}
+
+.wrap {
+    padding: 24px 0;
+    max-width: 1024px;
+    width: 100%;
+    margin: 0 auto;
+    position: relative;
+    z-index: 10;
+}
+
+.game-details {
+    padding: 24px;
+    border-radius: 8px;
+    background: rgba(11, 11, 11, 0.75);
+    backdrop-filter: blur(10px);
+    text-align: center;
+    max-width: 768px;
+    margin: 0 auto 36px auto;
+}
+
+.game-name-with-icons {
+    justify-content: center;
+}
+
+.game-name-with-icons, .persona-name-with-icon {
+    display: flex;
+    align-items: center;
+}
+
+.game-name-with-icons .icon, .persona-name-with-icon .icon {
+    margin-left: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.game-name-with-icons .icon img, .persona-name-with-icon .icon img {
+    height: 20px;
+}
+
+.scoreboard {
+    margin: 0 0 48px 0;
+}
+
+.scoreboard.teams {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 36px;
+    margin-bottom: 30px;
+}
+
+.scoreboard table {
+    display: table;
+    width: 100%;
+    border-spacing: 0;
+    border-bottom: solid 1px #fff;
+    font-family: "EB Garamond", serif;
+}
+
+.scoreboard table tfoot {
+    display: none;
+}
+
+.scoreboard table.axis tfoot,
+.scoreboard table.allies tfoot {
+    display: table-footer-group;
+}
+
+.scoreboard table th,
+.scoreboard table td {
+    height: 30px;
+    font-size: 20px;
+    text-align: right;
+    border: none;
+    padding: 0 8px;
+    font-weight: normal;
+}
+
+.scoreboard table strong {
+    font-weight: 500;
+}
+
+.scoreboard table th:first-child,
+.scoreboard table td:first-child {
+    text-align: left;
+}
+
+.scoreboard table thead tr,
+.scoreboard table tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.scoreboard table tfoot tr,
+.scoreboard table tbody tr:nth-child(odd) {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.scoreboard table thead tr th {
+    border-top: solid 1px #fff;
+}
+
+.scoreboard table thead tr:last-child th {
+    border-bottom: solid 1px #fff;
+}
+
+.scoreboard table th,
+.scoreboard table thead th:first-child,
+.scoreboard table tfoot th:first-child {
+    font-weight: 500;
+}
+
+.scoreboard table.allies {
+    border-color: var(--allies);
+}
+
+.scoreboard table.allies thead tr th,
+.scoreboard table.allies tfoot tr th,
+.scoreboard table.allies tfoot tr td {
+    border-top: solid 1px var(--allies);
+}
+
+.scoreboard table.allies thead tr:last-child th {
+    border-bottom: solid 1px var(--allies);
+}
+
+.scoreboard table.allies thead tr,
+.scoreboard table.allies tbody tr:nth-child(even) {
+    background: rgba(65, 93, 32, 0.45);
+}
+
+.scoreboard table.allies thead th:first-child,
+.scoreboard table.allies tfoot th:first-child {
+    color: #82bf84;
+    font-weight: bold;
+}
+
+.scoreboard table.axis {
+    border-color: var(--axis);
+}
+
+.scoreboard table.axis thead tr th,
+.scoreboard table.axis tfoot tr th,
+.scoreboard table.axis tfoot tr td {
+    border-top: solid 1px var(--axis);
+}
+
+.scoreboard table.axis thead tr:last-child th {
+    border-bottom: solid 1px var(--axis);
+}
+
+.scoreboard table.axis thead tr,
+.scoreboard table.axis tbody tr:nth-child(even) {
+    background: rgba(183, 6, 4, 0.325);
+}
+
+.scoreboard table.axis thead th:first-child,
+.scoreboard table.axis tfoot th:first-child {
+    color: #ff403e;
+    font-weight: bold;
+}
+
+.game-result .result {
+    text-align: center;
+    mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 1) 25%, rgba(0, 0, 0, 1) 75%, rgba(0, 0, 0, 0.15) 100%);
+    padding: 4px 0;
+    margin: 0 0 10px 0;
+}
+
+.game-result .result p {
+    color: #fff;
+    margin: 0;
+    font-weight: bold;
+    font-size: 32px;
+    background: var(--neutral);
+    padding: 12px 0;
+    outline: solid 2px var(--neutral);
+    outline-offset: 2px;
+}
+
+.game-result .result.axis p {
+    background: var(--axis);
+    outline-color: var(--axis);
+}
+
+.game-result .result.allies p {
+    background: var(--allies);
+    outline-color: var(--allies);
+}

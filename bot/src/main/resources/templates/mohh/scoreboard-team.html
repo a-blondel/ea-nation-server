@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>MOH: Heroes - Team Scoreboard</title>
+    <style th:utext="${styles}"></style>
+
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&amp;family=EB+Garamond:ital,wght@0,400..800;1,400..800&amp;display=swap"
+          rel="stylesheet"/>
+</head>
+
+<body th:style="'background-image: url(' + ${backgroundImg} + ');'">
+<div class="wrap">
+    <div class="game-details">
+        <h1 th:text="${mapName}"></h1>
+        <h3 class="date" th:text="${gameStartTime} + ' - ' + ${gameDuration} + ' min'"></h3>
+
+        <div class="game-name-with-icons">
+            <h3 class="game" th:text="${gameName}"></h3>
+
+            <div class="icon" th:if="${hasPassword} == true">
+                <img alt="Password Logo" th:src="${passwordImg}"/>
+            </div>
+
+            <div class="icon" th:if="${ranked} == '1'">
+                <img alt="Ranked Logo" th:src="${rankedImg}"/>
+            </div>
+
+            <div class="icon" th:if="${friendlyFireMode == '1' or friendlyFireMode == '2'}">
+                <img alt="Friendly Fire Logo" th:src="${friendlyFireImg}"/>
+            </div>
+
+            <div class="icon" th:if="${aimAssist} == '1'">
+                <img alt="Aim Assist Logo" th:src="${aimAssistImg}"/>
+            </div>
+        </div>
+    </div>
+
+    <div class="scoreboard teams">
+        <table class="allies">
+            <thead>
+            <th>Allies</th>
+            <th>Score</th>
+            <th>Kills</th>
+            <th>Deaths</th>
+            </thead>
+            <tbody>
+            <tr th:each="report, iterStat : ${alliesReports}">
+                <td class="persona-name-with-icon">
+                    <strong th:text="${report.gameConnection.personaConnection.persona.pers}"></strong>
+                    <div class="icon" th:if="${report.allies == 0}">
+                        <img alt="Logout Icon" th:src="${logoutImg}"/>
+                    </div>
+                </td>
+                <td th:text="${report.kill - report.death}"></td>
+                <td th:text="${report.kill}"></td>
+                <td th:text="${report.death}"></td>
+            </tr>
+            <tr th:each="i : ${#numbers.sequence(1, 16 - #lists.size(alliesReports))}"
+                th:if="${#lists.size(alliesReports) < 16}">
+                <td colspan="4"></td>
+            </tr>
+            </tbody>
+            <tfoot>
+            <tr>
+                <th>Total</th>
+                <td th:text="${alliesTotalKills - alliesTotalDeaths}"></td>
+                <td th:text="${alliesTotalKills}"></td>
+                <td th:text="${alliesTotalDeaths}"></td>
+            </tr>
+            </tfoot>
+        </table>
+
+        <table class="axis">
+            <thead>
+            <th>Axis</th>
+            <th>Score</th>
+            <th>Kills</th>
+            <th>Deaths</th>
+            </thead>
+            <tbody>
+            <tr th:each="report, iterStat : ${axisReports}">
+                <td class="persona-name-with-icon">
+                    <strong th:text="${report.gameConnection.personaConnection.persona.pers}"></strong>
+                    <div class="icon" th:if="${report.axis == 0}">
+                        <img alt="Logout Icon" th:src="${logoutImg}"/>
+                    </div>
+                </td>
+                <td th:text="${report.kill - report.death}"></td>
+                <td th:text="${report.kill}"></td>
+                <td th:text="${report.death}"></td>
+            </tr>
+            <tr th:each="i : ${#numbers.sequence(1, 16 - #lists.size(axisReports))}"
+                th:if="${#lists.size(axisReports) < 16}">
+                <td colspan="4"></td>
+            </tr>
+            </tbody>
+            <tfoot>
+            <tr>
+                <th>Total</th>
+                <td th:text="${axisTotalKills - axisTotalDeaths}"></td>
+                <td th:text="${axisTotalKills}"></td>
+                <td th:text="${axisTotalDeaths}"></td>
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <div class="game-result">
+        <div class="result draw" th:if="${winner} == 'Draw'">
+            <p>Draw Battle</p>
+        </div>
+
+        <div class="result axis" th:if="${winner} == 'Axis'">
+            <p>Axis Win</p>
+        </div>
+
+        <div class="result allies" th:if="${winner} == 'Allies'">
+            <p>Allies Win</p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Need For Speed - Race Scoreboard</title>
+    <style th:utext="${styles}"></style>
+</head>
+
+<body th:style="'background-image: url(' + ${__${backgroundKey}__} + ');'">
+<div class="wrap">
+    <!-- Race Header -->
+    <div class="race-header">
+        <div class="track-name" th:text="${trackName}">TRACK NAME</div>
+        
+        <div class="race-metadata">
+            <div class="meta-item" th:if="${direction != null and direction != ''}">
+                <strong>DIRECTION:</strong> <span th:text="${direction}">Forward</span>
+            </div>
+            <div class="meta-item">
+                <strong>RANKED:</strong> <span th:text="${ranked}">OFF</span>
+            </div>
+            <div class="meta-item">
+                <strong>DATE:</strong> <span th:text="${gameDateTime}">01/01/2025 12:00:00</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Race Results Table -->
+    <div class="scoreboard">
+        <table>
+            <thead>
+                <tr>
+                    <th>RANK</th>
+                    <th>NAME</th>
+                    <th>CAR</th>
+                    <th th:if="${!isMostWanted}" style="text-align: right;">TIME</th>
+                    <th style="text-align: right;">BEST LAP</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="result : ${results}" 
+                    th:classappend="${result.rank == 1} ? 'winner' : ''">
+                    <td class="rank" th:text="${result.rank}">1</td>
+                    <td class="player-name" th:text="${result.playerName}">Player Name</td>
+                    <td class="car" th:text="${result.carName}">CAR MODEL</td>
+                    <td th:if="${!isMostWanted}" class="time" 
+                        th:text="${result.time}"
+                        th:classappend="${result.time == 'DNF'} ? 'dnf' : ''">1:23.456</td>
+                    <td class="best-lap" th:text="${result.bestLap}">1:23.456</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Winner Announcement -->
+    <div class="race-result" th:if="${winner != null}">
+        <p th:text="${winner + ' WINS!'}">WINNER WINS!</p>
+    </div>
+</div>
+</body>
+</html>
