@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>EA NHL 07 PSP Score</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Leksa+Sans:wght@400;500;600;700&display=swap"
+          rel="stylesheet"/>
+    <style th:utext="${styles}"></style>
+</head>
+<body th:style="'background: linear-gradient(rgba(156, 210, 251, 0.8), rgba(156, 210, 251, 0.8)), url(' + ${stadiumBackground} + ') center center / cover no-repeat;'">
+<div class="ea-logo-absolute">
+    <img alt="EA Sports Logo" class="ea-logo" th:src="${images['v1_4860']}">
+</div>
+<div class="scoreboard-container">
+    <div class="scoreboard-header"></div>
+    <div class="scoreboard-main">
+        <div class="players-row">
+            <div class="player-label"><span th:text="${#strings.toUpperCase(homePlayer.pers)}">PLAYER1</span></div>
+            <div class="player-label"><span th:text="${#strings.toUpperCase(awayPlayer.pers)}">PLAYER2</span></div>
+        </div>
+        <img alt="Horizontal Line" class="horizontal-line main-horizontal" th:src="${images['v3_15']}">
+        <div class="teams-row">
+            <div class="team-block">
+                <div class="team-name" th:text="${homeTeamName}">HOME TEAM</div>
+                <img alt="Home Team Logo" class="team-logo" th:src="${homeTeamLogo}">
+                <div class="team-score" th:text="${homeScore}">6</div>
+            </div>
+            <img alt="Vertical Line" class="vertical-line team-vertical" th:src="${images['v3_30']}">
+            <div class="team-block">
+                <div class="team-name" th:text="${awayTeamName}">AWAY TEAM</div>
+                <img alt="Away Team Logo" class="team-logo" th:src="${awayTeamLogo}">
+                <div class="team-score" th:text="${awayScore}">5</div>
+            </div>
+        </div>
+        <div class="stats-flex-row">
+            <!-- HOME PLAYER STATS -->
+            <div class="player-stats-table">
+                <div class="stats-title" th:text="${#strings.toUpperCase(homePlayer.pers) + ' STATS'}">PLAYER1 STATS
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label" style="flex:2; text-align:left;">RANK</span>
+                    <span class="stat-value" style="flex:1;" th:text="${homePlayerRank}">#1</span>
+                </div>
+                <img alt="Horizontal Line" class="horizontal-line stat-horizontal" th:src="${images['v3_15']}">
+                <div class="stat-row">
+                    <span class="stat-label" style="flex:2; text-align:left;">TOTAL POINTS</span>
+                    <span class="stat-value" style="flex:1;"
+                          th:text="${homePlayerStats != null ? homePlayerStats.points : 0}">12</span>
+                </div>
+                <img alt="Horizontal Line" class="horizontal-line stat-horizontal" th:src="${images['v3_15']}">
+                <div class="stat-row">
+                    <span class="stat-label" style="flex:2; text-align:left;">TOTAL WINS</span>
+                    <span class="stat-value" style="flex:1;"
+                          th:text="${homePlayerStats != null ? homePlayerStats.wins : 0}">8</span>
+                </div>
+                <img alt="Horizontal Line" class="horizontal-line stat-horizontal" th:src="${images['v3_15']}">
+                <div class="stat-row">
+                    <span class="stat-label" style="flex:2; text-align:left;">TOTAL LOSSES</span>
+                    <span class="stat-value" style="flex:1;"
+                          th:text="${homePlayerStats != null ? homePlayerStats.losses : 0}">3</span>
+                </div>
+                <img alt="Horizontal Line" class="horizontal-line stat-horizontal" th:src="${images['v3_15']}">
+                <div class="stat-row">
+                    <span class="stat-label" style="flex:2; text-align:left;">TOTAL OT WINS</span>
+                    <span class="stat-value" style="flex:1;"
+                          th:text="${homePlayerStats != null ? homePlayerStats.otWins : 0}">2</span>
+                </div>
+                <img alt="Horizontal Line" class="horizontal-line stat-horizontal" th:src="${images['v3_15']}">
+                <div class="stat-row">
+                    <span class="stat-label" style="flex:2; text-align:left;">TOTAL OT LOSSES</span>
+                    <span class="stat-value" style="flex:1;"
+                          th:text="${homePlayerStats != null ? homePlayerStats.otLosses : 0}">1</span>
+                </div>
+                <img alt="Horizontal Line" class="horizontal-line stat-horizontal" th:src="${images['v3_15']}">
+                <div class="stat-row">
+                    <span class="stat-label" style="flex:2; text-align:left;">WIN STREAK</span>
+                    <span class="stat-value" style="flex:1;" th:text="${homeWinStreak}">W4</span>
+                </div>
+                <img alt="Horizontal Line" class="horizontal-line stat-horizontal" th:src="${images['v3_15']}">
+            </div>
+            <div class="stats-table-block stats-table-center">
+                <div class="stats-title">FINAL GAME STATS</div>
+                <div class="stat-row">
+                    <span class="stat-value" th:text="${homeGameReport != null ? homeGameReport.shots : 0}">27</span>
+                    <span class="stat-label">SHOTS</span>
+                    <span class="stat-value" th:text="${awayGameReport != null ? awayGameReport.shots : 0}">28</span>
+                </div>
+                <img alt="Horizontal Line" class="horizontal-line stat-horizontal" th:src="${images['v3_15']}">
+                <div class="stat-row">
+                    <span class="stat-value" th:text="${homeGameReport != null ? homeGameReport.hits : 0}">14</span>
+                    <span class="stat-label">HITS</span>
+                    <span class="stat-value" th:text="${awayGameReport != null ? awayGameReport.hits : 0}">7</span>
+                </div>
+                <img alt="Horizontal Line" class="horizontal-line stat-horizontal" th:src="${images['v3_15']}">
+                <div class="stat-row">
+                    <span class="stat-value"
+                          th:text="${homeGameReport != null ? homeGameReport.penmin + ':00' : '0:00'}">2:00</span>
+                    <span class="stat-label">PIM</span>
+                    <span class="stat-value"
+                          th:text="${awayGameReport != null ? awayGameReport.penmin + ':00' : '0:00'}">2:00</span>
+                </div>
+                <img alt="Horizontal Line" class="horizontal-line stat-horizontal" th:src="${images['v3_15']}">
+                <div class="stat-row">
+                    <span class="stat-value" th:text="${homePowerPlay}">0/1</span>
+                    <span class="stat-label">PP</span>
+                    <span class="stat-value" th:text="${awayPowerPlay}">0/1</span>
+                </div>
+                <img alt="Horizontal Line" class="horizontal-line stat-horizontal" th:src="${images['v3_15']}">
+                <div class="stat-row">
+                    <span class="stat-value" th:text="${homeGameReport != null ? homeGameReport.shg : 0}">1</span>
+                    <span class="stat-label">SHG</span>
+                    <span class="stat-value" th:text="${awayGameReport != null ? awayGameReport.shg : 0}">0</span>
+                </div>
+                <img alt="Horizontal Line" class="horizontal-line stat-horizontal" th:src="${images['v3_15']}">
+                <div class="stat-row">
+                    <span class="stat-label" style="flex:2; text-align:left;">OVERTIME</span>
+                    <span class="stat-value" style="flex:1;" th:text="${overtime ? 'YES' : 'NO'}">NO</span>
+                </div>
+                <img alt="Horizontal Line" class="horizontal-line stat-horizontal" th:src="${images['v3_15']}">
+                <div class="stat-row">
+                    <span class="stat-label" style="flex:2; text-align:left;">RANKED</span>
+                    <span class="stat-value" style="flex:1;" th:text="${ranked ? 'YES' : 'NO'}">YES</span>
+                </div>
+                <img alt="Horizontal Line" class="horizontal-line stat-horizontal" th:src="${images['v3_15']}">
+                <div class="stat-row">
+                    <span class="stat-label" style="flex:2; text-align:left;">LEAGUE</span>
+                    <span class="stat-value" style="flex:1;" th:text="${league}">NHL</span>
+                </div>
+                <img alt="Horizontal Line" class="horizontal-line stat-horizontal" th:src="${images['v3_15']}">
+            </div>
+            <!-- AWAY PLAYER STATS -->
+            <div class="player-stats-table">
+                <div class="stats-title" th:text="${#strings.toUpperCase(awayPlayer.pers) + ' STATS'}">PLAYER2 STATS
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label" style="flex:2; text-align:left;">RANK</span>
+                    <span class="stat-value" style="flex:1;" th:text="${awayPlayerRank}">#1</span>
+                </div>
+                <img alt="Horizontal Line" class="horizontal-line stat-horizontal" th:src="${images['v3_15']}">
+                <div class="stat-row">
+                    <span class="stat-label" style="flex:2; text-align:left;">TOTAL POINTS</span>
+                    <span class="stat-value" style="flex:1;"
+                          th:text="${awayPlayerStats != null ? awayPlayerStats.points : 0}">12</span>
+                </div>
+                <img alt="Horizontal Line" class="horizontal-line stat-horizontal" th:src="${images['v3_15']}">
+                <div class="stat-row">
+                    <span class="stat-label" style="flex:2; text-align:left;">TOTAL WINS</span>
+                    <span class="stat-value" style="flex:1;"
+                          th:text="${awayPlayerStats != null ? awayPlayerStats.wins : 0}">8</span>
+                </div>
+                <img alt="Horizontal Line" class="horizontal-line stat-horizontal" th:src="${images['v3_15']}">
+                <div class="stat-row">
+                    <span class="stat-label" style="flex:2; text-align:left;">TOTAL LOSSES</span>
+                    <span class="stat-value" style="flex:1;"
+                          th:text="${awayPlayerStats != null ? awayPlayerStats.losses : 0}">3</span>
+                </div>
+                <img alt="Horizontal Line" class="horizontal-line stat-horizontal" th:src="${images['v3_15']}">
+                <div class="stat-row">
+                    <span class="stat-label" style="flex:2; text-align:left;">TOTAL OT WINS</span>
+                    <span class="stat-value" style="flex:1;"
+                          th:text="${awayPlayerStats != null ? awayPlayerStats.otWins : 0}">2</span>
+                </div>
+                <img alt="Horizontal Line" class="horizontal-line stat-horizontal" th:src="${images['v3_15']}">
+                <div class="stat-row">
+                    <span class="stat-label" style="flex:2; text-align:left;">TOTAL OT LOSSES</span>
+                    <span class="stat-value" style="flex:1;"
+                          th:text="${awayPlayerStats != null ? awayPlayerStats.otLosses : 0}">1</span>
+                </div>
+                <img alt="Horizontal Line" class="horizontal-line stat-horizontal" th:src="${images['v3_15']}">
+                <div class="stat-row">
+                    <span class="stat-label" style="flex:2; text-align:left;">WIN STREAK</span>
+                    <span class="stat-value" style="flex:1;" th:text="${awayWinStreak}">W4</span>
+                </div>
+                <img alt="Horizontal Line" class="horizontal-line stat-horizontal" th:src="${images['v3_15']}">
+            </div>
+        </div>
+    </div>
+    <div class="scoreboard-footer"></div>
+</div>
+</body>
+</html>

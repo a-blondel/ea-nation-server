@@ -1,0 +1,45 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    port: ${DB_PORT:5432}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    default-schema: discord
+logging:
+  level:
+    root: info
+
+discord:
+  token: ${DISCORD_TOKEN}
+
+dns.name: ${DNS_NAME}
+
+reports.path: ${REPORTS_PATH:reports}
+
+services:
+  bot-activity-enabled: ${ENABLE_BOT_ACTIVITY:false}    # Controls bot activity updates and Discord message/image sending
+  events-enabled: ${ENABLE_EVENTS:false}    # Controls event processing from game server
+
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:h2:mem:ea-nation_db;DB_CLOSE_DELAY=-1;INIT=CREATE SCHEMA IF NOT EXISTS core\;CREATE SCHEMA IF NOT EXISTS stats\;CREATE SCHEMA IF NOT EXISTS discord;
+    username: sa
+    password: sa
+    driver-class-name: org.h2.Driver
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master-populate.yaml
+  sql:
+    init:
+      mode: always
+  jpa:
+    hibernate:
+      ddl-auto: none
