@@ -58,6 +58,11 @@ public class UserSetService {
         String custflags = getValueFromSocket(socketData.getInputMessage(), "CUSTFLAGS");
         String params = getValueFromSocket(socketData.getInputMessage(), "PARAMS");
 
+        // Burnout Revenge sends ucre with null NAME on login, so we fall back to using the persona name
+        if (name == null) {
+            name = socketWrapper.getPersonaEntity().getPers();
+        }
+
         // Check for duplicate name
         if (userSetRepository.existsByNameAndVersAndEndTimeIsNull(name, vers)) {
             socketData.setIdMessage("ucredupl");

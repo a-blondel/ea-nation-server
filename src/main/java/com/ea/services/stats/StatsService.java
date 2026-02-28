@@ -2,6 +2,7 @@ package com.ea.services.stats;
 
 import com.ea.dto.SocketData;
 import com.ea.dto.SocketWrapper;
+import com.ea.enums.LeaderboardLabel;
 import com.ea.services.core.GameService;
 import com.ea.services.core.RoomService;
 import com.ea.services.core.UserSetService;
@@ -13,6 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.net.Socket;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.ea.services.server.GameServerService.*;
 
@@ -42,12 +46,23 @@ public class StatsService {
     public void cate(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         if (MOH07_OR_MOH08.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             mohhStatsService.cate(socketData, socketWrapper);
-        } else if (PSP_NHL_07.equals(socketWrapper.getPersonaConnectionEntity().getVers())) {
+        } else if (ALL_NHL.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             nhlStatsService.cate(socketData);
         } else if (ALL_PSP_NFS.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             nfsStatsService.cate(socketData, socketWrapper);
         } else if (ALL_FIFA.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             fifaStatsService.cate(socketData);
+        } else {
+            Map<String, String> content = Stream.of(new String[][]{
+                    {"CC", "1"}, // <total # of categories in this view>
+                    {"IC", "1"}, // <total # of indices in this view>
+                    {"VC", "1"}, // <total # of variations in this view>
+                    {"SYMS", "\"" + LeaderboardLabel.TOP_100.name + "\""},
+                    {"SS", String.valueOf(LeaderboardLabel.TOP_100.name.length() + 1)},
+                    {"R", "0,1,1,1,1,1,1,1"},
+            }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+
+            socketData.setOutputData(content);
         }
         socketWriter.write(socket, socketData);
     }
@@ -62,7 +77,7 @@ public class StatsService {
     public void snap(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         if (MOH07_OR_MOH08.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             mohhStatsService.snap(socket, socketData, socketWrapper);
-        } else if (PSP_NHL_07.equals(socketWrapper.getPersonaConnectionEntity().getVers())) {
+        } else if (ALL_NHL.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             nhlStatsService.snap(socket, socketData, socketWrapper);
         } else if (ALL_PSP_NFS.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             nfsStatsService.snap(socket, socketData, socketWrapper);
@@ -93,7 +108,7 @@ public class StatsService {
             mohhStatsService.rank(socketData);
         } else {
             if (gameServerService.isP2P(vers)) {
-                if (PSP_NHL_07.equals(vers)) {
+                if (ALL_NHL.contains(vers)) {
                     nhlStatsService.rank(socketData);
                 } else if (ALL_PSP_NFS.contains(vers)) {
                     nfsRankService.rank(socketData);
@@ -113,6 +128,26 @@ public class StatsService {
                 }
             }
         }
+    }
+
+    /**
+     * sviw - Request names for each fields in a user's stats record.
+     *
+     * @param socket     The socket to write the response to
+     * @param socketData The socket data
+     */
+    public void sviw(Socket socket, SocketData socketData) {
+        // Dummy data from ghostline, requires analysis to understand the fields and populate them correctly
+        Map<String, String> content = Stream.of(new String[][]{
+                {"N", "16"},
+                {"NAMES", "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16"},
+                {"DESCS", "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"},
+                {"PARAMS", "2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2"},
+                {"WIDTHS", "5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5"},
+        }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+
+        socketData.setOutputData(content);
+        socketWriter.write(socket, socketData);
     }
 
 }

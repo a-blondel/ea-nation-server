@@ -50,7 +50,7 @@ public class PersonaUtils {
             Map<String, String> mohhData = mohhStatsService.getStatsAndRank(personaEntity, vers);
             stats = mohhData.get("stats");
             rank = mohhData.get("rank");
-        } else if (PSP_NHL_07.equals(vers)) {
+        } else if (ALL_NHL.contains(vers)) {
             Map<String, String> nhlData = nhlStatsService.getStatsAndRank(personaEntity, vers);
             stats = nhlData.get("stats");
             rank = nhlData.get("rank");

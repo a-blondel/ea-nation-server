@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.ea.services.server.GameServerService.CUSTOM_TOS_GAMES;
 import static com.ea.utils.SocketUtils.SPACE_CHAR;
 import static com.ea.utils.SocketUtils.getValueFromSocket;
 
@@ -73,12 +72,14 @@ public class AuthService {
 
         String vers = gameServerService.getVersByPort(socket.getLocalPort());
         log.debug("Detected VERS={} for port {}", vers, socket.getLocalPort());
-        if (!vers.isEmpty() && CUSTOM_TOS_GAMES.contains(vers)) {
+        if (vers.contains("PS2")) {
             tosUrl = props.getDnsName() + "/tos-ps2/";
         }
         Map<String, String> content = Stream.of(new String[][]{
                 {"BUDDY_SERVER", props.getTcpHost()},
+                {"BUDDYSERVERNAME", props.getTcpHost()}, // For SSX3
                 {"BUDDY_PORT", String.valueOf(props.getTcpBuddyPort())},
+                {"BUDDYPORT", String.valueOf(props.getTcpBuddyPort())}, // For SSX3
                 {"CONTEXT", "buddy"},
                 {"TOSAC_URL", tosUrl},
                 {"TOSA_URL", tosUrl},
@@ -91,8 +92,9 @@ public class AuthService {
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
         String name = getValueFromSocket(socketData.getInputMessage(), "NAME");
-        if (name != null && name.equals("7")) {
-            socketData.setIdMessage("newsnew7");
+        // if name exists and is a number
+        if (name != null && name.matches("\\d+")) {
+            socketData.setIdMessage("newsnew" + name);
         }
 
         socketData.setOutputData(content);
@@ -198,7 +200,7 @@ public class AuthService {
         socketData.setOutputData(content);
         socketWriter.write(socket, socketData, SPACE_CHAR);
 
-        if (null != stats || null != inGame) {
+        if ((null != stats || null != inGame) && socketWrapper.getPersonaEntity() != null) {
             personaService.who(socket, socketWrapper);
         }
 

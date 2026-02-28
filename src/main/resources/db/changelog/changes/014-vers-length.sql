@@ -1,0 +1,2 @@
+ALTER TABLE core.game ALTER COLUMN vers TYPE VARCHAR(64);
+ALTER TABLE core.persona_connection ALTER COLUMN vers TYPE VARCHAR(64);

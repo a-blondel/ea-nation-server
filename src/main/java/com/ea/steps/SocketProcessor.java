@@ -173,6 +173,9 @@ public class SocketProcessor {
             case ("mesg"):
                 roomService.mesg(socket, socketData, socketWrapper);
                 break;
+            case ("peek"):
+                roomService.peek(socket, socketData);
+                break;
             case ("cate"):
                 statsService.cate(socket, socketData, socketWrapper);
                 break;
@@ -181,6 +184,9 @@ public class SocketProcessor {
                 break;
             case ("rank"):
                 statsService.rank(socket, socketData, socketWrapper);
+                break;
+            case ("sviw"):
+                statsService.sviw(socket, socketData);
                 break;
             case ("gqwk"):
                 gameService.gqwk(socket, socketData, socketWrapper);
