@@ -21,7 +21,6 @@ public class NfsPersonaStatsEntity {
     private PersonaEntity persona;
 
     private String vers;
-    private String slus;
     private int wins;
     private int losses;
     private int skil;

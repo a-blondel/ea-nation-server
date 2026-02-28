@@ -31,11 +31,11 @@ public interface GameRepository extends JpaRepository<GameEntity, Long> {
 
     List<GameEntity> findByEndTimeIsNull();
 
-    List<GameEntity> findByVersInAndEndTimeIsNull(List<String> vers);
+    List<GameEntity> findByVersAndEndTimeIsNull(String vers);
 
-    Optional<GameEntity> findByNameAndVersInAndEndTimeIsNull(String name, List<String> vers);
+    Optional<GameEntity> findByNameAndVersAndEndTimeIsNull(String name, String vers);
 
-    boolean existsByNameAndVersInAndEndTimeIsNull(String name, List<String> vers);
+    boolean existsByNameAndVersAndEndTimeIsNull(String name, String vers);
 
     @Transactional
     @Modifying

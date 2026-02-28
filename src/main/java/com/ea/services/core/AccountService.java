@@ -8,6 +8,7 @@ import com.ea.entities.core.PersonaEntity;
 import com.ea.mappers.SocketMapper;
 import com.ea.repositories.core.AccountRepository;
 import com.ea.repositories.core.BlacklistRepository;
+import com.ea.services.server.GameServerService;
 import com.ea.steps.SocketWriter;
 import com.ea.utils.AccountUtils;
 import com.ea.utils.EmailUtils;
@@ -37,6 +38,7 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final BlacklistRepository blacklistRepository;
     private final PersonaService personaService;
+    private final GameServerService gameServerService;
     private final SocketWriter socketWriter;
     private final EmailUtils emailUtils;
 
@@ -200,8 +202,9 @@ public class AccountService {
 
                 PersonaConnectionEntity personaConnectionEntity = new PersonaConnectionEntity();
                 personaConnectionEntity.setAddress(SocketUtils.handleLocalhostIp(socket.getRemoteSocketAddress().toString()));
-                personaConnectionEntity.setVers(vers);
-                personaConnectionEntity.setSlus(slus);
+                String gameName = gameServerService.getNameByPort(socket.getLocalPort());
+                personaConnectionEntity.setVers(gameName);
+                log.info("Login: user={}, VERS={}, SLUS={}, game={}, port={}", accountEntity.getName(), vers, slus, gameName, socket.getLocalPort());
                 synchronized (this) {
                     socketWrapper.setPersonaConnectionEntity(personaConnectionEntity);
                 }

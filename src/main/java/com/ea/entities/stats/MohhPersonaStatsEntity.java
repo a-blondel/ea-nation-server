@@ -23,8 +23,6 @@ public class MohhPersonaStatsEntity {
 
     private String vers;
 
-    private String slus;
-
     @Column(name = "KILL")
     private int kill;
 

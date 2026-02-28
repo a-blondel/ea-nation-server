@@ -357,7 +357,6 @@ public class NhlStatsService {
     private void updatePersonaStats(GameConnectionEntity gameConnection, Map<String, Object> playerStats, Map<String, Object> opponentStats) {
         PersonaEntity persona = gameConnection.getPersonaConnection().getPersona();
         String vers = gameConnection.getGame().getVers();
-        String slus = gameConnection.getGame().getSlus();
 
         NhlPersonaStatsEntity personaStats = nhlPersonaStatsRepository.findByPersonaIdAndVers(persona.getId(), vers);
 
@@ -365,7 +364,6 @@ public class NhlStatsService {
             personaStats = new NhlPersonaStatsEntity();
             personaStats.setPersona(persona);
             personaStats.setVers(vers);
-            personaStats.setSlus(slus);
         }
 
         // Calculate WIN/LOSS/DRAW according to business rules

@@ -44,13 +44,13 @@ public class NfsStatsService {
 
     private static int getRaceCount(String vers) {
         int raceCount;
-        if (PSP_NFS_06.equals(vers)) {
+        if (PSP_NFS06.equals(vers)) {
             raceCount = 11; // NFS Most Wanted (10 + 1 for some reason)
-        } else if (PSP_NFS_07.equals(vers)) {
+        } else if (PSP_NFS07.equals(vers)) {
             raceCount = 30; // NFS Carbon
-        } else if (PSP_NFS_08.equals(vers)) {
+        } else if (PSP_NFS08.equals(vers)) {
             raceCount = 38; // NFS ProStreet
-        } else if (PSP_NFS_09.equals(vers)) {
+        } else if (PSP_NFS09.equals(vers)) {
             raceCount = 36; // NFS Undercover
         } else {
             raceCount = 0;
@@ -64,7 +64,7 @@ public class NfsStatsService {
         dnf = Math.min(dnf, 100); // Ensure DNF percentage does not exceed 100
 
         String stats;
-        if (PSP_NFS_06.equals(vers)) {
+        if (PSP_NFS06.equals(vers)) {
             // For NFS MW: wins at index 2, losses at index 3, DNF% at index 10
             stats = ",," +
                     (hasStats ? Long.toHexString(nfsPersonaStatsEntity.getWins()) : "0") +
@@ -107,11 +107,11 @@ public class NfsStatsService {
         String vers = socketWrapper.getPersonaConnectionEntity().getVers();
         int raceCount = getRaceCount(vers);
 
-        Stream<String> beginLabels = PSP_NFS_06.equals(vers) ? Stream.of() : Stream.of(MY_LEADERBOARD.name, TOP_100.name, LAP_RECORDS.name);
+        Stream<String> beginLabels = PSP_NFS06.equals(vers) ? Stream.of() : Stream.of(MY_LEADERBOARD.name, TOP_100.name, LAP_RECORDS.name);
         Stream<String> endLabels = Stream.of(FORWARD.name, REVERSE.name);
 
         // Dynamic generation of SYMS
-        int firstRaceId = PSP_NFS_06.equals(vers) ? 0 : 1;
+        int firstRaceId = PSP_NFS06.equals(vers) ? 0 : 1;
         List<String> syms = Stream.concat(
                 Stream.concat(beginLabels,
                         // Dynamic generation of "Race X"
@@ -131,7 +131,7 @@ public class NfsStatsService {
                 .append("2,1,1,1,1,1,1,1");
 
         // Dynamic race categories (one per race with Forward/Reverse variations)
-        int startIndex = PSP_NFS_06.equals(vers) ? 0 : 3; // Index of "Race 1" in SYMS
+        int startIndex = PSP_NFS06.equals(vers) ? 0 : 3; // Index of "Race 1" in SYMS
         int forwardIndex = syms.size() - 2; // Index of "Forward" in SYMS
         int reverseIndex = syms.size() - 1; // Index of "Reverse" in SYMS
         for (int i = startIndex; i < startIndex + raceCount; i++) {
@@ -143,8 +143,8 @@ public class NfsStatsService {
 
         Map<String, String> content = Stream.of(new String[][]{
                 {"CC", String.valueOf(raceCount + 3)}, // Categories count (fixed + number of races)
-                {"IC", String.valueOf(PSP_NFS_06.equals(vers) ? raceCount + 1 : raceCount)}, // Indices count (number of races)
-                {"VC", String.valueOf(PSP_NFS_06.equals(vers) ? (raceCount + 1) * 2 : raceCount * 2)}, // Variation count (each race has Forward + Reverse)
+                {"IC", String.valueOf(PSP_NFS06.equals(vers) ? raceCount + 1 : raceCount)}, // Indices count (number of races)
+                {"VC", String.valueOf(PSP_NFS06.equals(vers) ? (raceCount + 1) * 2 : raceCount * 2)}, // Variation count (each race has Forward + Reverse)
                 {"SYMS", categoryNames},
                 {"SS", String.valueOf(categoryNames.length() + 1)}, // Total character count in SYMS + 1
                 {"R", rDataBuilder.toString()},
@@ -187,7 +187,7 @@ public class NfsStatsService {
             int dir = Integer.parseInt(itemIndex != null ? itemIndex : "0"); // II=0 -> DIR=0, II=1 -> DIR=1
 
             int venue = ci - 2; // CI=3 -> VENUE=1, CI=4 -> VENUE=2, etc.
-            if (PSP_NFS_06.equals(vers)) {
+            if (PSP_NFS06.equals(vers)) {
                 // MW uses one venue for forward and another one for reverse
                 if (dir == 0) {
                     venue = PSP_NFS_06_VENUE_MAP_FORWARD[ci - 3];
@@ -196,7 +196,7 @@ public class NfsStatsService {
                 }
             }
 
-            if (PSP_NFS_06.equals(vers)) {
+            if (PSP_NFS06.equals(vers)) {
                 // For NFS Most Wanted, use racetime instead of lap
                 nfsGameReportEntityList = nfsGameReportRepository.getRacetimeRecordsByVenueAndDir(vers, venue, dir, 100, offset);
             } else {
@@ -220,7 +220,7 @@ public class NfsStatsService {
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
         if ("1".equals(cols) && isLapRecords) {
-            if (PSP_NFS_06.equals(vers)) {
+            if (PSP_NFS06.equals(vers)) {
                 content.putAll(Stream.of(new String[][]{
                         {"CN0", "RNK"},
                         {"CN1", "Persona"},
@@ -325,11 +325,11 @@ public class NfsStatsService {
             String name = nfsGameReportEntity.getGameConnection().getPersonaConnection().getPersona().getPers();
 
             // Use racetime for NFS MW, lap time for other games
-            long timeValue = PSP_NFS_06.equals(vers) ? nfsGameReportEntity.getRacetime() : nfsGameReportEntity.getLap();
+            long timeValue = PSP_NFS06.equals(vers) ? nfsGameReportEntity.getRacetime() : nfsGameReportEntity.getLap();
             String timeString = String.valueOf(timeValue);
 
             String stats;
-            if (PSP_NFS_06.equals(vers)) {
+            if (PSP_NFS06.equals(vers)) {
                 stats = String.join(",",
                         String.valueOf(rank),
                         name,

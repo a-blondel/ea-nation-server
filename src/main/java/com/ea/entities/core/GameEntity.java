@@ -23,8 +23,6 @@ public class GameEntity {
 
     private String vers;
 
-    private String slus;
-
     private String name;
 
     private String params;

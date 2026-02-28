@@ -70,9 +70,9 @@ public interface GameConnectionRepository extends JpaRepository<GameConnectionEn
                 FROM GameConnectionEntity gc
                 WHERE gc.endTime IS NULL
                 AND gc.personaConnection.isHost = false
-                AND gc.game.vers IN ( :vers )
+                AND gc.game.vers = :name
             """)
-    int countPlayersInGame(List<String> vers);
+    int countPlayersInGame(String name);
 
     @Query("""
                 SELECT new com.ea.frontend.DTO$PlayerInfoDTO(

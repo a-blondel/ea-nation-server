@@ -23,7 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.ea.services.server.GameServerService.PS2_FIFA_08;
+import static com.ea.services.server.GameServerService.PS2_FIFA08;
 import static com.ea.utils.SocketUtils.TAB_CHAR;
 import static com.ea.utils.SocketUtils.getValueFromSocket;
 
@@ -179,7 +179,7 @@ public class RoomService {
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
         // PS2/FIFA08 wants at least 2 categories with one having auto_create=0
-        if (PS2_FIFA_08.equals(socketWrapper.getPersonaConnectionEntity().getVers())) {
+        if (PS2_FIFA08.equals(socketWrapper.getPersonaConnectionEntity().getVers())) {
             content.put("CAT1", "Manual,Local,LVL,,,,,0");
         }
 
@@ -241,9 +241,9 @@ public class RoomService {
      * @param wrapper The socket wrapper of the client
      */
     public void sst(Socket socket, SocketWrapper wrapper) {
-        List<String> vers = gameServerService.getRelatedVers(wrapper.getPersonaConnectionEntity().getVers());
-        int playersInLobby = personaConnectionRepository.countPlayersInLobby(vers);
-        int playersInGame = gameConnectionRepository.countPlayersInGame(vers);
+        String name = wrapper.getPersonaConnectionEntity().getVers();
+        int playersInLobby = personaConnectionRepository.countPlayersInLobby(name);
+        int playersInGame = gameConnectionRepository.countPlayersInGame(name);
         Map<String, String> content = Stream.of(new String[][]{
                 {"UIL", String.valueOf(playersInLobby)},
                 {"UIG", String.valueOf(playersInGame)},
@@ -471,12 +471,7 @@ public class RoomService {
 
     public Room getRoomByVers(String vers) {
         return rooms.stream()
-                .filter(room ->
-                        room.getVers().equals(vers) || gameServerConfig.getServers().stream()
-                                .filter(server -> server.getVers().equals(room.getVers()))
-                                .filter(server -> server.getDedicated() != null && server.getDedicated().getVers() != null)
-                                .anyMatch(server -> server.getDedicated().getVers().equals(vers))
-                )
+                .filter(room -> room.getVers().equals(vers))
                 .findFirst()
                 .orElse(null);
     }
@@ -492,8 +487,8 @@ public class RoomService {
         for (GameServerConfig.GameServer server : gameServerConfig.getServers()) {
             Room room = new Room();
             room.setId(rooms.size() + 1L);
-            room.setName(server.getVers());
-            room.setVers(server.getVers());
+            room.setName(server.getName());
+            room.setVers(server.getName());
             rooms.add(room);
         }
     }

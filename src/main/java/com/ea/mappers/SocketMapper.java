@@ -22,10 +22,9 @@ public class SocketMapper {
     @Autowired
     private PasswordUtils passwordUtils;
 
-    public GameEntity toGameEntity(String socket, String vers, String slus) {
+    public GameEntity toGameEntity(String socket, String vers) {
         GameEntity gameEntity = new GameEntity();
         gameEntity.setVers(vers);
-        gameEntity.setSlus(slus);
         setFieldsFromSocket(gameEntity, socket, RETURN_CHAR);
 
         // gpsc packets comes without a room, it doesn't matter as this entity is not saved to the database,

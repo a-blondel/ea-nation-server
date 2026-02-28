@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-import static com.ea.services.server.GameServerService.PSP_NFS_06;
+import static com.ea.services.server.GameServerService.PSP_NFS06;
 import static com.ea.utils.SocketUtils.*;
 
 @Slf4j
@@ -159,7 +159,6 @@ public class NfsRankService {
 
     private void updatePersonaStats(GameConnectionEntity gameConnection, NfsGameReportEntity gameReport) {
         String vers = gameConnection.getGame().getVers();
-        String slus = gameConnection.getGame().getSlus();
 
         NfsPersonaStatsEntity stats = nfsPersonaStatsRepository.findByPersonaIdAndVers(
                 gameConnection.getPersonaConnection().getPersona().getId(), vers);
@@ -168,7 +167,6 @@ public class NfsRankService {
             stats = new NfsPersonaStatsEntity();
             stats.setPersona(gameConnection.getPersonaConnection().getPersona());
             stats.setVers(vers);
-            stats.setSlus(slus);
         }
 
         // Update cumulative stats
@@ -181,7 +179,7 @@ public class NfsRankService {
         if (gameReport.getPos() == 1 && gameReport.getRacetime() > 0) {
             stats.setWins(stats.getWins() + 1);
         } else if (gameReport.getPos() > 1 || gameReport.getDidquit() == 1 || gameReport.getDiddisc() == 1 ||
-                (gameReport.getPos() == 0 && PSP_NFS_06.equals(gameReport.getGameConnection().getGame().getVers()))) {
+                (gameReport.getPos() == 0 && PSP_NFS06.equals(gameReport.getGameConnection().getGame().getVers()))) {
             stats.setLosses(stats.getLosses() + 1);
         }
 

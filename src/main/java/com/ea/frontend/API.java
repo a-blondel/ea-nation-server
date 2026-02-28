@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 
-import static com.ea.services.server.GameServerService.MOH07_OR_UHS;
+import static com.ea.services.server.GameServerService.PSP_MOH07;
 
 @Service
 @RequiredArgsConstructor
@@ -19,11 +19,11 @@ public class API {
     private final PersonaConnectionRepository personaConnectionRepository;
 
     public int getPlayersInGame() {
-        return gameConnectionRepository.countPlayersInGame(MOH07_OR_UHS);
+        return gameConnectionRepository.countPlayersInGame(PSP_MOH07);
     }
 
     public int getPlayersInLobby() {
-        return personaConnectionRepository.countPlayersInLobby(MOH07_OR_UHS);
+        return personaConnectionRepository.countPlayersInLobby(PSP_MOH07);
     }
 
     public Instant toUTCInstant(LocalDateTime localDateTime) {

@@ -12,8 +12,6 @@ public interface MohhPersonaStatsRepository extends JpaRepository<MohhPersonaSta
 
     MohhPersonaStatsEntity findByPersonaIdAndVers(Long id, String vers);
 
-    MohhPersonaStatsEntity findByPersonaIdAndVersIn(Long id, List<String> vers);
-
     @Query(value = """
             SELECT RANK FROM
                 (SELECT PERSONA_ID, ROW_NUMBER() OVER(ORDER BY (KILL - DEATH) DESC, PERSONA_ID ASC) AS RANK

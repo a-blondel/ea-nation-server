@@ -14,21 +14,13 @@ public class GameServerConfig {
 
     @Data
     public static class GameServer {
-        private String vers;
+        private String name;
         private boolean enabled = true;
         private String sdk = "";
         private boolean aries = true;
         private boolean p2p = true;
-        private DedicatedConfig dedicated;
         private SslConfig ssl;
-        private List<RegionConfig> regions;
-    }
-
-    @Data
-    public static class DedicatedConfig {
-        private String vers;
-        private String slus;
-        private int port;
+        private List<PortConfig> ports;
     }
 
     @Data
@@ -38,9 +30,7 @@ public class GameServerConfig {
     }
 
     @Data
-    public static class RegionConfig {
-        private String name;
+    public static class PortConfig {
         private int port;
-        private List<String> slus;
     }
 }
