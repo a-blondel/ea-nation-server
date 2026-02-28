@@ -28,3 +28,5 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/${{ github.repository }}/ea-nation-server:latest
+          build-args: |
+            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}

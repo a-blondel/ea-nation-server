@@ -1,10 +1,12 @@
 # Build image
 FROM maven:3.9-ibm-semeru-21-jammy AS build
 WORKDIR /usr/local/app
+ARG GITHUB_TOKEN
 # Copy project into image
 COPY ./ /usr/local/app/
+COPY .m2/settings.xml /root/.m2/settings.xml
 # Build
-RUN mvn clean package -DskipTests
+RUN GITHUB_TOKEN=$GITHUB_TOKEN mvn clean package -DskipTests
 
 
 # Run image
