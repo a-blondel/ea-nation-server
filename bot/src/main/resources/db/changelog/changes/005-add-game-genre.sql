@@ -1,3 +1,9 @@
+--liquibase formatted sql
+
+--changeset includeAll:raw
+--validCheckSum: 9:7d5e967be9ad9c60456b0ea165070a72
+--validCheckSum: 9:1590bec781badb6016b7ce460965ab6a
+
 -- Add game_genre column to channel_subscription table
 ALTER TABLE discord.CHANNEL_SUBSCRIPTION ADD COLUMN game_genre VARCHAR(32);
 
@@ -8,7 +14,7 @@ UPDATE discord.CHANNEL_SUBSCRIPTION SET game_genre = 'FPS';
 ALTER TABLE discord.CHANNEL_SUBSCRIPTION ALTER COLUMN game_genre SET NOT NULL;
 
 -- Drop old unique constraint and create new one including game_genre
-ALTER TABLE discord.CHANNEL_SUBSCRIPTION DROP CONSTRAINT channel_subscription_guild_id_subscription_type_key;
+ALTER TABLE discord.CHANNEL_SUBSCRIPTION DROP CONSTRAINT IF EXISTS channel_subscription_guild_id_subscription_type_key;
 ALTER TABLE discord.CHANNEL_SUBSCRIPTION ADD CONSTRAINT channel_subscription_guild_id_subscription_type_game_genre_key
     UNIQUE (guild_id, subscription_type, game_genre);
 
