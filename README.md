@@ -19,31 +19,90 @@ Fell free to join !
 
 ## Supported games
 
-| Game                              | Platform(s)     | Region(s) | Status                        |
-|-----------------------------------|-----------------|-----------|-------------------------------|
-| UEFA Champions League 2006-2007   | PSP             | EU, US    | Playable, partial support     |
-| FIFA 07, 08                       | PS2             | EU        | Playable, partial support     |
-| FIFA 07, 08, 09, 10               | PSP             | EU, US    | Playable, partial support     |
-| FIFA World Cup Germany 2006       | PSP             | EU, US    | Playable, partial support     |
-| FIFA World Cup South Africa 2010  | PSP             | EU, US    | Playable, partial support     |
-| Fight Night Round 3               | PSP             | EU, US    | Playable, partial support     |
-| MADDEN 07, 08, 09, 10             | PSP             | EU, US    | Playable, partial support     |
-| Medal of Honor: Heroes            | PSP             | EU, US    | Full support                  |
-| Medal of Honor: Heroes 2          | PSP, Wii        | EU, US    | In progress, not playable yet |
-| Need for Speed: Most Wanted 2005  | PC, PS2 (Alpha) | EU, US    | Playable, partial support     |
-| Need for Speed: Most Wanted 5-1-0 | PSP             | EU, US    | Full support                  |
-| Need for Speed Carbon: OTC        | PSP             | EU, US    | Full support                  |
-| Need for Speed: ProStreet         | PSP             | EU, US    | Full support                  |
-| Need for Speed: Undercover        | PSP             | EU, US    | Full support                  |
-| NBA Live 06, 07, 08               | PSP             | US        | Playable, partial support     |
-| NCAA 07                           | PSP             | US        | Playable, partial support     |
-| NHL 07                            | PSP             | EU, US    | Playable, partial support     |
-| Tiger Woods PGA Tour 07, 08, 10   | PSP             | EU, US    | Playable, partial support     |
+**Status legend:**
+
+- ✅ Full support
+- ⚠️ Partial support (playable with missing features)
+- ❌ Not playable yet
+
+### PC
+
+| Game                             | Status |
+|----------------------------------|--------|
+| Need for Speed: Most Wanted 2005 | ⚠️     |
+
+### PS2
+
+| Game                                          | Status |
+|-----------------------------------------------|--------|
+| Arena Football                                | ❌      |
+| Arena Football Road To Glory                  | ❌      |
+| Burnout 3 - Takedown                          | ❌      |
+| Burnout Revenge                               | ❌      |
+| FIFA Soccer 2004                              | ❌      |
+| FIFA 06, 07, 08                               | ⚠️     |
+| FIFA World Cup Germany 2006                   | ⚠️     |
+| Fight Night Round 2                           | ❌      |
+| Fight Night Round 3                           | ❌      |
+| James Bond 007: Everything or Nothing         | ❌      |
+| Madden NFL 2004, 05, 06, 07, 08, 09, 10       | ❌      |
+| Marvel Nemesis: Rise of the Imperfects        | ⚠️     |
+| MVP Baseball 2004, 05                         | ❌      |
+| MVP 06, 07 NCAA Baseball                      | ❌      |
+| NASCAR 04, 05, 06, 07, 08                     | ❌      |
+| NASCAR 09                                     | ⚠️     |
+| NBA Live 2004, 05, 06, 07                     | ❌      |
+| NBA Live 08                                   | ⚠️     |
+| NBA Street 2                                  | ❌      |
+| NCAA Football 2004, 05, 06, 07, 08, 09, 10    | ❌      |
+| NCAA March Madness 2004, 05                   | ❌      |
+| NCAA March Madness 06, 07                     | ⚠️     |
+| Need for Speed: Underground                   | ❌      |
+| Need for Speed: Underground 2                 | ⚠️     |
+| Need for Speed: Most Wanted 2005 (Alpha)      | ⚠️     |
+| NFL Head Coach                                | ❌      |
+| NFL Street (2004), 2, 3                       | ❌      |
+| NHL 2004, 05                                  | ❌      |
+| NHL 06, 07, 08                                | ⚠️     |
+| SSX 3                                         | ❌      |
+| The Lord of the Rings: The Return of the King | ❌      |
+| The Sims: Bustin' Out                         | ❌      |
+| Tiger Woods PGA Tour 2004, 05, 06, 07         | ❌      |
+| Tiger Woods PGA Tour 08                       | ❌      |
+| UEFA Champions League 2004-2005               | ❌      |
+| UEFA Champions League 2006-2007               | ⚠️     |
+
+### PSP
+
+| Game                              | Status |
+|-----------------------------------|--------|
+| FIFA 07, 08, 09, 10               | ⚠️     |
+| FIFA World Cup Germany 2006       | ⚠️     |
+| FIFA World Cup South Africa 2010  | ⚠️     |
+| Fight Night Round 3               | ⚠️     |
+| MADDEN 07, 08, 09, 10             | ⚠️     |
+| Medal of Honor: Heroes            | ✅      |
+| Medal of Honor: Heroes 2          | ❌      |
+| NBA Live 06, 07, 08*              | ⚠️     |
+| NCAA 07*                          | ⚠️     |
+| Need for Speed: Most Wanted 5-1-0 | ✅      |
+| Need for Speed Carbon: OTC        | ✅      |
+| Need for Speed: ProStreet         | ✅      |
+| Need for Speed: Undercover        | ✅      |
+| NHL 07                            | ⚠️     |
+| Tiger Woods PGA Tour 07, 08, 10   | ⚠️     |
+| UEFA Champions League 2006-2007   | ⚠️     |
+
+\* Only the US version has online support
+
+### Wii
+
+| Game                     | Status |
+|--------------------------|--------|
+| Medal of Honor: Heroes 2 | ❌      |
 
 Notes:
 
-- **FIFA WC 06, Fight Night Round 3, NFS MW 2005/5-1-0 and NBA Live 06 requires
-  the [SSLv2 stunnel](https://github.com/a-blondel/ea-sslv2-stunnel) to connect**
 - **The EU version of NFS MW 5-1-0 requires
   an [SSL bypass patch](https://github.com/a-blondel/ea-nation-patches/tree/main/PSP/Xdelta/NFS-Most-Wanted) to
   connect, as the game's port is already used by NFS Undercover**
@@ -116,32 +175,3 @@ following projects were inspiring in the development of this project:
 
 <img src="resources/images/nhl-scoreboard.png" alt="NHL scoreboard" /><br/>
 *NHL Scoreboard*
-
-## Run
-
-In IntelliJ IDEA, create a new `Application` run configuration.
-
-To start with the `dev` profile (containing database samples), use the following command line argument:
-
-```
--Dspring.profiles.active=dev
-```
-
-For the Discord bot to work, you need to define the appropriate environment variables :
-
-- `DNS_NAME` : the DNS name of the server
-- `DISCORD_TOKEN` : the token of the Discord bot
-
-Otherwise, comment out the `DiscordBotService` methods.
-
-If you don't want to use the `dev` profile, you have to define the following environment variables :
-
-- `DB_URL` : the URL of the database
-- `DB_USERNAME` : the username of the database
-- `DB_PASSWORD` : the password of the database
-
-But this requires to run an [EA Nation Server](https://github.com/a-blondel/ea-nation-server) database locally.
-
-The default scoreboard image is generated in the `report` directory. You can change the path using the `REPORTS_PATH`
-environment variable.  
-
