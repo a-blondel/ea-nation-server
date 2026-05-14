@@ -384,6 +384,10 @@ public class GameService {
      */
     private boolean matchesCriteria(GameEntity gameEntity, Map<String, String> paramsMap, String vers) {
         if (ALL_MOH.contains(vers)) {
+            if (gameEntity.getVers().equals("WII_MOH08")) { // TODO : delete this when the server is fixed
+                //gameEntity.setParams("8,12d,,1,1,-1,,,a,3,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // PSP
+                gameEntity.setParams("8,12d,,1,-1,,,a,3,-1,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // Wii
+            }
             return mohhStatsService.matchesCriteria(gameEntity, paramsMap, vers);
         } else {
             return true;
@@ -468,7 +472,7 @@ public class GameService {
         }
         if (gameEntity.getEndTime() == null) {
             // Check if game allows joining mid-game
-            if (gameEntity.isStarted() && !PSP_MOH07.equals(gameEntity.getVers())) {
+            if (gameEntity.isStarted() && !ALL_MOH.contains(gameEntity.getVers())) {
                 socketWriter.write(socket, new SocketData("gjoiasta", null, null)); // Game already started
                 return;
             }
@@ -551,12 +555,11 @@ public class GameService {
 
         GameEntity gameEntityToCreate = socketMapper.toGameEntity(socketData.getInputMessage(), name);
 
-        boolean isMohh = PSP_MOH07.equals(name);
         boolean duplicateName = gameRepository.existsByNameAndVersAndEndTimeIsNull(gameEntityToCreate.getName(), name);
         if (duplicateName) {
             socketData.setIdMessage("gpscdupl");
             socketWriter.write(socket, socketData);
-        } else if (isMohh) {
+        } else {
             SocketWrapper gpsSocketWrapper = socketManager.getAvailableGps();
             if (gpsSocketWrapper == null) {
                 socketData.setIdMessage("gpscnfnd");
@@ -593,25 +596,6 @@ public class GameService {
                     }
                 }).start();
             }
-        } else {
-            socketWriter.write(socket, socketData);
-
-            // Set a game server port for MoHH2 if it's not already set (the game set it if there are other games...)
-            String params = gameEntityToCreate.getParams();
-            int serverPortPos = StringUtils.ordinalIndexOf(params, ",", 20);
-            if (serverPortPos != -1 && serverPortPos < params.length()) {
-                String[] paramArray = params.split(",");
-                if (paramArray.length > 19 && paramArray[19].isEmpty()) {
-                    paramArray[19] = Integer.toHexString(1); // Set game server port to 1, so it doesn't conflict with other games
-                    params = String.join(",", paramArray);
-                }
-            }
-            gameEntityToCreate.setParams(params);
-            gameEntityToCreate.setStarted(true);
-            gameRepository.save(gameEntityToCreate);
-
-            startGameConnection(socketWrapper, gameEntityToCreate, false);
-            ses(socket, gameEntityToCreate);
         }
     }
 
@@ -804,6 +788,10 @@ public class GameService {
      * @param gameEntity The game entity to start the session for
      */
     public void ses(Socket socket, GameEntity gameEntity) {
+        if (gameEntity.getVers().equals("WII_MOH08")) { // TODO : delete this when the server is fixed
+            //gameEntity.setParams("8,12d,,1,1,-1,,,a,3,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // PSP
+            gameEntity.setParams("8,12d,,1,-1,,,a,3,-1,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // Wii
+        }
         socketWriter.write(socket, new SocketData("+ses", null, gameUtils.getGameInfo(gameEntity)));
     }
 
@@ -818,6 +806,10 @@ public class GameService {
         Optional<GameEntity> gameEntityOpt = gameRepository.findById(Long.valueOf(ident));
         if (gameEntityOpt.isPresent()) {
             GameEntity gameEntity = gameEntityOpt.get();
+            if (gameEntity.getVers().equals("WII_MOH08")) { // TODO : delete this when the server is fixed
+                //gameEntity.setParams("8,12d,,1,1,-1,,,a,3,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // PSP
+                gameEntity.setParams("8,12d,,1,-1,,,a,3,-1,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // Wii
+            }
             socketWriter.write(socket, new SocketData("gget", null, gameUtils.getGameInfo(gameEntity)));
         } else {
             socketWriter.write(socket, new SocketData("gget", null, null));
@@ -1008,19 +1000,6 @@ public class GameService {
      */
     public void dataCleanup() {
         LocalDateTime now = LocalDateTime.now();
-
-        // Manually close expired games
-        List<GameEntity> gameEntities = gameRepository.findByEndTimeIsNull();
-        gameEntities.forEach(gameEntity -> {
-            Set<GameConnectionEntity> gameConnections = gameEntity.getGameConnections();
-            if (gameConnections.stream().noneMatch(connection -> connection.isHost() || null == connection.getEndTime())) {
-                if (gameConnections.stream().allMatch(connection -> connection.getEndTime().plusSeconds(90).isBefore(now))) {
-                    log.info("Closing expired game: {} - {}", gameEntity.getId(), gameEntity.getName());
-                    gameEntity.setEndTime(now);
-                    gameRepository.save(gameEntity);
-                }
-            }
-        });
 
         // Get all active socket addresses from socket manager
         Set<String> activeAddresses = socketManager.getActiveSocketIdentifiers();

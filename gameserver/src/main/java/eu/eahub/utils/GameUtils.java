@@ -48,19 +48,8 @@ public class GameUtils {
 
         boolean isP2P = gameServerService.isP2P(gameEntity.getVers());
 
-        // Workaround when there is no host (MoHH2 serverless patch)
-        boolean hasHost = hostSocketWrapperOfGame != null;
-        String host;
-        if (hasHost) {
-            // For P2P games, no prefix. For non-P2P games, use @ prefix
-            String prefix = isP2P ? "" : "@";
-            host = prefix + hostSocketWrapperOfGame.getPersonaEntity().getPers();
-        } else {
-            // Fallback for serverless patch (non-P2P only)
-            host = "@brobot1";
-        }
+        String host = "@" + hostSocketWrapperOfGame.getPersonaEntity().getPers();
         int count = gameConnections.size();
-        if (!hasHost) count++;
 
         String sysflags = gameEntity.getSysflags();
         if (StringUtils.isNotEmpty(gameEntity.getPass())) {
@@ -101,17 +90,6 @@ public class GameUtils {
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
         int[] idx = {0};
-
-        if (!hasHost) {
-            content.putAll(Stream.of(new String[][]{
-                    {"OPID" + idx[0], "0"},
-                    {"OPPO" + idx[0], "@brobot1"},
-                    {"ADDR" + idx[0], "127.0.0.1"},
-                    {"LADDR" + idx[0], "127.0.0.1"},
-                    {"MADDR" + idx[0], ""},
-            }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-            idx[0]++;
-        }
 
         gameConnections.stream()
                 .sorted(Comparator.comparing(GameConnectionEntity::getId))
