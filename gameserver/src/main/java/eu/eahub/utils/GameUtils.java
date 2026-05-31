@@ -34,13 +34,17 @@ public class GameUtils {
     private final GameServerService gameServerService;
     private final SocketManager socketManager;
 
+    public Map<String, String> getGameInfo(GameEntity gameEntity) {
+        return getGameInfo(gameEntity, false);
+    }
+
     /**
      * Get game info
      *
      * @param gameEntity The game entity to get info for
      * @return Map with game info
      */
-    public Map<String, String> getGameInfo(GameEntity gameEntity) {
+    public Map<String, String> getGameInfo(GameEntity gameEntity, boolean isHost) {
         Long gameId = gameEntity.getId();
         SocketWrapper hostSocketWrapperOfGame = socketManager.getHostSocketWrapperOfGame(gameId);
 
@@ -48,7 +52,7 @@ public class GameUtils {
 
         boolean isP2P = gameServerService.isP2P(gameEntity.getVers());
 
-        String host = "@" + hostSocketWrapperOfGame.getPersonaEntity().getPers();
+        String host = hostSocketWrapperOfGame.getPersonaEntity().getPers();
         int count = gameConnections.size();
 
         String sysflags = gameEntity.getSysflags();
@@ -91,8 +95,14 @@ public class GameUtils {
 
         int[] idx = {0};
 
+        if (isHost) {
+            gameConnections = gameConnections.stream().sorted(Comparator.comparing(GameConnectionEntity::getId).reversed()).toList();
+        } else {
+            gameConnections = gameConnections.stream().sorted(Comparator.comparing(GameConnectionEntity::getId)).toList();
+        }
+
         gameConnections.stream()
-                .sorted(Comparator.comparing(GameConnectionEntity::getId))
+//                .sorted(Comparator.comparing(GameConnectionEntity::getId))
                 .forEach(gameConnectionEntity -> {
                     PersonaConnectionEntity personaConnectionEntity = gameConnectionEntity.getPersonaConnection();
                     PersonaEntity personaEntity = personaConnectionEntity.getPersona();
@@ -101,8 +111,9 @@ public class GameUtils {
                         log.warn("SocketWrapper not found for PersonaConnectionEntity ID: {}", personaConnectionEntity.getId());
                         return;
                     }
+//                    boolean isHost = !isP2P && gameConnectionEntity.isHost();
                     String ipAddr = personaConnectionEntity.getAddress().replace("/", "").split(":")[0];
-                    String hostPrefix = !isP2P && gameConnectionEntity.isHost() ? "@" : "";
+                    String hostPrefix = "";
                     String opparamValue = !socketWrapper.getUserparams().isEmpty() ? socketWrapper.getUserparams() : generateOpParam(personaEntity, gameEntity.getVers());
 
                     content.putAll(Stream.of(new String[][]{

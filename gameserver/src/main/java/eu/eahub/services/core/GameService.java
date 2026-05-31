@@ -235,7 +235,9 @@ public class GameService {
                     gameRepository.save(gameEntity);
 
                     if (!sysflags.isEmpty()) {
-                        Map<String, String> content = gameUtils.getGameInfo(gameEntity);
+                        boolean isHost = gameConnectionRepository.findByPersonaConnectionIdAndEndTimeIsNull(personaConnectionEntity.getId())
+                                .map(GameConnectionEntity::isHost).orElse(false);
+                        Map<String, String> content = gameUtils.getGameInfo(gameEntity, isHost);
                         socketWriter.write(socketWrapper.getSocket(), new SocketData("gset", null, content));
                         return;
                     }
@@ -385,7 +387,7 @@ public class GameService {
     private boolean matchesCriteria(GameEntity gameEntity, Map<String, String> paramsMap, String vers) {
         if (ALL_MOH.contains(vers)) {
             if (gameEntity.getVers().equals("PSP_MOH08")) { // TODO : delete this when the server is fixed
-                gameEntity.setParams("8,12d,,1,1,-1,,,a,3,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // PSP
+//                gameEntity.setParams("8,12d,,1,1,-1,,,a,3,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // PSP
 //                gameEntity.setParams("8,12d,,1,-1,,,a,3,-1,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // Wii
             }
             return mohhStatsService.matchesCriteria(gameEntity, paramsMap, vers);
@@ -562,8 +564,34 @@ public class GameService {
         } else {
             SocketWrapper gpsSocketWrapper = socketManager.getAvailableGps();
             if (gpsSocketWrapper == null) {
-                socketData.setIdMessage("gpscnfnd");
-                socketWriter.write(socket, socketData);
+                // === 5.6.2 POC client-as-server (Route 3 "self-host via +ses") — 2026-05-30 ===
+                // Hypothese : le role host/guest UDP du client se deduit du CONTENU du +ses
+                // (HOST/ADDR0), pas d'un flag interne pose par l'emission gcre (Route 1/2).
+                // Donc, au lieu de chercher un GPS, on fait du client DEMANDEUR le host de
+                // SA partie et on lui envoie les messages de session host (+mgm puis +ses),
+                // exactement comme le master le fait a un vrai UHS.
+                //   1) repondre au 'gpsc' (echo) -> sinon DISC (pas de reponse a son paquet).
+                //   2) creer la partie, marquer ce socket comme HOST (startGameConnection true).
+                //   3) updateHostInfo -> +mgm puis +ses au host (= ce client).
+                // BUT : voir si le client lance sa session de jeu UDP en HOTE (BP client
+                // FUN_0891bc88 GameSession_Init / barriere +0x244). Pour revenir a l'origine :
+                // restaurer les 2 lignes 'gpscnfnd'.
+                // NB : startGameConnection(...,true) designe ce socket comme host cote master
+                // (getHostSocketWrapperOfGame). Le prefixe '@' (isDedicatedHost) peut etre
+                // ajuste en base si le client ne se reconnait pas comme host dans le +ses.
+                socketWriter.write(socket, socketData);            // 1) ack gpsc
+                gameRepository.save(gameEntityToCreate);           // 2) creer la partie
+                startGameConnection(socketWrapper, gameEntityToCreate, true); //    ce client = host
+                personaService.who(socket, socketWrapper);
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                socketWriter.write(socket, new SocketData("+mgm", null, gameUtils.getGameInfo(gameEntityToCreate)));
+//                socketWriter.write(socket, new SocketData("+ses", null, gameUtils.getGameInfo(gameEntityToCreate)));
+//                updateHostInfo(gameEntityToCreate);                // 3) +mgm puis +ses au host
+                // === fin POC Route 3 ===
             } else {
                 socketWriter.write(socket, socketData);
                 Map<String, String> content = Stream.of(new String[][]{
@@ -607,7 +635,7 @@ public class GameService {
     public void updateHostInfo(GameEntity gameEntity) {
         SocketWrapper hostSocketWrapper = socketManager.getHostSocketWrapperOfGame(gameEntity.getId());
         if (hostSocketWrapper != null) {
-            Map<String, String> content = gameUtils.getGameInfo(gameEntity);
+            Map<String, String> content = gameUtils.getGameInfo(gameEntity, true);
             socketWriter.write(hostSocketWrapper.getSocket(), new SocketData("+mgm", null, content));
             try {
                 Thread.sleep(100);
@@ -789,7 +817,7 @@ public class GameService {
      */
     public void ses(Socket socket, GameEntity gameEntity) {
         if (gameEntity.getVers().equals("PSP_MOH08")) { // TODO : delete this when the server is fixed
-            gameEntity.setParams("8,12d,,1,1,-1,,,a,3,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // PSP
+//            gameEntity.setParams("8,12d,,1,1,-1,,,a,3,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // PSP
 //            gameEntity.setParams("8,12d,,1,-1,,,a,3,-1,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // Wii
         }
         socketWriter.write(socket, new SocketData("+ses", null, gameUtils.getGameInfo(gameEntity)));
@@ -807,7 +835,7 @@ public class GameService {
         if (gameEntityOpt.isPresent()) {
             GameEntity gameEntity = gameEntityOpt.get();
             if (gameEntity.getVers().equals("PSP_MOH08")) { // TODO : delete this when the server is fixed
-                gameEntity.setParams("8,12d,,1,1,-1,,,a,3,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // PSP
+//                gameEntity.setParams("8,12d,,1,1,-1,,,a,3,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // PSP
 //                gameEntity.setParams("8,12d,,1,-1,,,a,3,-1,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // Wii
             }
             socketWriter.write(socket, new SocketData("gget", null, gameUtils.getGameInfo(gameEntity)));
@@ -881,7 +909,7 @@ public class GameService {
                 } else {
                     gameConnectionEntity.setEndTime(LocalDateTime.now());
                     gameConnectionRepository.save(gameConnectionEntity);
-                    updateHostInfo(gameEntity);
+//                    updateHostInfo(gameEntity);
                 }
             }
         }

@@ -75,7 +75,7 @@ public class PersonaUtils {
                 .map(gameEntity -> Optional.ofNullable(gameEntity.getOriginalId()).orElse(gameEntity.getId()))
                 .orElse(0L);
 
-        String hostPrefix = socketWrapper.getIsDedicatedHost().get() ? "@" : "";
+        String hostPrefix = socketWrapper.getIsDedicatedHost().get() ? "" : "";
 
         // Get auxiliary text from socket wrapper (used by NFS MW)
         String auxText = socketWrapper.getAuxText() != null ? socketWrapper.getAuxText() : "";
