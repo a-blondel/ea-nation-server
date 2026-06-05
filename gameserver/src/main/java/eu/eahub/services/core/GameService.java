@@ -385,7 +385,8 @@ public class GameService {
     private boolean matchesCriteria(GameEntity gameEntity, Map<String, String> paramsMap, String vers) {
         if (ALL_MOH.contains(vers)) {
             if (gameEntity.getVers().equals("PSP_MOH08")) { // TODO : delete this when the server is fixed
-                gameEntity.setParams("8,12d,,1,1,-1,,,a,3,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // PSP
+                gameEntity.setParams("8,65,,1,1,-1,,,a,3,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // PSP
+//                gameEntity.setParams("8,12d,,1,1,-1,,,a,3,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // PSP
 //                gameEntity.setParams("8,12d,,1,-1,,,a,3,-1,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // Wii
             }
             return mohhStatsService.matchesCriteria(gameEntity, paramsMap, vers);
@@ -789,7 +790,8 @@ public class GameService {
      */
     public void ses(Socket socket, GameEntity gameEntity) {
         if (gameEntity.getVers().equals("PSP_MOH08")) { // TODO : delete this when the server is fixed
-            gameEntity.setParams("8,12d,,1,1,-1,,,a,3,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // PSP
+            gameEntity.setParams("8,65,,1,1,-1,,,a,3,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // PSP
+//            gameEntity.setParams("8,12d,,1,1,-1,,,a,3,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // PSP
 //            gameEntity.setParams("8,12d,,1,-1,,,a,3,-1,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // Wii
         }
         socketWriter.write(socket, new SocketData("+ses", null, gameUtils.getGameInfo(gameEntity)));
@@ -807,7 +809,8 @@ public class GameService {
         if (gameEntityOpt.isPresent()) {
             GameEntity gameEntity = gameEntityOpt.get();
             if (gameEntity.getVers().equals("PSP_MOH08")) { // TODO : delete this when the server is fixed
-                gameEntity.setParams("8,12d,,1,1,-1,,,a,3,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // PSP
+                gameEntity.setParams("8,65,,1,1,-1,,,a,3,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // PSP
+//                gameEntity.setParams("8,12d,,1,1,-1,,,a,3,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // PSP
 //                gameEntity.setParams("8,12d,,1,-1,,,a,3,-1,1,1,1,1,1,1,1,1,20,e4a,e68,15f90,122d0022"); // Wii
             }
             socketWriter.write(socket, new SocketData("gget", null, gameUtils.getGameInfo(gameEntity)));
