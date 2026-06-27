@@ -24,53 +24,58 @@ Fell free to join !
 - ✅ Full support
 - ⚠️ Partial support (playable with missing features)
 - ❌ Not playable yet
+- 🔒 Currently not public
 
 ### PC
 
-| Game                             | Status |
-|----------------------------------|--------|
-| Need for Speed: Most Wanted 2005 | ⚠️     |
+| Game                             | Status    |
+|----------------------------------|-----------|
+| Need for Speed: Underground      | ✅ 🔒      |
+| Need for Speed: Underground 2    | ✅ 🔒      |
+| Need for Speed: Most Wanted 2005 | ⚠️ - ✅ 🔒 |
 
 ### PS2
 
-| Game                                          | Status |
-|-----------------------------------------------|--------|
-| Arena Football                                | ❌      |
-| Arena Football Road To Glory                  | ❌      |
-| Burnout 3 - Takedown                          | ❌      |
-| Burnout Revenge                               | ❌      |
-| FIFA Soccer 2004                              | ❌      |
-| FIFA 06, 07, 08                               | ⚠️     |
-| FIFA World Cup Germany 2006                   | ⚠️     |
-| Fight Night Round 2                           | ❌      |
-| Fight Night Round 3                           | ❌      |
-| James Bond 007: Everything or Nothing         | ❌      |
-| Madden NFL 2004, 05, 06, 07, 08, 09, 10       | ❌      |
-| Marvel Nemesis: Rise of the Imperfects        | ⚠️     |
-| MVP Baseball 2004, 05                         | ❌      |
-| MVP 06, 07 NCAA Baseball                      | ❌      |
-| NASCAR 04, 05, 06, 07, 08                     | ❌      |
-| NASCAR 09                                     | ⚠️     |
-| NBA Live 2004, 05, 06, 07                     | ❌      |
-| NBA Live 08                                   | ⚠️     |
-| NBA Street 2                                  | ❌      |
-| NCAA Football 2004, 05, 06, 07, 08, 09, 10    | ❌      |
-| NCAA March Madness 2004, 05                   | ❌      |
-| NCAA March Madness 06, 07                     | ⚠️     |
-| Need for Speed: Underground                   | ❌      |
-| Need for Speed: Underground 2                 | ⚠️     |
-| Need for Speed: Most Wanted 2005 (Alpha)      | ⚠️     |
-| NFL Head Coach                                | ❌      |
-| NFL Street (2004), 2, 3                       | ❌      |
-| NHL 2004, 05                                  | ❌      |
-| NHL 06, 07, 08                                | ⚠️     |
-| SSX 3                                         | ❌      |
-| The Lord of the Rings: The Return of the King | ❌      |
-| The Sims: Bustin' Out                         | ❌      |
-| Tiger Woods PGA Tour 2004, 05, 06, 07         | ❌      |
-| Tiger Woods PGA Tour 08                       | ❌      |
-| UEFA Champions League 2004-2005               | ❌      |
-| UEFA Champions League 2006-2007               | ⚠️     |
+| Game                                          | Status    |
+|-----------------------------------------------|-----------|
+| Arena Football                                | ⚠️ 🔒     |
+| Arena Football Road To Glory                  | ⚠️ 🔒     |
+| Burnout 3 - Takedown                          | ❌         |
+| Burnout Revenge                               | ❌         |
+| FIFA Soccer 2004                              | ❌         |
+| FIFA 06, 07, 08                               | ⚠️        |
+| FIFA World Cup Germany 2006                   | ⚠️        |
+| Fight Night Round 2                           | ❌         |
+| Fight Night Round 3                           | ⚠️ 🔒     |
+| James Bond 007: Everything or Nothing         | ❌         |
+| Madden NFL 2004, 05, 06                       | ❌         |
+| Madden NFL 07, 08, 09, 10                     | ⚠️ 🔒     |
+| Marvel Nemesis: Rise of the Imperfects        | ⚠️ 🔒     |
+| MVP Baseball 2004, 05                         | ❌         |
+| MVP 06, 07 NCAA Baseball                      | ⚠️ 🔒     |
+| NASCAR 04, 05                                 | ❌         |
+| NASCAR 06, 07, 08, 09                         | ⚠️ 🔒     |
+| NBA Live 2004, 05                             | ❌         |
+| NBA Live 06, 07, 08                           | ⚠️ 🔒     |
+| NBA Street 2                                  | ❌         |
+| NCAA Football 2004, 05                        | ❌         |
+| NCAA Football 06, 07, 08, 09, 10              | ⚠️ 🔒     |
+| NCAA March Madness 2004, 05                   | ❌         |
+| NCAA March Madness 06, 07                     | ⚠️ 🔒     |
+| Need for Speed: Underground                   | ✅ 🔒      |
+| Need for Speed: Underground 2                 | ✅ 🔒      |
+| Need for Speed: Most Wanted 2005 (Alpha)      | ⚠️ - ✅ 🔒 |
+| NFL Head Coach                                | ⚠️ 🔒     |
+| NFL Street (2004), 2, 3                       | ❌         |
+| NHL 2004, 05                                  | ❌         |
+| NHL 06, 07, 08                                | ⚠️ 🔒     |
+| SSX 3                                         | ❌         |
+| The Lord of the Rings: The Return of the King | ❌         |
+| The Sims: Bustin' Out                         | ❌         |
+| Tiger Woods PGA Tour 2004, 05, 06, 07         | ❌         |
+| Tiger Woods PGA Tour 08                       | ❌         |
+| UEFA Champions League 2004-2005               | ❌         |
+| UEFA Champions League 2006-2007               | ⚠️        |
 
 ### PSP
 
