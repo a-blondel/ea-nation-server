@@ -41,6 +41,8 @@ public interface GameConnectionRepository extends JpaRepository<GameConnectionEn
 
     List<GameConnectionEntity> findByGameIdAndEndTimeIsNull(Long gameId);
 
+    List<GameConnectionEntity> findByPersonaConnectionPersonaIdAndEndTimeIsNull(Long personaId);
+
     @Query("""
                 SELECT gc FROM GameConnectionEntity gc
                 WHERE gc.personaConnection.persona.pers = :playerName
