@@ -28,6 +28,7 @@ tw04: # Tiger Woods PGA Tour 2004
   news: ${TW04_NEWS:Welcome back to Tiger Woods PGA Tour 2004 online.}
   news-file: ${TW04_NEWS_FILE:} # Optional text file used instead of tw04.news
   auto-news: ${TW04_AUTO_NEWS:true} # Add today's event, leaders and new records to the news
+  rebuild-stats: ${TW04_REBUILD_STATS:false} # Rebuild the statistics from the stored results at startup, then set back to false
   relay: # Optional UDP relay, so that players need no port forwarding
     enabled: ${TW04_RELAY_ENABLED:false}
     bind-address: ${TW04_RELAY_BIND_ADDRESS:0.0.0.0}

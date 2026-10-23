@@ -21,4 +21,12 @@ public interface TwGameReportRepository extends JpaRepository<TwGameReportEntity
             """)
     List<TwGameReportEntity> findByVersSince(String vers, LocalDateTime since);
 
+    @Query("""
+            FROM TwGameReportEntity r
+            JOIN FETCH r.gameConnection gc JOIN FETCH gc.game g JOIN FETCH gc.personaConnection pc JOIN FETCH pc.persona
+            WHERE g.vers = :vers
+            ORDER BY g.startTime, g.id, r.side
+            """)
+    List<TwGameReportEntity> findByVers(String vers);
+
 }

@@ -16,6 +16,8 @@ public interface TwPersonaStatsRepository extends JpaRepository<TwPersonaStatsEn
 
     List<TwPersonaStatsEntity> findByPersonaIdInAndVers(Collection<Long> personaIds, String vers);
 
+    List<TwPersonaStatsEntity> findByVers(String vers);
+
     @Query("""
             FROM TwPersonaStatsEntity s
             WHERE s.vers = :vers AND s.persona.deletedOn IS NULL

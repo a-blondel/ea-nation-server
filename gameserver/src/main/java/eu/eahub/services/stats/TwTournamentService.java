@@ -683,7 +683,7 @@ public class TwTournamentService {
     /**
      * Rank and pay the days before today that are not settled yet
      */
-    private void settle(String vers, int today) {
+    synchronized void settle(String vers, int today) {
         for (TwEventEntity event : twEventRepository.findByVersAndEventDayLessThanAndSettledOnIsNullOrderByEventDay(vers, today)) {
             settle(vers, event);
         }
