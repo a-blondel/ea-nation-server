@@ -4,8 +4,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * In most game titles, a room is used to manage players and games.
@@ -19,6 +19,9 @@ public class Room {
     private String name;
     private String vers;
     private String flags = "CK";
-    private Set<Long> gameIds = new HashSet<>();
-    private Set<Long> personaIds = new HashSet<>();
+    private String password = "";
+    private int limit = 50;
+    private boolean created; // Created by a player, removed once empty
+    private Set<Long> gameIds = ConcurrentHashMap.newKeySet();
+    private Set<Long> personaIds = ConcurrentHashMap.newKeySet();
 }

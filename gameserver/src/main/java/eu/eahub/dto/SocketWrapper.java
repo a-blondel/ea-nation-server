@@ -32,6 +32,16 @@ public class SocketWrapper {
     private volatile Thread gameSearchThread;
     private volatile Long userSetId;
     private volatile String auxText;
+    // Lobby subscriptions requested with sele (used by TW04, which is only sent the updates it subscribed to)
+    private volatile boolean roomUpdates;
+    private volatile boolean userUpdates;
+    private volatile boolean messageUpdates;
+    // Address the client reported with addr (used by TW04 to reach players behind the same NAT)
+    private volatile String reportedAddress = "";
+    // Number of +usr records last sent, so that departed users can be removed (TW04)
+    private volatile int rosterSize;
+    // First day of the tournament season shown to the client (TW04)
+    private volatile Integer seasonFirst;
 
 
     public void cleanupOnSocketClose(SocketWrapper socketWrapper) {

@@ -21,6 +21,22 @@ public class GameServerConfig {
         private boolean p2p = true;
         private SslConfig ssl;
         private List<PortConfig> ports;
+        private RoomConfig rooms;
+        // Product name sent in buddy server AUTH when the game uses its own Messenger dialect (TW04)
+        private String buddyProduct = "";
+    }
+
+    /**
+     * Named lobby rooms, for games that list rooms by name (default: one room named after the game)
+     */
+    @Data
+    public static class RoomConfig {
+        private List<String> names = List.of();
+        private int limit = 50;
+        // Players can create rooms whose name matches this pattern (disabled when empty)
+        private String createPattern = "";
+        private int nameLength = 31;
+        private int max = 74;
     }
 
     @Data

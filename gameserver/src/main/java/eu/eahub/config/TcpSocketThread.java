@@ -3,6 +3,7 @@ package eu.eahub.config;
 import eu.eahub.dto.BuddySocketWrapper;
 import eu.eahub.dto.SocketData;
 import eu.eahub.dto.SocketWrapper;
+import eu.eahub.services.core.ConnectionListener;
 import eu.eahub.services.core.GameService;
 import eu.eahub.services.core.PersonaService;
 import eu.eahub.services.core.UserSetService;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.Socket;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -32,6 +34,7 @@ public class TcpSocketThread implements Runnable {
     private final PersonaService personaService;
     private final GameService gameService;
     private final UserSetService userSetService;
+    private final List<ConnectionListener> connectionListeners;
     private ScheduledExecutorService pingExecutor;
 
     @Override
@@ -54,6 +57,7 @@ public class TcpSocketThread implements Runnable {
             if (socketWrapper != null) {
                 playerInfo = SocketUtils.getPlayerInfo(socketWrapper);
                 socketManager.removeSocket(socketWrapper.getIdentifier());
+                connectionListeners.forEach(listener -> listener.onDisconnect(socketWrapper));
                 if (socketWrapper.getPersonaEntity() != null) {
                     userSetService.endUserSetMembership(socketWrapper);
                     gameService.endGameConnection(socketWrapper);
@@ -66,6 +70,7 @@ public class TcpSocketThread implements Runnable {
                 if (buddySocketWrapper != null) {
                     playerInfo = SocketUtils.getBuddyPlayerInfo(buddySocketWrapper);
                     socketManager.removeBuddySocket(buddySocketWrapper.getIdentifier());
+                    connectionListeners.forEach(listener -> listener.onBuddyDisconnect(buddySocketWrapper));
                 } else {
                     log.warn("No SocketWrapper found for socket: {}", clientSocket.getRemoteSocketAddress());
                 }
@@ -75,7 +80,8 @@ public class TcpSocketThread implements Runnable {
     }
 
     private void png(Socket socket) {
-        SocketData socketData = new SocketData("~png", null, null);
+        BuddySocketWrapper buddySocketWrapper = socketManager.getBuddySocketWrapperBySocket(socket);
+        SocketData socketData = new SocketData(buddySocketWrapper != null ? buddySocketWrapper.getKeepAlive() : "~png", null, null);
         socketWriter.write(socket, socketData);
     }
 }

@@ -1,5 +1,6 @@
 package eu.eahub.steps;
 
+import eu.eahub.dirtysdk.LobbyTagField;
 import eu.eahub.dto.BuddySocketWrapper;
 import eu.eahub.dto.SocketData;
 import eu.eahub.dto.SocketWrapper;
@@ -16,6 +17,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 import static eu.eahub.utils.SocketUtils.NEWLINE_CHAR;
 import static java.util.stream.Collectors.joining;
@@ -40,6 +42,32 @@ public class SocketWriter {
      * @param socketData the object to use to write the message
      */
     public void write(Socket socket, SocketData socketData, String joiner) {
+        write(socket, socketData, joiner, null);
+    }
+
+    /**
+     * Sends a plain text body instead of key=value pairs (e.g. TW04 news and tournament data)
+     *
+     * @param socket the socket to write into
+     * @param id     the message id
+     * @param text   the body
+     */
+    public void writeText(Socket socket, String id, String text) {
+        write(socket, new SocketData(id, null, null), NEWLINE_CHAR, text);
+    }
+
+    /**
+     * Sends fields encoded as tag fields (quoted and escaped values, in the map's order), as used by TW04
+     *
+     * @param socket the socket to write into
+     * @param id     the message id
+     * @param fields the fields to send
+     */
+    public void writeTagFields(Socket socket, String id, Map<String, String> fields) {
+        writeText(socket, id, LobbyTagField.encode(fields));
+    }
+
+    private void write(Socket socket, SocketData socketData, String joiner, String text) {
         try (ByteArrayOutputStream buffer = new ByteArrayOutputStream();
              DataOutputStream writer = new DataOutputStream(buffer)) {
 
@@ -49,7 +77,12 @@ public class SocketWriter {
             }
             int outputLength = 12;
 
-            if (socketData.getOutputData() != null) {
+            if (text != null) {
+                byte[] contentBytes = (text + "\0").getBytes(StandardCharsets.ISO_8859_1);
+                outputLength += contentBytes.length;
+                writer.writeInt(outputLength);
+                writer.write(contentBytes);
+            } else if (socketData.getOutputData() != null) {
                 byte[] contentBytes = (socketData.getOutputData().entrySet()
                         .stream()
                         .map(param -> param.getKey() + "=" + param.getValue())

@@ -1,6 +1,7 @@
 package eu.eahub;
 
 import eu.eahub.config.*;
+import eu.eahub.services.core.ConnectionListener;
 import eu.eahub.services.core.GameService;
 import eu.eahub.services.core.PersonaService;
 import eu.eahub.services.core.RoomService;
@@ -17,6 +18,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.HttpServerCodec;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -48,6 +50,7 @@ public class ServerApp implements CommandLineRunner {
     private final GameService gameService;
     private final RoomService roomService;
     private final UserSetService userSetService;
+    private final ObjectProvider<ConnectionListener> connectionListeners;
     private ExecutorService clientHandlingExecutor = Executors.newFixedThreadPool(500);
 
     @Value("${http.tunnel.enabled:true}")
@@ -157,7 +160,8 @@ public class ServerApp implements CommandLineRunner {
     }
 
     private Runnable createTcpSocketThread(Socket socket) {
-        return new TcpSocketThread(socket, socketManager, socketReader, socketWriter, personaService, gameService, userSetService);
+        return new TcpSocketThread(socket, socketManager, socketReader, socketWriter, personaService, gameService, userSetService,
+                connectionListeners.stream().toList());
     }
 
     private Runnable createSslSocketThread(Socket socket) {

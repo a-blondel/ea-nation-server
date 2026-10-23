@@ -44,6 +44,10 @@ public class GameServerService {
     public static final String PSP_WORLDCUP10 = "PSP_WORLDCUP10";
     public static final List<String> ALL_FIFA = List.of(PS2_FIFA06, PS2_FIFA07, PS2_FIFA08, PSP_UEFA07, PSP_FIFA07, PSP_FIFA08, PSP_FIFA09, PSP_FIFA10, PSP_WORLDCUP06, PSP_WORLDCUP10);
 
+    //    TIGER WOODS
+    public static final String PS2_TW04 = "PS2_TW04";
+    public static final List<String> ALL_TW = List.of(PS2_TW04);
+
     // Games using usersets instead of rooms
     public static final List<String> USERSETS_GAMES = List.of(PC_NFS06, PS2_NFS06);
 
