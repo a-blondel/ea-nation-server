@@ -72,7 +72,8 @@ Fell free to join !
 | SSX 3                                         | ❌         |
 | The Lord of the Rings: The Return of the King | ❌         |
 | The Sims: Bustin' Out                         | ❌         |
-| Tiger Woods PGA Tour 2004, 05, 06, 07         | ❌         |
+| Tiger Woods PGA Tour 2004                     | ⚠️ 🔒     |
+| Tiger Woods PGA Tour 2005, 06, 07             | ❌         |
 | Tiger Woods PGA Tour 08                       | ❌         |
 | UEFA Champions League 2004-2005               | ❌         |
 | UEFA Champions League 2006-2007               | ⚠️        |
@@ -116,6 +117,10 @@ Notes:
 - **The PS2 version of NFS MW 2005 requires a DNAS patch. Either
   use [DNAS-net Patcher](https://www.psx-place.com/threads/dnas-net-patcher.22813/) or the
   provided [Xdelta patch](https://github.com/a-blondel/ea-nation-patches/tree/main/PS2/Xdelta/NFS-Most-Wanted)**
+- **Tiger Woods PGA Tour 2004 (PS2, SLUS-20757) connects to the numeric IP address built into the game, so it can't be
+  redirected by DNS: it needs a patch made for your server's address, which also skips DNAS. The `BUDDY` server must be
+  enabled for its Messenger. Head-to-head rounds are played peer-to-peer on UDP 3658, so the host needs that port
+  forwarded, unless the server enables the `tw04.relay` UDP relay and forwards it once for everyone**
 - All the other PS2 games requires a DNAS patch unless they are supported by DNASrep.
   See [pnach](https://github.com/a-blondel/ea-nation-patches/tree/main/PS2/pnach) folder for your specific game
 - Partial support means that some features are not implemented yet, like:
@@ -150,6 +155,9 @@ following projects were inspiring in the development of this project:
     - https://github.com/valters-tomsons/arcadia (implementation)
 - Nintendo WFC server emulator
     - https://github.com/barronwaffles/dwc_network_server_emulator
+- Tiger Woods PGA Tour 2004 online server (lobby, Messenger, statistics and tournaments,
+  see [THIRD-PARTY-TW04.txt](THIRD-PARTY-TW04.txt))
+    - https://github.com/jeddyhhh/TW04OnlineServer
 - Related EA server emulators with more or less similar TCP packets
     - https://github.com/HarpyWar/nfsuserver
     - https://github.com/VTSTech/VTSTech-SRVEmu
