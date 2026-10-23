@@ -189,8 +189,15 @@ public class PersonaService {
 //            socketData.setIdMessage("perspset");
 //            socketWriter.write(socket, socketData);
 //            return;
+            if (personaConnectionEntity.getId() != null
+                    && personaConnectionEntity.getId().equals(socketWrapper.getPersonaConnectionEntity().getId())) {
+                continue; // pers sent again on the same connection
+            }
             log.warn("Persona {} already connected, ending old session", pers);
-            Socket socketToClose = socketManager.getSocketWrapper(personaConnectionEntity.getAddress()).getSocket();
+            // Look the socket up by connection id: the stored address is rewritten for localhost clients (handleLocalhostIp),
+            // and the socket may already be gone
+            SocketWrapper oldSocketWrapper = socketManager.getSocketWrapperByPersonaConnectionId(personaConnectionEntity.getId());
+            Socket socketToClose = oldSocketWrapper != null ? oldSocketWrapper.getSocket() : null;
             if (socketToClose != null) {
                 log.info("Closing old socket {}", socketToClose.getRemoteSocketAddress());
                 try {

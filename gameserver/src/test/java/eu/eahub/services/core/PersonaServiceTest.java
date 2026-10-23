@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
@@ -123,5 +125,60 @@ class PersonaServiceTest {
         personaService.pers(socket, new SocketData("pers", "PERS=Vic@tim", null), loggedIn(account(1)));
 
         assertEquals("persmaut", reply());
+    }
+    private static PersonaConnectionEntity openConnection(Long id) {
+        PersonaConnectionEntity personaConnection = new PersonaConnectionEntity();
+        personaConnection.setId(id);
+        personaConnection.setVers("PS2_NHL08");
+        // A localhost client's address is stored rewritten, so it never matches a socket identifier
+        personaConnection.setAddress("/192.168.1.5:1000");
+        return personaConnection;
+    }
+
+    private SocketWrapper alreadyConnected(PersonaConnectionEntity personaConnection) {
+        AccountEntity account = account(1);
+        when(personaRepository.findByPers("Mine")).thenReturn(Optional.of(persona("Mine", account)));
+        when(personaConnectionRepository.findByVersAndPersonaPersAndIsHostFalseAndEndTimeIsNull(anyString(), anyString()))
+                .thenReturn(List.of(personaConnection));
+        SocketWrapper socketWrapper = loggedIn(account);
+        socketWrapper.getPersonaConnectionEntity().setId(2L);
+        return socketWrapper;
+    }
+
+    @Test
+    void oldSocketIsFoundByConnectionIdAndClosed() throws Exception {
+        SocketWrapper socketWrapper = alreadyConnected(openConnection(1L));
+        Socket oldSocket = mock(Socket.class);
+        SocketWrapper oldSocketWrapper = new SocketWrapper();
+        oldSocketWrapper.setSocket(oldSocket);
+        when(socketManager.getSocketWrapperByPersonaConnectionId(1L)).thenReturn(oldSocketWrapper);
+
+        personaService.pers(socket, new SocketData("pers", "PERS=Mine", null), socketWrapper);
+
+        verify(oldSocket).close();
+        assertNotNull(socketWrapper.getPersonaEntity());
+    }
+
+    @Test
+    void oldConnectionWithoutSocketIsEnded() {
+        PersonaConnectionEntity old = openConnection(1L);
+        SocketWrapper socketWrapper = alreadyConnected(old);
+
+        personaService.pers(socket, new SocketData("pers", "PERS=Mine", null), socketWrapper);
+
+        assertNotNull(old.getEndTime());
+        verify(personaConnectionRepository).save(old);
+        assertNotNull(socketWrapper.getPersonaEntity());
+    }
+
+    @Test
+    void ownConnectionIsNotEnded() {
+        PersonaConnectionEntity own = openConnection(2L);
+        SocketWrapper socketWrapper = alreadyConnected(own);
+
+        personaService.pers(socket, new SocketData("pers", "PERS=Mine", null), socketWrapper);
+
+        assertNull(own.getEndTime());
+        verify(socketManager, never()).getSocketWrapperByPersonaConnectionId(2L);
     }
 }
