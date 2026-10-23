@@ -1,5 +1,6 @@
 package eu.eahub.services.core;
 
+import eu.eahub.dirtysdk.LobbyTagField;
 import eu.eahub.dto.SocketData;
 import eu.eahub.dto.SocketWrapper;
 import eu.eahub.entities.core.AccountEntity;
@@ -8,6 +9,8 @@ import eu.eahub.entities.core.PersonaEntity;
 import eu.eahub.mappers.SocketMapper;
 import eu.eahub.repositories.core.AccountRepository;
 import eu.eahub.repositories.core.BlacklistRepository;
+import eu.eahub.repositories.core.PersonaRepository;
+import eu.eahub.repositories.stats.TwGolferRepository;
 import eu.eahub.services.server.GameServerService;
 import eu.eahub.steps.SocketWriter;
 import eu.eahub.utils.AccountUtils;
@@ -20,12 +23,14 @@ import org.springframework.stereotype.Service;
 
 import java.net.Socket;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static eu.eahub.services.server.GameServerService.ALL_TW;
 import static eu.eahub.utils.SocketUtils.getValueFromSocket;
 
 @Slf4j
@@ -41,6 +46,8 @@ public class AccountService {
     private final GameServerService gameServerService;
     private final SocketWriter socketWriter;
     private final EmailUtils emailUtils;
+    private final PersonaRepository personaRepository;
+    private final TwGolferRepository twGolferRepository;
 
     /**
      * Account creation
@@ -264,6 +271,10 @@ public class AccountService {
     }
 
     public void user(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+        if (socketWrapper.getPersonaConnectionEntity() != null && ALL_TW.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+            twUser(socket, socketData, socketWrapper);
+            return;
+        }
 //        String pers = getValueFromSocket(socketData.getInputMessage(), "PERS");
 
         Map<String, String> content = Stream.of(new String[][]{
@@ -274,5 +285,24 @@ public class AccountService {
 
         socketData.setOutputData(content);
         socketWriter.write(socket, socketData);
+    }
+
+    /**
+     * TW04 asks for another player's created golfer (CRPIN), uploaded with cusr whomi
+     */
+    private void twUser(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+        if (socketWrapper.getPersonaEntity() == null) {
+            socketWriter.writeText(socket, "usernusr", "");
+            return;
+        }
+        String vers = socketWrapper.getPersonaConnectionEntity().getVers();
+        String pers = LobbyTagField.decode(socketData.getInputMessage()).getOrDefault("PERS", "");
+        Map<String, String> content = new LinkedHashMap<>();
+        content.put("PERS", pers);
+        personaRepository.findByPers(pers)
+                .filter(persona -> persona.getDeletedOn() == null)
+                .flatMap(persona -> twGolferRepository.findByPersonaIdAndVers(persona.getId(), vers))
+                .ifPresent(golfer -> content.put("CRPIN", golfer.getData()));
+        socketWriter.writeTagFields(socket, socketData.getIdMessage(), content);
     }
 }

@@ -1,13 +1,16 @@
 package eu.eahub.services.core;
 
+import eu.eahub.dirtysdk.LobbyTagField;
 import eu.eahub.dto.Room;
 import eu.eahub.dto.SocketData;
 import eu.eahub.dto.SocketWrapper;
 import eu.eahub.entities.core.*;
 import eu.eahub.repositories.core.GameConnectionRepository;
+import eu.eahub.repositories.core.PersonaRepository;
 import eu.eahub.repositories.core.UserSetMemberRepository;
 import eu.eahub.repositories.core.UserSetRepository;
 import eu.eahub.services.server.SocketManager;
+import eu.eahub.services.stats.TwStatsService;
 import eu.eahub.steps.SocketWriter;
 import eu.eahub.utils.PersonaUtils;
 import jakarta.annotation.PostConstruct;
@@ -26,6 +29,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static eu.eahub.services.server.GameServerService.ALL_TW;
 import static eu.eahub.utils.SocketUtils.TAB_CHAR;
 import static eu.eahub.utils.SocketUtils.getValueFromSocket;
 
@@ -41,6 +45,8 @@ public class UserSetService {
     private final SocketManager socketManager;
     private final PersonaUtils personaUtils;
     private final RoomService roomService;
+    private final PersonaRepository personaRepository;
+    private final TwStatsService twStatsService;
 
     /**
      * Create a new UserSet
@@ -407,6 +413,10 @@ public class UserSetService {
     public void onln(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
         String pers = getValueFromSocket(socketData.getInputMessage(), "PERS");
         String vers = socketWrapper.getPersonaConnectionEntity().getVers();
+        if (ALL_TW.contains(vers)) {
+            twOnln(socket, socketData, socketWrapper);
+            return;
+        }
 
         SocketWrapper targetWrapper = socketManager.getSocketWrapperByPersonaNameAndVers(pers, vers);
         if (targetWrapper != null && targetWrapper.getPersonaEntity() != null) {
@@ -809,4 +819,20 @@ public class UserSetService {
         socketWrapper.setUserSetId(null);
     }
 
+    /**
+     * TW04 asks for a player's rank (R) and statistics (S), online or not, for the profile screen
+     */
+    private void twOnln(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+        if (socketWrapper.getPersonaEntity() == null) {
+            socketWriter.writeText(socket, "onlnnusr", "");
+            return;
+        }
+        String vers = socketWrapper.getPersonaConnectionEntity().getVers();
+        String pers = LobbyTagField.decode(socketData.getInputMessage()).getOrDefault("PERS", socketWrapper.getPersonaEntity().getPers());
+        PersonaEntity persona = personaRepository.findByPers(pers)
+                .filter(found -> found.getDeletedOn() == null)
+                .orElse(socketWrapper.getPersonaEntity());
+        TwStatsService.Standing standing = twStatsService.standing(persona, vers);
+        socketWriter.writeTagFields(socket, socketData.getIdMessage(), Map.of("R", String.valueOf(standing.rank()), "P", "0", "S", standing.packed()));
+    }
 }

@@ -35,6 +35,7 @@ public class BuddyService {
     private final BuddyRepository buddyRepository;
     private final MessageRepository messageRepository;
     private final SocketManager socketManager;
+    private final TwBuddyService twBuddyService;
 
     /**
      * AUTH - Authenticate to Buddy Service
@@ -44,6 +45,11 @@ public class BuddyService {
      * @param buddySocketWrapper the wrapper containing user data
      */
     public void auth(Socket socket, SocketData socketData, BuddySocketWrapper buddySocketWrapper) {
+        Optional<String> twVers = twBuddyService.authVers(socketData);
+        if (twVers.isPresent()) {
+            twBuddyService.auth(socket, socketData, buddySocketWrapper, twVers.get());
+            return;
+        }
         String prod = getValueFromSocket(socketData.getInputMessage(), "PROD");
         String vers = getValueFromSocket(socketData.getInputMessage(), "VERS");
         String lkey = getValueFromSocket(socketData.getInputMessage(), "LKEY");
@@ -79,6 +85,10 @@ public class BuddyService {
      * @param socketData the object to use to write the message
      */
     public void epgt(Socket socket, SocketData socketData) {
+        if (twBuddyService.isTw(socketManager.getBuddySocketWrapperBySocket(socket))) {
+            twBuddyService.other(socket, socketData);
+            return;
+        }
         String id = getValueFromSocket(socketData.getInputMessage(), "ID");
 
         // Can be completed with ADDR (mail address), and ENABL (T or F), likely to send messages as mail
@@ -95,6 +105,10 @@ public class BuddyService {
      * @param buddySocketWrapper the wrapper containing user data
      */
     public void rget(Socket socket, SocketData socketData, BuddySocketWrapper buddySocketWrapper) {
+        if (twBuddyService.isTw(buddySocketWrapper)) {
+            twBuddyService.rget(socket, socketData, buddySocketWrapper);
+            return;
+        }
         String id = getValueFromSocket(socketData.getInputMessage(), "ID");
         String list = getValueFromSocket(socketData.getInputMessage(), "LIST"); // B = buddies, I = Ignored
         // There is also PRES (presence) and PEND (pending) with Y or N
@@ -219,6 +233,10 @@ public class BuddyService {
      * @param buddySocketWrapper the wrapper containing user data
      */
     public void pset(Socket socket, SocketData socketData, BuddySocketWrapper buddySocketWrapper) {
+        if (twBuddyService.isTw(buddySocketWrapper)) {
+            twBuddyService.pset(socket, socketData, buddySocketWrapper);
+            return;
+        }
         String show = getValueFromSocket(socketData.getInputMessage(), "SHOW"); // CHAT, PASS (in-game), AWAY
         socketWriter.write(socket, socketData);
 
@@ -427,6 +445,10 @@ public class BuddyService {
      * @param buddySocketWrapper the wrapper containing user data
      */
     public void radd(Socket socket, SocketData socketData, BuddySocketWrapper buddySocketWrapper) {
+        if (twBuddyService.isTw(buddySocketWrapper)) {
+            twBuddyService.radd(socket, socketData, buddySocketWrapper);
+            return;
+        }
         String id = getValueFromSocket(socketData.getInputMessage(), "ID");
         String user = getValueFromSocket(socketData.getInputMessage(), "USER"); // Username to add
         String list = getValueFromSocket(socketData.getInputMessage(), "LIST"); // List type (mainly "I" for Ignored)
@@ -496,6 +518,10 @@ public class BuddyService {
      */
     @Transactional
     public void rdel(Socket socket, SocketData socketData, BuddySocketWrapper buddySocketWrapper) {
+        if (twBuddyService.isTw(buddySocketWrapper)) {
+            twBuddyService.rdel(socket, socketData, buddySocketWrapper);
+            return;
+        }
         String id = getValueFromSocket(socketData.getInputMessage(), "ID");
         String user = getValueFromSocket(socketData.getInputMessage(), "USER"); // Username to remove
         String list = getValueFromSocket(socketData.getInputMessage(), "LIST");
@@ -576,6 +602,10 @@ public class BuddyService {
      * @param buddySocketWrapper the wrapper containing user data
      */
     public void send(Socket socket, SocketData socketData, BuddySocketWrapper buddySocketWrapper) {
+        if (twBuddyService.isTw(buddySocketWrapper)) {
+            twBuddyService.send(socket, socketData, buddySocketWrapper);
+            return;
+        }
 //        String type = getValueFromSocket(socketData.getInputMessage(), "TYPE"); // Message type (usually "C")
         String user = getValueFromSocket(socketData.getInputMessage(), "USER"); // Target username
         String body = getValueFromSocket(socketData.getInputMessage(), "BODY"); // Message content
@@ -653,7 +683,11 @@ public class BuddyService {
      *
      * @param buddySocketWrapper the wrapper containing user data
      */
-    public void disc(BuddySocketWrapper buddySocketWrapper) {
+    public void disc(Socket socket, SocketData socketData, BuddySocketWrapper buddySocketWrapper) {
+        if (twBuddyService.isTw(buddySocketWrapper)) {
+            twBuddyService.disc(socket, socketData, buddySocketWrapper);
+            return;
+        }
         // Broadcast disconnect presence update to all buddies
         if (buddySocketWrapper != null && buddySocketWrapper.getPersonaEntity() != null) {
             broadcastPresenceUpdate(buddySocketWrapper.getPersonaEntity().getPers(), "DISC");
@@ -988,4 +1022,16 @@ public class BuddyService {
         socketWriter.write(socket, socketData);
     }
 
+    /**
+     * PING - TW04 Messenger answers the server's PING keep-alive with PING, which must not be echoed again
+     *
+     * @param socket             the socket to write into
+     * @param socketData         the object to use to write the message
+     * @param buddySocketWrapper the wrapper containing user data
+     */
+    public void ping(Socket socket, SocketData socketData, BuddySocketWrapper buddySocketWrapper) {
+        if (!twBuddyService.isTw(buddySocketWrapper)) {
+            socketWriter.write(socket, socketData);
+        }
+    }
 }

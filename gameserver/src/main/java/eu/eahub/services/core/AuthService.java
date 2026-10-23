@@ -1,8 +1,10 @@
 package eu.eahub.services.core;
 
+import eu.eahub.dirtysdk.LobbyTagField;
 import eu.eahub.dto.SocketData;
 import eu.eahub.dto.SocketWrapper;
 import eu.eahub.services.server.GameServerService;
+import eu.eahub.services.stats.TwNewsService;
 import eu.eahub.steps.SocketWriter;
 import eu.eahub.utils.Props;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static eu.eahub.services.server.GameServerService.ALL_TW;
 import static eu.eahub.utils.SocketUtils.SPACE_CHAR;
 import static eu.eahub.utils.SocketUtils.getValueFromSocket;
 
@@ -28,6 +31,8 @@ public class AuthService {
     private final GameServerService gameServerService;
     private final SocketWriter socketWriter;
     private final UserSetService userSetService;
+    private final RoomService roomService;
+    private final TwNewsService twNewsService;
 
     public void dir(Socket socket, SocketData socketData) {
         String vers = getValueFromSocket(socketData.getInputMessage(), "VERS");
@@ -58,7 +63,15 @@ public class AuthService {
         socketWriter.write(socket, socketData);
     }
 
-    public void addr(Socket socket, SocketData socketData) {
+    public void addr(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+        String name = gameServerService.getNameByPort(socket.getLocalPort());
+        if (ALL_TW.contains(name)) {
+            // Kept to reach players behind the same NAT
+            Map<String, String> fields = LobbyTagField.decode(socketData.getInputMessage());
+            socketWrapper.setReportedAddress(fields.getOrDefault("ADDR", ""));
+            socketWriter.writeTagFields(socket, socketData.getIdMessage(), fields);
+            return;
+        }
         socketWriter.write(socket, socketData);
     }
 
@@ -78,6 +91,14 @@ public class AuthService {
 
         String name = gameServerService.getNameByPort(socket.getLocalPort());
         log.debug("Detected game={} for port {}", name, socket.getLocalPort());
+        if (ALL_TW.contains(name)) {
+            // NAME=0 asks for the buddy server, any other NAME for the news text, both as plain text
+            String newsName = LobbyTagField.decode(socketData.getInputMessage()).getOrDefault("NAME", "0");
+            socketWriter.writeText(socket, socketData.getIdMessage(), "0".equals(newsName)
+                    ? props.getTcpHost() + ":" + props.getTcpBuddyPort() + "\n"
+                    : twNewsService.news(name));
+            return;
+        }
         if (name.startsWith("PS2_")) {
             tosUrl = contentUrl + "/tos-ps2/";
         }
@@ -108,6 +129,22 @@ public class AuthService {
     }
 
     public void sele(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+        String name = gameServerService.getNameByPort(socket.getLocalPort());
+        if (ALL_TW.contains(name)) {
+            // TW04 is only sent the room, user and message updates it subscribes to
+            Map<String, String> fields = LobbyTagField.decode(socketData.getInputMessage());
+            socketWrapper.setRoomUpdates(selected(fields, "ROOMS", socketWrapper.isRoomUpdates()));
+            socketWrapper.setUserUpdates(selected(fields, "USERS", socketWrapper.isUserUpdates()));
+            socketWrapper.setMessageUpdates(selected(fields, "MESGS", socketWrapper.isMessageUpdates()));
+            socketWriter.writeTagFields(socket, socketData.getIdMessage(), fields);
+            if (socketWrapper.isRoomUpdates()) {
+                roomService.twPushRooms(socket, name);
+            }
+            if (socketWrapper.isUserUpdates()) {
+                roomService.twPushRoomUsers(socket, socketWrapper);
+            }
+            return;
+        }
         String stats = getValueFromSocket(socketData.getInputMessage(), "STATS");
         String inGame = getValueFromSocket(socketData.getInputMessage(), "INGAME");
         String rooms = getValueFromSocket(socketData.getInputMessage(), "ROOMS", SPACE_CHAR); // Not the same separator
@@ -294,4 +331,7 @@ public class AuthService {
         socketWriter.write(socket, socketData);
     }
 
+    private static boolean selected(Map<String, String> fields, String key, boolean previous) {
+        return fields.containsKey(key) ? "1".equals(fields.get(key)) : previous;
+    }
 }

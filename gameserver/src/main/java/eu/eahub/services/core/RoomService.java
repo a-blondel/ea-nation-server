@@ -1,16 +1,21 @@
 package eu.eahub.services.core;
 
 import eu.eahub.config.GameServerConfig;
+import eu.eahub.dirtysdk.LobbyTagField;
 import eu.eahub.dto.Room;
 import eu.eahub.dto.SocketData;
 import eu.eahub.dto.SocketWrapper;
 import eu.eahub.entities.core.GameConnectionEntity;
 import eu.eahub.entities.core.GameEntity;
+import eu.eahub.entities.core.PersonaEntity;
+import eu.eahub.repositories.buddy.BuddyRepository;
 import eu.eahub.repositories.core.GameConnectionRepository;
 import eu.eahub.repositories.core.GameRepository;
 import eu.eahub.repositories.core.PersonaConnectionRepository;
 import eu.eahub.services.server.GameServerService;
 import eu.eahub.services.server.SocketManager;
+import eu.eahub.services.social.ChatHistoryService;
+import eu.eahub.services.stats.TwStatsService;
 import eu.eahub.steps.SocketWriter;
 import eu.eahub.utils.GameUtils;
 import eu.eahub.utils.PersonaUtils;
@@ -20,9 +25,12 @@ import org.springframework.stereotype.Service;
 
 import java.net.Socket;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static eu.eahub.services.server.GameServerService.ALL_TW;
 import static eu.eahub.services.server.GameServerService.PS2_FIFA08;
 import static eu.eahub.utils.SocketUtils.TAB_CHAR;
 import static eu.eahub.utils.SocketUtils.getValueFromSocket;
@@ -40,7 +48,12 @@ public class RoomService {
     private final PersonaUtils personaUtils;
     private final SocketManager socketManager;
     private final SocketWriter socketWriter;
-    private final List<Room> rooms = new ArrayList<>();
+    private final TwStatsService twStatsService;
+    private final TwChallengeService twChallengeService;
+    private final ChatHistoryService chatHistoryService;
+    private final BuddyRepository buddyRepository;
+    private final List<Room> rooms = new CopyOnWriteArrayList<>();
+    private final AtomicLong nextRoomId = new AtomicLong(1);
 
     /**
      * Distribute room change updates
@@ -77,6 +90,10 @@ public class RoomService {
      * @param socketWrapper The socket wrapper of current connection
      */
     public void move(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+        if (isTw(socket)) {
+            twMove(socket, socketData, socketWrapper);
+            return;
+        }
         String ident = getValueFromSocket(socketData.getInputMessage(), "IDENT");
         String name = getValueFromSocket(socketData.getInputMessage(), "NAME");
 
@@ -147,10 +164,15 @@ public class RoomService {
      * - DESC=D_OS44
      * - LVLRNG=-1
      *
-     * @param socket     The socket to write the response to
-     * @param socketData The socket data
+     * @param socket        The socket to write the response to
+     * @param socketData    The socket data
+     * @param socketWrapper The socket wrapper of current connection
      */
-    public void room(Socket socket, SocketData socketData) {
+    public void room(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+        if (isTw(socket)) {
+            twCreate(socket, socketData, socketWrapper);
+            return;
+        }
         socketData.setIdMessage("roomfull");
         socketWriter.write(socket, socketData);
     }
@@ -263,6 +285,10 @@ public class RoomService {
      * @param socketWrapper The socket wrapper of current connection
      */
     public void mesg(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+        if (isTw(socket)) {
+            twMesg(socket, socketData, socketWrapper);
+            return;
+        }
         socketWriter.write(socket, socketData);
 
         if (socketWrapper.getPersonaEntity() == null) {
@@ -345,10 +371,15 @@ public class RoomService {
     /**
      * Peek in a room
      *
-     * @param socket     The socket to write the response to
-     * @param socketData The socket data
+     * @param socket        The socket to write the response to
+     * @param socketData    The socket data
+     * @param socketWrapper The socket wrapper of current connection
      */
-    public void peek(Socket socket, SocketData socketData) {
+    public void peek(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+        if (isTw(socket)) {
+            twPeek(socket, socketData, socketWrapper);
+            return;
+        }
         socketWriter.write(socket, socketData);
     }
 
@@ -373,6 +404,10 @@ public class RoomService {
     }
 
     public void removePersonaFromRoom(String vers, SocketWrapper wrapper) {
+        if (ALL_TW.contains(vers)) {
+            twJoin(wrapper, null, null);
+            return;
+        }
         Room room = getRoomByVers(vers);
         if (room != null) {
             Long personaId = wrapper.getPersonaEntity().getId();
@@ -485,11 +520,348 @@ public class RoomService {
 
     public void generateRooms() {
         for (GameServerConfig.GameServer server : gameServerConfig.getServers()) {
-            Room room = new Room();
-            room.setId(rooms.size() + 1L);
-            room.setName(server.getName());
-            room.setVers(server.getName());
-            rooms.add(room);
+            if (server.getRooms() != null && !server.getRooms().getNames().isEmpty()) {
+                // Games that list rooms by name get every configured room
+                for (String name : server.getRooms().getNames()) {
+                    addRoom(server.getName(), name, "", server.getRooms().getLimit(), false);
+                }
+            } else {
+                addRoom(server.getName(), server.getName(), "", 50, false);
+            }
+        }
+    }
+
+    private Room addRoom(String vers, String name, String password, int limit, boolean created) {
+        Room room = new Room();
+        room.setId(nextRoomId.getAndIncrement());
+        room.setName(name);
+        room.setVers(vers);
+        room.setPassword(password);
+        room.setLimit(limit);
+        room.setCreated(created);
+        rooms.add(room);
+        return room;
+    }
+
+    public Room getRoomByName(String vers, String name) {
+        return rooms.stream()
+                .filter(room -> room.getVers().equals(vers) && room.getName().equals(name))
+                .findFirst()
+                .orElse(null);
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------
+    // Tiger Woods PGA Tour 2004: rooms are listed and joined by name, players can create rooms, and each client is only
+    // sent the room, user and message updates it subscribed to with sele. +usr records are indexed by position in the
+    // room's roster, so the roster is sent again whenever it changes
+    // ---------------------------------------------------------------------------------------------------------------
+
+    private static final int ATTR_IGNORE = 0x200000;
+    private static final int ATTR_CHALLENGE = 0x40000000;
+    private static final int MAX_MESSAGE_LENGTH = 1023;
+
+    private boolean isTw(Socket socket) {
+        return ALL_TW.contains(gameServerService.getNameByPort(socket.getLocalPort()));
+    }
+
+    private void twFail(Socket socket, String verb, String code) {
+        socketWriter.writeText(socket, verb + code, "");
+    }
+
+    private GameServerConfig.RoomConfig roomConfig(String vers) {
+        return gameServerService.getServerByName(vers).map(GameServerConfig.GameServer::getRooms).orElse(new GameServerConfig.RoomConfig());
+    }
+
+    private static String vers(SocketWrapper wrapper) {
+        return wrapper.getPersonaConnectionEntity().getVers();
+    }
+
+    private void twCreate(Socket socket, SocketData socketData, SocketWrapper wrapper) {
+        if (wrapper.getPersonaEntity() == null) {
+            twFail(socket, "room", "nusr");
+            return;
+        }
+        Map<String, String> fields = LobbyTagField.decode(socketData.getInputMessage());
+        String vers = vers(wrapper);
+        GameServerConfig.RoomConfig config = roomConfig(vers);
+        String name = fields.getOrDefault("NAME", "");
+        synchronized (rooms) {
+            if (config.getCreatePattern().isEmpty() || name.length() > config.getNameLength() || !name.matches(config.getCreatePattern())) {
+                twFail(socket, "room", "name");
+                return;
+            }
+            if (getRoomByName(vers, name) != null) {
+                twFail(socket, "room", "dupl");
+                return;
+            }
+            if (rooms.stream().filter(room -> room.getVers().equals(vers)).count() >= config.getMax()) {
+                twFail(socket, "room", "full");
+                return;
+            }
+            int limit;
+            try {
+                limit = Integer.parseInt(fields.getOrDefault("MAX", String.valueOf(config.getLimit())));
+            } catch (NumberFormatException e) {
+                limit = config.getLimit();
+            }
+            Room room = addRoom(vers, name, fields.getOrDefault("PASS", ""), Math.clamp(limit, 1, config.getLimit()), true);
+            twJoin(wrapper, room, "room");
+        }
+    }
+
+    private void twMove(Socket socket, SocketData socketData, SocketWrapper wrapper) {
+        if (wrapper.getPersonaEntity() == null) {
+            twFail(socket, "move", "nusr");
+            return;
+        }
+        Map<String, String> fields = LobbyTagField.decode(socketData.getInputMessage());
+        String name = fields.getOrDefault("NAME", "");
+        Room room = null;
+        if (!name.isEmpty()) {
+            room = getRoomByName(vers(wrapper), name);
+            if (room == null) {
+                twFail(socket, "move", "name");
+                return;
+            }
+            if (!room.getPassword().isEmpty() && !room.getPassword().equals(fields.getOrDefault("PASS", ""))) {
+                twFail(socket, "move", "pass");
+                return;
+            }
+            if (!room.getPersonaIds().contains(wrapper.getPersonaEntity().getId()) && room.getPersonaIds().size() >= room.getLimit()) {
+                twFail(socket, "move", "full");
+                return;
+            }
+        }
+        twJoin(wrapper, room, "move");
+    }
+
+    /**
+     * Move a player to a room, or out of their room (room null), then send the updates
+     * A pending challenge is dropped when the player changes room, and an empty created room is removed
+     *
+     * @param wrapper The player
+     * @param room    The room to join, or null to leave
+     * @param verb    The reply to send the player (room or move), or null when they are leaving the lobby
+     */
+    private void twJoin(SocketWrapper wrapper, Room room, String verb) {
+        if (wrapper.getPersonaEntity() == null) {
+            return;
+        }
+        Long personaId = wrapper.getPersonaEntity().getId();
+        Room previous = getRoomByPersonaId(personaId);
+        if (previous != room) {
+            twChallengeService.cancel(wrapper, true);
+            if (previous != null) {
+                previous.getPersonaIds().remove(personaId);
+                if (previous.isCreated() && previous.getPersonaIds().isEmpty() && previous.getGameIds().isEmpty()) {
+                    rooms.remove(previous);
+                }
+            }
+            if (room != null) {
+                room.getPersonaIds().add(personaId);
+            }
+        }
+        String vers = vers(wrapper);
+        if (verb != null) {
+            socketWriter.writeTagFields(wrapper.getSocket(), verb, Map.of("NAME", room == null ? "" : room.getName(),
+                    "COUNT", String.valueOf(room == null ? 0 : twOccupants(vers, room).size())));
+        }
+        log.info("TW04 lobby: {} {} {}", wrapper.getPersonaEntity().getPers(), room == null ? "left" : "joined",
+                room == null ? previous == null ? "" : previous.getName() : room.getName());
+        twBroadcastRooms(vers);
+        if (previous != null) {
+            twBroadcastUsers(vers, previous);
+        }
+        if (room != null && room != previous) {
+            twBroadcastUsers(vers, room);
+        }
+        if (room == null && verb != null && wrapper.isUserUpdates()) {
+            twPushUsers(wrapper.getSocket(), wrapper, List.of());
+        }
+    }
+
+    private void twPeek(Socket socket, SocketData socketData, SocketWrapper wrapper) {
+        if (wrapper.getPersonaEntity() == null) {
+            twFail(socket, "peek", "nusr");
+            return;
+        }
+        Room room = getRoomByName(vers(wrapper), LobbyTagField.decode(socketData.getInputMessage()).getOrDefault("NAME", ""));
+        List<SocketWrapper> users = room == null ? List.of() : twOccupants(vers(wrapper), room);
+        socketWriter.writeTagFields(socket, "peek", Map.of("COUNT", String.valueOf(users.size())));
+        if (wrapper.isUserUpdates()) {
+            twPushUsers(socket, wrapper, users);
+        }
+    }
+
+    /**
+     * Send a client the room list, as requested with sele ROOMS=1
+     *
+     * @param socket The socket to write the response to
+     * @param vers   The game version
+     */
+    public void twPushRooms(Socket socket, String vers) {
+        for (Room room : rooms) {
+            if (room.getVers().equals(vers)) {
+                socketWriter.writeTagFields(socket, "+rom", Map.of("I", String.valueOf(room.getId()), "N", room.getName(), "H", "",
+                        "T", String.valueOf(twOccupants(vers, room).size()), "A", "0", "F", "0"));
+            }
+        }
+    }
+
+    /**
+     * Send a client its room's users, as requested with sele USERS=1
+     *
+     * @param socket  The socket to write the response to
+     * @param wrapper The socket wrapper of the client
+     */
+    public void twPushRoomUsers(Socket socket, SocketWrapper wrapper) {
+        Room room = wrapper.getPersonaEntity() == null ? null : getRoomByPersonaId(wrapper.getPersonaEntity().getId());
+        if (room != null) {
+            twPushUsers(socket, wrapper, twOccupants(vers(wrapper), room));
+        }
+    }
+
+    private void twBroadcastRooms(String vers) {
+        for (SocketWrapper client : socketManager.getSocketWrapperByVers(vers)) {
+            if (client.isRoomUpdates()) {
+                twPushRooms(client.getSocket(), vers);
+            }
+        }
+    }
+
+    /**
+     * Send the room's roster to everyone in the room who subscribed to user updates (e.g. after a result changes a rank)
+     *
+     * @param vers The game version
+     * @param room The room
+     */
+    public void twBroadcastUsers(String vers, Room room) {
+        List<SocketWrapper> users = twOccupants(vers, room);
+        for (SocketWrapper client : socketManager.getSocketWrapperByVers(vers)) {
+            if (client.isUserUpdates() && client.getPersonaEntity() != null && room.getPersonaIds().contains(client.getPersonaEntity().getId())) {
+                twPushUsers(client.getSocket(), client, users);
+            }
+        }
+    }
+
+    private List<SocketWrapper> twOccupants(String vers, Room room) {
+        return socketManager.getSocketWrapperByVers(vers).stream()
+                .filter(client -> client.getPersonaEntity() != null && room.getPersonaIds().contains(client.getPersonaEntity().getId()))
+                .sorted(Comparator.comparing(client -> client.getPersonaEntity().getPers()))
+                .toList();
+    }
+
+    private void twPushUsers(Socket socket, SocketWrapper recipient, List<SocketWrapper> users) {
+        Map<Long, TwStatsService.Standing> standings = twStatsService.standings(users.stream().map(SocketWrapper::getPersonaEntity).toList(),
+                vers(recipient));
+        for (int i = 0; i < users.size(); i++) {
+            PersonaEntity persona = users.get(i).getPersonaEntity();
+            TwStatsService.Standing standing = standings.get(persona.getId());
+            socketWriter.writeTagFields(socket, "+usr", Map.of("I", String.valueOf(i), "N", persona.getPers(), "P", "good",
+                    "A", twPeerAddress(users.get(i), recipient), "R", String.valueOf(standing.rank()), "S", standing.packed()));
+        }
+        // An index without N removes the previous occupant from the client's list
+        for (int i = users.size(); i < recipient.getRosterSize(); i++) {
+            socketWriter.writeTagFields(socket, "+usr", Map.of("I", String.valueOf(i)));
+        }
+        recipient.setRosterSize(users.size());
+    }
+
+    /**
+     * The address a player gives another to reach them
+     * PCSX2 Sockets gives every guest the same virtual address, so prefer the TCP source, except for real console LAN
+     * addresses behind a shared NAT
+     *
+     * @param peer   The player to reach
+     * @param viewer The player who connects to them
+     * @return The address
+     */
+    public String twPeerAddress(SocketWrapper peer, SocketWrapper viewer) {
+        String observed = peer.getSocket().getInetAddress().getHostAddress();
+        String viewerAddress = viewer.getSocket().getInetAddress().getHostAddress();
+        String reported = peer.getReportedAddress();
+        if (observed.equals(viewerAddress) && !reported.startsWith("192.0.2.") && isLanIpv4(reported)) {
+            return reported;
+        }
+        return observed.startsWith("::ffff:") ? observed.substring(7) : observed;
+    }
+
+    private static boolean isLanIpv4(String address) {
+        String[] parts = address.split("\\.", -1);
+        if (parts.length != 4) {
+            return false;
+        }
+        for (String part : parts) {
+            if (!part.matches("[0-9]{1,3}") || Integer.parseInt(part) > 255) {
+                return false;
+            }
+        }
+        return !address.equals("0.0.0.0") && !address.startsWith("127.");
+    }
+
+    /**
+     * A session set up in a room has ended: an empty created room can now be removed
+     *
+     * @param vers   The game version
+     * @param roomId The room ID
+     * @param gameId The game ID
+     */
+    public void removeSessionFromRoom(String vers, Long roomId, Long gameId) {
+        Room room = getRoomById(roomId);
+        if (room != null) {
+            room.getGameIds().remove(gameId);
+            if (room.isCreated() && room.getPersonaIds().isEmpty() && room.getGameIds().isEmpty()) {
+                rooms.remove(room);
+                twBroadcastRooms(vers);
+            }
+        }
+    }
+
+    private boolean blocks(SocketWrapper owner, SocketWrapper target) {
+        return buddyRepository.existsByFromPersonaIdAndToPersonaIdAndList(owner.getPersonaEntity().getId(), target.getPersonaEntity().getId(), "I");
+    }
+
+    private void twMesg(Socket socket, SocketData socketData, SocketWrapper sender) {
+        if (sender.getPersonaEntity() == null) {
+            twFail(socket, "mesg", "nusr");
+            return;
+        }
+        Map<String, String> fields = LobbyTagField.decode(socketData.getInputMessage());
+        String target = fields.getOrDefault("PRIV", "");
+        String text = fields.getOrDefault("TEXT", "");
+        if (text.length() > MAX_MESSAGE_LENGTH) {
+            twFail(socket, "mesg", "full");
+            return;
+        }
+        String vers = vers(sender);
+        int attr = LobbyTagField.decodeFlags(fields.getOrDefault("ATTR", "")) & ~ATTR_IGNORE;
+        SocketWrapper targetWrapper = target.isEmpty() ? null : socketManager.getSocketWrapperByPersonaNameAndVers(target, vers);
+        Room senderRoom = getRoomByPersonaId(sender.getPersonaEntity().getId());
+        if ((attr & ATTR_CHALLENGE) != 0) {
+            Room targetRoom = targetWrapper == null || targetWrapper.getPersonaEntity() == null ? null
+                    : getRoomByPersonaId(targetWrapper.getPersonaEntity().getId());
+            twChallengeService.message(socket, sender, senderRoom, targetWrapper, targetRoom,
+                    targetWrapper != null && targetWrapper.getPersonaEntity() != null && blocks(targetWrapper, sender), text, attr);
+            return;
+        }
+        socketWriter.writeTagFields(socket, "mesg", Map.of());
+        if (!target.isEmpty() && (targetWrapper == null || targetWrapper.getPersonaEntity() == null || blocks(targetWrapper, sender))) {
+            return;
+        }
+        chatHistoryService.add(sender.getPersonaEntity().getId(), sender.getPersonaEntity().getPers(),
+                targetWrapper == null ? 0 : targetWrapper.getPersonaEntity().getId(),
+                senderRoom == null ? "" : senderRoom.getName(), text);
+        String flags = LobbyTagField.encodeFlags(target.isEmpty() ? attr : attr | TwChallengeService.ATTR_PRIVATE);
+        for (SocketWrapper other : socketManager.getSocketWrapperByVers(vers)) {
+            if (other.getPersonaEntity() == null || !other.isMessageUpdates()) {
+                continue;
+            }
+            boolean receives = target.isEmpty()
+                    ? senderRoom != null && senderRoom.getPersonaIds().contains(other.getPersonaEntity().getId())
+                    : other == targetWrapper || other == sender;
+            if (receives && !blocks(other, sender)) {
+                socketWriter.writeTagFields(other.getSocket(), "+msg", Map.of("N", sender.getPersonaEntity().getPers(), "T", text, "F", flags));
+            }
         }
     }
 }

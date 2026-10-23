@@ -1,5 +1,6 @@
 package eu.eahub.services.core;
 
+import eu.eahub.dirtysdk.LobbyTagField;
 import eu.eahub.dto.Room;
 import eu.eahub.dto.SocketData;
 import eu.eahub.dto.SocketWrapper;
@@ -14,6 +15,7 @@ import eu.eahub.repositories.core.AccountRepository;
 import eu.eahub.repositories.core.PersonaConnectionRepository;
 import eu.eahub.repositories.core.PersonaRepository;
 import eu.eahub.services.server.SocketManager;
+import eu.eahub.services.social.ChatHistoryService;
 import eu.eahub.steps.SocketWriter;
 import eu.eahub.utils.AccountUtils;
 import eu.eahub.utils.PersonaUtils;
@@ -36,6 +38,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static eu.eahub.services.server.GameServerService.ALL_MOH;
+import static eu.eahub.services.server.GameServerService.ALL_TW;
 import static eu.eahub.utils.HexUtils.formatHexString;
 import static eu.eahub.utils.SocketUtils.getValueFromSocket;
 
@@ -55,6 +58,7 @@ public class PersonaService {
     private final FeedbackTypeRepository feedbackTypeRepository;
     private final RoomService roomService;
     private final PersonaUtils personaUtils;
+    private final ChatHistoryService chatHistoryService;
 
     /**
      * Persona creation
@@ -243,6 +247,10 @@ public class PersonaService {
                     {"LA", socket.getInetAddress().getHostAddress()},
                     {"IDLE", "100000"},
             }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+            // TW04's tournament startup rejects an absent or empty EX-GAME
+            if (ALL_TW.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+                content.put("EX-GAME", "0");
+            }
 
             socketData.setOutputData(content);
             socketWriter.write(socket, socketData);
@@ -373,6 +381,10 @@ public class PersonaService {
      * @param socketWrapper the wrapper containing user data
      */
     public void rept(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+        if (socketWrapper.getPersonaConnectionEntity() != null && ALL_TW.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+            twRept(socket, socketData, socketWrapper);
+            return;
+        }
         String pers = getValueFromSocket(socketData.getInputMessage(), "PERS"); // Target persona name
         //String text = getValueFromSocket(socketData.getInputMessage(), "TEXT"); // Optional text comment
         String prod = getValueFromSocket(socketData.getInputMessage(), "PROD"); // Product version (goes into VERS)
@@ -430,7 +442,48 @@ public class PersonaService {
     }
 
 
+    /**
+     * TW04 report abuse: sends PERS PROD LANG, without a feedback type
+     * Stored as a "Report abuse" feedback with the room and the last hour of relevant chat, at most once every ten minutes
+     * per pair of players
+     */
+    private void twRept(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+        if (socketWrapper.getPersonaEntity() == null) {
+            socketWriter.writeText(socket, "reptnusr", "");
+            return;
+        }
+        PersonaEntity fromPersona = socketWrapper.getPersonaEntity();
+        String pers = LobbyTagField.decode(socketData.getInputMessage()).getOrDefault("PERS", "");
+        Optional<PersonaEntity> toPersona = personaRepository.findByPers(pers).filter(persona -> persona.getDeletedOn() == null);
+        Optional<FeedbackTypeEntity> abuse = feedbackTypeRepository.findByNumber(BigDecimal.ZERO);
+        if (toPersona.isPresent() && abuse.isPresent() && !toPersona.get().getId().equals(fromPersona.getId())
+                && !feedbackRepository.existsByFromPersonaIdAndToPersonaIdAndFeedbackTypeIdAndCreatedOnAfter(fromPersona.getId(),
+                toPersona.get().getId(), abuse.get().getId(), LocalDateTime.now().minusMinutes(10))) {
+            Room room = roomService.getRoomByPersonaId(fromPersona.getId());
+            String roomName = room == null ? "" : room.getName();
+            StringBuilder text = new StringBuilder();
+            for (ChatHistoryService.Line line : chatHistoryService.between(fromPersona.getId(), toPersona.get().getId(), roomName, 3600, 60)) {
+                text.append(line.fromName()).append(line.to() == 0 ? " (room): " : " (private): ").append(line.text().replace('\n', ' ')).append('\n');
+            }
+            FeedbackEntity feedbackEntity = new FeedbackEntity();
+            feedbackEntity.setFromPersona(fromPersona);
+            feedbackEntity.setToPersona(toPersona.get());
+            feedbackEntity.setVers(socketWrapper.getPersonaConnectionEntity().getVers());
+            feedbackEntity.setFeedbackType(abuse.get());
+            feedbackEntity.setCreatedOn(LocalDateTime.now());
+            feedbackEntity.setRoom(roomName);
+            feedbackEntity.setText(text.toString());
+            feedbackRepository.save(feedbackEntity);
+            log.info("Abuse report from {} about {}", fromPersona.getPers(), toPersona.get().getPers());
+        }
+        socketWriter.writeTagFields(socket, socketData.getIdMessage(), Map.of());
+    }
+
     public void addRoomInfo(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+        // TW04 receives its named rooms through the ROOMS subscription
+        if (ALL_TW.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+            return;
+        }
         // Some games don't use pre-match rooms but requires a room ID in order to work so we add one by default
         if (ALL_MOH.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             Long roomId = roomService.getRoomByVers(socketWrapper.getPersonaConnectionEntity().getVers()).getId();
