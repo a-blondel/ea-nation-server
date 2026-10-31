@@ -36,4 +36,10 @@ public class FeedbackEntity {
 
     @Column(name = "CREATED_ON", nullable = false)
     private LocalDateTime createdOn;
+
+    @Column(name = "ROOM", length = 64)
+    private String room;
+
+    @Column(name = "TEXT")
+    private String text;
 }

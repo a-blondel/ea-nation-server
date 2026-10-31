@@ -23,6 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static eu.eahub.services.server.GameServerService.ALL_TW;
 import static eu.eahub.services.server.GameServerService.PS2_FIFA08;
 import static eu.eahub.utils.SocketUtils.TAB_CHAR;
 import static eu.eahub.utils.SocketUtils.getValueFromSocket;
@@ -40,6 +41,7 @@ public class RoomService {
     private final PersonaUtils personaUtils;
     private final SocketManager socketManager;
     private final SocketWriter socketWriter;
+    private final TwRoomService twRoomService;
     private final List<Room> rooms = new ArrayList<>();
 
     /**
@@ -77,6 +79,10 @@ public class RoomService {
      * @param socketWrapper The socket wrapper of current connection
      */
     public void move(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+        if (isTw(socket)) {
+            twRoomService.move(socket, socketData, socketWrapper);
+            return;
+        }
         String ident = getValueFromSocket(socketData.getInputMessage(), "IDENT");
         String name = getValueFromSocket(socketData.getInputMessage(), "NAME");
 
@@ -147,10 +153,15 @@ public class RoomService {
      * - DESC=D_OS44
      * - LVLRNG=-1
      *
-     * @param socket     The socket to write the response to
-     * @param socketData The socket data
+     * @param socket        The socket to write the response to
+     * @param socketData    The socket data
+     * @param socketWrapper The socket wrapper of current connection
      */
-    public void room(Socket socket, SocketData socketData) {
+    public void room(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+        if (isTw(socket)) {
+            twRoomService.room(socket, socketData, socketWrapper);
+            return;
+        }
         socketData.setIdMessage("roomfull");
         socketWriter.write(socket, socketData);
     }
@@ -263,6 +274,10 @@ public class RoomService {
      * @param socketWrapper The socket wrapper of current connection
      */
     public void mesg(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+        if (isTw(socket)) {
+            twRoomService.mesg(socket, socketData, socketWrapper);
+            return;
+        }
         socketWriter.write(socket, socketData);
 
         if (socketWrapper.getPersonaEntity() == null) {
@@ -345,10 +360,15 @@ public class RoomService {
     /**
      * Peek in a room
      *
-     * @param socket     The socket to write the response to
-     * @param socketData The socket data
+     * @param socket        The socket to write the response to
+     * @param socketData    The socket data
+     * @param socketWrapper The socket wrapper of current connection
      */
-    public void peek(Socket socket, SocketData socketData) {
+    public void peek(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+        if (isTw(socket)) {
+            twRoomService.peek(socket, socketData, socketWrapper);
+            return;
+        }
         socketWriter.write(socket, socketData);
     }
 
@@ -373,6 +393,10 @@ public class RoomService {
     }
 
     public void removePersonaFromRoom(String vers, SocketWrapper wrapper) {
+        if (ALL_TW.contains(vers)) {
+            twRoomService.endPersonaConnection(wrapper);
+            return;
+        }
         Room room = getRoomByVers(vers);
         if (room != null) {
             Long personaId = wrapper.getPersonaEntity().getId();
@@ -483,8 +507,16 @@ public class RoomService {
                 .orElse(null);
     }
 
+    private boolean isTw(Socket socket) {
+        return ALL_TW.contains(gameServerService.getNameByPort(socket.getLocalPort()));
+    }
+
     public void generateRooms() {
         for (GameServerConfig.GameServer server : gameServerConfig.getServers()) {
+            if (ALL_TW.contains(server.getName())) {
+                twRoomService.generateRooms(server.getName());
+                continue;
+            }
             Room room = new Room();
             room.setId(rooms.size() + 1L);
             room.setName(server.getName());

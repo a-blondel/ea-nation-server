@@ -30,4 +30,7 @@ public class BuddyEntity {
 
     @Column(name = "STATUS", length = 1, nullable = false)
     private String status;
+
+    @Column(name = "GROUP_NAME", length = 64)
+    private String groupName;
 }

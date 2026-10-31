@@ -3,6 +3,7 @@ package eu.eahub.entities.core;
 import eu.eahub.entities.stats.MohhGameReportEntity;
 import eu.eahub.entities.stats.NfsGameReportEntity;
 import eu.eahub.entities.stats.NhlGameReportEntity;
+import eu.eahub.entities.stats.TwGameReportEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -46,4 +47,7 @@ public class GameConnectionEntity {
 
     @OneToOne(mappedBy = "gameConnection", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private NhlGameReportEntity nhlGameReport;
+
+    @OneToOne(mappedBy = "gameConnection", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private TwGameReportEntity twGameReport;
 }

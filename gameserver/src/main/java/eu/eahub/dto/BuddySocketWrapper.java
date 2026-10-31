@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import java.net.Socket;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 @AllArgsConstructor
@@ -22,4 +23,6 @@ public class BuddySocketWrapper {
     private volatile PersonaEntity personaEntity;
     private volatile String presence; // CHAT = online, PASS(ive) = in-game, AWAY = idle
     private volatile Set<String> buddyList = new HashSet<>();
+    private volatile Map<String, String> presenceFields = Map.of(); // Presence sent to buddies (TW04: SHOW, STAT, PROD)
+    private volatile String keepAlive = "~png"; // Keep-alive message sent every 20 seconds
 }

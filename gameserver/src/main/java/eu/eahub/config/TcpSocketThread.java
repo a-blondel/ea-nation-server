@@ -6,6 +6,7 @@ import eu.eahub.dto.SocketWrapper;
 import eu.eahub.services.core.GameService;
 import eu.eahub.services.core.PersonaService;
 import eu.eahub.services.core.UserSetService;
+import eu.eahub.services.social.BuddyService;
 import eu.eahub.services.server.SocketManager;
 import eu.eahub.steps.SocketReader;
 import eu.eahub.steps.SocketWriter;
@@ -32,6 +33,7 @@ public class TcpSocketThread implements Runnable {
     private final PersonaService personaService;
     private final GameService gameService;
     private final UserSetService userSetService;
+    private final BuddyService buddyService;
     private ScheduledExecutorService pingExecutor;
 
     @Override
@@ -66,6 +68,7 @@ public class TcpSocketThread implements Runnable {
                 if (buddySocketWrapper != null) {
                     playerInfo = SocketUtils.getBuddyPlayerInfo(buddySocketWrapper);
                     socketManager.removeBuddySocket(buddySocketWrapper.getIdentifier());
+                    buddyService.endBuddyConnection(buddySocketWrapper);
                 } else {
                     log.warn("No SocketWrapper found for socket: {}", clientSocket.getRemoteSocketAddress());
                 }
@@ -75,7 +78,8 @@ public class TcpSocketThread implements Runnable {
     }
 
     private void png(Socket socket) {
-        SocketData socketData = new SocketData("~png", null, null);
+        BuddySocketWrapper buddySocketWrapper = socketManager.getBuddySocketWrapperBySocket(socket);
+        SocketData socketData = new SocketData(buddySocketWrapper != null ? buddySocketWrapper.getKeepAlive() : "~png", null, null);
         socketWriter.write(socket, socketData);
     }
 }

@@ -1,10 +1,13 @@
 package eu.eahub.services.stats;
 
+import eu.eahub.dto.Room;
+import eu.eahub.entities.core.GameEntity;
 import eu.eahub.dto.SocketData;
 import eu.eahub.dto.SocketWrapper;
 import eu.eahub.enums.LeaderboardLabel;
 import eu.eahub.services.core.GameService;
 import eu.eahub.services.core.RoomService;
+import eu.eahub.services.core.TwRoomService;
 import eu.eahub.services.core.UserSetService;
 import eu.eahub.services.server.GameServerService;
 import eu.eahub.steps.SocketWriter;
@@ -33,8 +36,10 @@ public class StatsService {
     private final FifaStatsService fifaStatsService;
     private final GameService gameService;
     private final RoomService roomService;
+    private final TwRoomService twRoomService;
     private final NfsRankService nfsRankService;
     private final UserSetService userSetService;
+    private final TwStatsService twStatsService;
 
     /**
      * Retrieve ranking categories
@@ -75,7 +80,9 @@ public class StatsService {
      * @param socketWrapper The socket wrapper of current connection
      */
     public void snap(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
-        if (ALL_MOH.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+        if (ALL_TW.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+            twStatsService.snap(socket, socketData, socketWrapper);
+        } else if (ALL_MOH.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             mohhStatsService.snap(socket, socketData, socketWrapper);
         } else if (ALL_NHL.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
             nhlStatsService.snap(socket, socketData, socketWrapper);
@@ -97,6 +104,19 @@ public class StatsService {
      */
     @Transactional
     public void rank(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+        if (socketWrapper != null && socketWrapper.getPersonaConnectionEntity() != null
+                && ALL_TW.contains(socketWrapper.getPersonaConnectionEntity().getVers())) {
+            // The match counts once; it then ends, and the room's roster is sent again with the new ranks
+            GameEntity game = twStatsService.rank(socket, socketData, socketWrapper);
+            if (game != null) {
+                gameService.endSession(game, "reported");
+                Room room = twRoomService.getRoomByPersonaId(socketWrapper.getPersonaEntity().getId());
+                if (room != null) {
+                    twRoomService.broadcastUsers(socketWrapper.getPersonaConnectionEntity().getVers(), room);
+                }
+            }
+            return;
+        }
         socketWriter.write(socket, socketData);
         if (socketWrapper == null) {
             log.warn("SocketWrapper is null for socket: {}", socket);
@@ -149,5 +169,4 @@ public class StatsService {
         socketData.setOutputData(content);
         socketWriter.write(socket, socketData);
     }
-
 }

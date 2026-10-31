@@ -54,6 +54,7 @@ public enum Game {
 //    MEDAL_OF_HONOR_HEROES_2_WII("[Wii] Medal of Honor: Heroes 2", "WII_MOH08", GameGenre.FPS),
 
     // GOLF genre
+    TIGER_WOODS_PGA_TOUR_2004_PS2("[PS2] Tiger Woods PGA Tour 2004", "PS2_TW04", GameGenre.GOLF),
     TIGER_WOODS_PGA_TOUR_07_PSP("[PSP] Tiger Woods PGA Tour 07", "PSP_TW07", GameGenre.GOLF),
     TIGER_WOODS_PGA_TOUR_08_PSP("[PSP] Tiger Woods PGA Tour 08", "PSP_TW08", GameGenre.GOLF),
     TIGER_WOODS_PGA_TOUR_10_PSP("[PSP] Tiger Woods PGA Tour 10", "PSP_TW10", GameGenre.GOLF);

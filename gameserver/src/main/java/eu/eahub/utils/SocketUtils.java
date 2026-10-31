@@ -18,21 +18,6 @@ public class SocketUtils {
     public static final String NEWLINE_CHAR = "\n";
 
     /**
-     * Calculate length of the content to parse
-     *
-     * @param buffer  the request buffer (only efficient way to get the length)
-     * @param lastPos the position to begin in the buffer (there can be multiple messages in a buffer)
-     * @return int - the size of the content
-     */
-    public static int getlength(byte[] buffer, int lastPos) {
-        StringBuilder size = new StringBuilder();
-        for (int i = lastPos + 8; i < lastPos + 12; i++) {
-            size.append(String.format("%02x", buffer[i]));
-        }
-        return Integer.parseInt(size.toString(), 16);
-    }
-
-    /**
      * Get the value from a key in a socket data
      * E.g. : data = "key1=value1\nkey2=value
      * getValueFromSocket(data, "key1") returns "value1"

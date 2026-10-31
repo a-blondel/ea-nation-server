@@ -96,10 +96,13 @@ public class SocketProcessor {
                 buddyService.grvk(socket, socketData, buddySocketWrapper);
                 break;
             case ("DISC"):
-                buddyService.disc(buddySocketWrapper);
+                buddyService.disc(socket, socketData, buddySocketWrapper);
+                break;
+            case ("PING"):
+                buddyService.ping(socket, socketData, buddySocketWrapper);
                 break;
             case ("addr"):
-                authService.addr(socket, socketData);
+                authService.addr(socket, socketData, socketWrapper);
                 break;
             case ("skey"):
                 authService.skey(socket, socketData);
@@ -129,7 +132,7 @@ public class SocketProcessor {
                 accountService.acct(socket, socketData);
                 break;
             case ("edit"):
-                accountService.edit(socket, socketData);
+                accountService.edit(socket, socketData, socketWrapper);
                 break;
             case ("auth"):
                 accountService.auth(socket, socketData, socketWrapper);
@@ -165,7 +168,7 @@ public class SocketProcessor {
                 roomService.arom(socket, socketData);
                 break;
             case ("room"):
-                roomService.room(socket, socketData);
+                roomService.room(socket, socketData, socketWrapper);
                 break;
             case ("move"):
                 roomService.move(socket, socketData, socketWrapper);
@@ -174,7 +177,7 @@ public class SocketProcessor {
                 roomService.mesg(socket, socketData, socketWrapper);
                 break;
             case ("peek"):
-                roomService.peek(socket, socketData);
+                roomService.peek(socket, socketData, socketWrapper);
                 break;
             case ("cate"):
                 statsService.cate(socket, socketData, socketWrapper);
@@ -184,6 +187,9 @@ public class SocketProcessor {
                 break;
             case ("rank"):
                 statsService.rank(socket, socketData, socketWrapper);
+                break;
+            case ("chal"):
+                gameService.chal(socket, socketData, socketWrapper);
                 break;
             case ("sviw"):
                 statsService.sviw(socket, socketData);

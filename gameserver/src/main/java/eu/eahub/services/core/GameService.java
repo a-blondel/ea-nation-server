@@ -1,8 +1,10 @@
 package eu.eahub.services.core;
 
+import eu.eahub.dirtysdk.LobbyTagField;
 import eu.eahub.dto.Room;
 import eu.eahub.dto.SocketData;
 import eu.eahub.dto.SocketWrapper;
+import eu.eahub.dto.TwChallenge;
 import eu.eahub.entities.core.*;
 import eu.eahub.mappers.SocketMapper;
 import eu.eahub.repositories.core.*;
@@ -20,9 +22,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -33,6 +39,9 @@ import static eu.eahub.utils.SocketUtils.getValueFromSocket;
 @RequiredArgsConstructor
 @Service
 public class GameService {
+
+    // A TW04 session that is never reported is ended after this long
+    private static final long SESSION_MAX_HOURS = 6;
 
     public static final String NFS_MW_CONVERT_TO_RANKED_PASSWORD = "ranked";
     private final GameRepository gameRepository;
@@ -51,6 +60,8 @@ public class GameService {
     private final UserSetRepository userSetRepository;
     private final UserSetMemberRepository userSetMemberRepository;
     private final GameUtils gameUtils;
+    private final TwChallengeService twChallengeService;
+    private final TwRoomService twRoomService;
 
 
     /**
@@ -866,6 +877,10 @@ public class GameService {
             GameConnectionEntity gameConnectionEntity = gameConnectionEntityOpt.get();
             GameEntity gameEntity = gameConnectionEntity.getGame();
 
+            if (ALL_TW.contains(gameEntity.getVers())) {
+                // TW04 consoles leave the lobby once the match starts, and report it after logging in again
+                return;
+            }
             if (gameServerService.isP2P(gameEntity.getVers())) {
                 // If the player is the host, we need to close the game and notify all players
                 if (gameConnectionEntity.isHost()) {
@@ -1009,6 +1024,13 @@ public class GameService {
     public void dataCleanup() {
         LocalDateTime now = LocalDateTime.now();
 
+        // End TW04 sessions that were never reported
+        for (String vers : ALL_TW) {
+            gameRepository.findByVersAndEndTimeIsNull(vers).stream()
+                    .filter(game -> game.getStartTime().plusHours(SESSION_MAX_HOURS).isBefore(now))
+                    .forEach(game -> endSession(game, "expired"));
+        }
+
         // Manually close expired games
         List<GameEntity> gameEntities = gameRepository.findByEndTimeIsNull();
         gameEntities.forEach(gameEntity -> {
@@ -1036,9 +1058,11 @@ public class GameService {
             personaConnectionRepository.saveAll(inactivePersonaConnections);
         }
 
-        // Close game connections for inactive persona connections
+        // Close game connections for inactive persona connections (TW04 sessions outlive the lobby connection)
         List<GameConnectionEntity> inactiveGameConnections = gameConnectionRepository
-                .findByEndTimeIsNullAndPersonaConnectionAddressNotIn(activeAddresses);
+                .findByEndTimeIsNullAndPersonaConnectionAddressNotIn(activeAddresses).stream()
+                .filter(connection -> !ALL_TW.contains(connection.getGame().getVers()))
+                .toList();
         if (!inactiveGameConnections.isEmpty()) {
             inactiveGameConnections.forEach(report -> {
                 log.info("Socket closed for game report: {}", report.getId());
@@ -1048,7 +1072,9 @@ public class GameService {
         }
 
         // Close games where host is inactive
-        List<GameEntity> gamesWithInactiveHost = gameRepository.findByEndTimeIsNullAndGameConnectionsIsHostIsTrueAndGameConnectionsPersonaConnectionAddressNotIn(activeAddresses);
+        List<GameEntity> gamesWithInactiveHost = gameRepository.findByEndTimeIsNullAndGameConnectionsIsHostIsTrueAndGameConnectionsPersonaConnectionAddressNotIn(activeAddresses).stream()
+                .filter(game -> !ALL_TW.contains(game.getVers()))
+                .toList();
         if (!gamesWithInactiveHost.isEmpty()) {
             gamesWithInactiveHost.forEach(game -> {
                 log.info("Host socket closed for game: {}", game.getId());
@@ -1092,4 +1118,147 @@ public class GameService {
         }
     }
 
+    /**
+     * TW04 challenge readiness (chal)
+     * Without HOST, the player cancels their challenge. Otherwise HOST=1 from the challenger and HOST=0 from the
+     * opponent mark them ready, and the session starts once both are
+     *
+     * @param socket        The socket to write the response to
+     * @param socketData    The socket data
+     * @param socketWrapper The socket wrapper of current connection
+     */
+    public void chal(Socket socket, SocketData socketData, SocketWrapper socketWrapper) {
+        if (!ALL_TW.contains(gameServerService.getNameByPort(socket.getLocalPort()))) {
+            socketWriter.write(socket, socketData);
+            return;
+        }
+        Map<String, String> fields = LobbyTagField.decode(socketData.getInputMessage());
+        if (!fields.containsKey("HOST")) {
+            TwChallenge challenge = twChallengeService.getChallenge(socketWrapper);
+            if (challenge != null && challenge.isStarted() && challenge.getGameId() != null) {
+                gameRepository.findById(challenge.getGameId()).ifPresent(game -> endSession(game, "cancelled"));
+            }
+            twChallengeService.cancel(socketWrapper, true);
+            socketWriter.writeTagFields(socket, "chal", Map.of());
+            return;
+        }
+        if (socketWrapper.getPersonaEntity() == null) {
+            socketWriter.writeText(socket, "chalnrom", "");
+            return;
+        }
+        String vers = socketWrapper.getPersonaConnectionEntity().getVers();
+        SocketWrapper other = socketManager.getSocketWrapperByPersonaNameAndVers(fields.getOrDefault("PERS", ""), vers);
+        Room room = twRoomService.getRoomByPersonaId(socketWrapper.getPersonaEntity().getId());
+        Room otherRoom = other == null || other.getPersonaEntity() == null ? null : twRoomService.getRoomByPersonaId(other.getPersonaEntity().getId());
+        TwChallenge start = twChallengeService.ready(socket, socketWrapper, other, fields.get("HOST"), room, otherRoom);
+        if (start != null) {
+            startTwSession(start, start.getRoomId() == null ? null : room);
+        }
+    }
+
+    /**
+     * Start a TW04 head-to-head session: a started game with both players' connections, then +ses to each
+     * WHEN identifies the game when it is reported, AUTH checks the report
+     * The game is named after its room, like the room a match is played in, or after its mode when challenged from
+     * Messenger. PARAMS holds the course, the seed and the setup's MFLG
+     */
+    private void startTwSession(TwChallenge challenge, Room room) {
+        SocketWrapper host = challenge.getHost();
+        SocketWrapper guest = challenge.getGuest();
+        int seed = ThreadLocalRandom.current().nextInt(1, Integer.MAX_VALUE);
+        String params = (challenge.getCourse() == null ? "" : challenge.getCourse()) + "," + seed
+                + (challenge.getModeFlags() == null ? "" : "," + challenge.getModeFlags());
+        String name = room != null ? room.getName() : (challenge.isStrokePlay() ? "Stroke" : "Match") + ".B.Buddy";
+        GameEntity game = startSession(host.getPersonaConnectionEntity().getVers(), room, name, params, host, guest);
+        challenge.setGameId(game.getId());
+        String token = UUID.randomUUID().toString().replace("-", "");
+        twChallengeService.addSessionToken(token, game.getId());
+        long epoch = game.getStartTime().atZone(ZoneId.systemDefault()).toEpochSecond();
+        String when = "$" + HexFormat.of().formatHex(ByteBuffer.allocate(8).putLong(epoch).array());
+        for (SocketWrapper player : List.of(host, guest)) {
+            SocketWrapper other = player == host ? guest : host;
+            Map<String, String> fields = new LinkedHashMap<>();
+            fields.put("NAME", name);
+            fields.put("SELF", player.getPersonaEntity().getPers());
+            fields.put("HOST", host.getPersonaEntity().getPers());
+            fields.put("OPPO", other.getPersonaEntity().getPers());
+            fields.put("P1", host.getPersonaEntity().getPers());
+            fields.put("P2", guest.getPersonaEntity().getPers());
+            fields.put("FROM", other.getPersonaEntity().getPers());
+            fields.put("ADDR", twRoomService.peerAddress(other, player));
+            fields.put("SEED", String.valueOf(seed));
+            fields.put("WHEN", when);
+            fields.put("AUTH", token);
+            socketWriter.writeTagFields(player.getSocket(), "+ses", fields);
+            log.info("TW04 session start: {} -> peer {} at {} (UDP)", player.getPersonaEntity().getPers(),
+                    other.getPersonaEntity().getPers(), fields.get("ADDR"));
+        }
+    }
+
+    /**
+     * Start a two-player session set up by the server (as opposed to a game created with gcre)
+     *
+     * @param vers   The game version
+     * @param room   The room the session was set up in
+     * @param name   The game name
+     * @param params The game parameters
+     * @param host   The host's connection
+     * @param guest  The guest's connection
+     * @return The started game
+     */
+    public GameEntity startSession(String vers, Room room, String name, String params, SocketWrapper host, SocketWrapper guest) {
+        // A player is in one session at a time: end any earlier one that was never reported
+        for (SocketWrapper player : List.of(host, guest)) {
+            gameConnectionRepository.findByPersonaConnectionPersonaIdAndEndTimeIsNull(player.getPersonaEntity().getId()).stream()
+                    .map(GameConnectionEntity::getGame)
+                    .distinct()
+                    .forEach(previous -> endSession(previous, "expired"));
+        }
+        GameEntity game = new GameEntity();
+        game.setVers(vers);
+        game.setName(name);
+        game.setParams(params);
+        game.setSysflags("0");
+        game.setMinsize(2);
+        game.setMaxsize(2);
+        game.setStarted(true);
+        game.setRoomId(room == null ? null : room.getId().intValue());
+        // Truncated to the second, as the game reports the start time (WHEN) without fractions
+        game.setStartTime(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
+        gameRepository.save(game);
+        startGameConnection(host, game, true);
+        startGameConnection(guest, game, false);
+        if (room != null) {
+            room.getGameIds().add(game.getId());
+        }
+        return gameRepository.findById(game.getId()).orElse(game);
+    }
+
+    /**
+     * End a session started with startSession and all its connections, and drop the players' challenge
+     *
+     * @param game   The game
+     * @param reason Why it ended (reported, cancelled or expired), for the log
+     */
+    public void endSession(GameEntity game, String reason) {
+        if (game.getEndTime() == null) {
+            LocalDateTime now = LocalDateTime.now();
+            game.setEndTime(now);
+            gameRepository.save(game);
+            List<GameConnectionEntity> connections = gameConnectionRepository.findByGameIdAndEndTimeIsNull(game.getId());
+            for (GameConnectionEntity connection : connections) {
+                connection.setEndTime(now);
+                gameConnectionRepository.save(connection);
+                SocketWrapper player = socketManager.getSocketWrapperByPersonaIdAndVers(connection.getPersonaConnection().getPersona().getId(), game.getVers());
+                if (player != null) {
+                    twChallengeService.cancel(player, false);
+                }
+            }
+            if (game.getRoomId() != null) {
+                twRoomService.removeSession(game);
+            }
+            twChallengeService.removeSessionToken(game.getId());
+            log.info("Session {} ended: {}", game.getId(), reason);
+        }
+    }
 }
