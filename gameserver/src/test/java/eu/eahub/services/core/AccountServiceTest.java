@@ -6,6 +6,7 @@ import eu.eahub.entities.core.AccountEntity;
 import eu.eahub.mappers.SocketMapper;
 import eu.eahub.repositories.core.AccountRepository;
 import eu.eahub.repositories.core.BlacklistRepository;
+import eu.eahub.repositories.core.PersonaRepository;
 import eu.eahub.services.server.GameServerService;
 import eu.eahub.steps.SocketWriter;
 import eu.eahub.utils.EmailUtils;
@@ -38,7 +39,7 @@ class AccountServiceTest {
     @BeforeEach
     void setUp() {
         accountService = new AccountService(passwordUtils, mock(SocketMapper.class), accountRepository, mock(BlacklistRepository.class),
-                mock(PersonaService.class), mock(GameServerService.class), socketWriter, mock(EmailUtils.class));
+                mock(PersonaService.class), mock(GameServerService.class), socketWriter, mock(EmailUtils.class), mock(PersonaRepository.class));
         account = account(1);
         when(accountRepository.findByName("player")).thenReturn(Optional.of(account));
         when(accountRepository.findByMail(anyString())).thenReturn(List.of(account));
