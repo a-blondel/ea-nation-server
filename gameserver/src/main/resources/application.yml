@@ -23,6 +23,8 @@ tcp:
     exclusions: ${TCP_DEBUG_EXCLUSIONS:~png,+snp}
 ssc2:
   key: 51ba8aee64ddfacae5baefa6bf61e009
+tw04: # Tiger Woods PGA Tour 2004
+  news: ${TW04_NEWS:Welcome back to Tiger Woods PGA Tour 2004 online.} # Shown on the game's news screen
 
 spring:
   datasource:
@@ -537,9 +539,9 @@ game:
       sdk: ''
       ssl:
         enabled: false # No SSL
-        domain: 'ps2tw04.ea.com'
+        domain: 'ps2tw04.ea.com' # Not resolved by the game, which needs a patch with the server address
       ports:
-        - port: 10200 # US
+        - port: 10200 # US, same as TW07, should be patched to avoid conflicts
     - name: 'PS2_TW05' # Tiger Woods PGA Tour 2005
       enabled: false
       sdk: '' # Not specified

@@ -5,6 +5,7 @@ import eu.eahub.services.core.GameService;
 import eu.eahub.services.core.PersonaService;
 import eu.eahub.services.core.RoomService;
 import eu.eahub.services.core.UserSetService;
+import eu.eahub.services.social.BuddyService;
 import eu.eahub.services.server.GameServerService;
 import eu.eahub.services.server.SocketManager;
 import eu.eahub.steps.SocketReader;
@@ -48,6 +49,7 @@ public class ServerApp implements CommandLineRunner {
     private final GameService gameService;
     private final RoomService roomService;
     private final UserSetService userSetService;
+    private final BuddyService buddyService;
     private ExecutorService clientHandlingExecutor = Executors.newFixedThreadPool(500);
 
     @Value("${http.tunnel.enabled:true}")
@@ -157,7 +159,7 @@ public class ServerApp implements CommandLineRunner {
     }
 
     private Runnable createTcpSocketThread(Socket socket) {
-        return new TcpSocketThread(socket, socketManager, socketReader, socketWriter, personaService, gameService, userSetService);
+        return new TcpSocketThread(socket, socketManager, socketReader, socketWriter, personaService, gameService, userSetService, buddyService);
     }
 
     private Runnable createSslSocketThread(Socket socket) {
