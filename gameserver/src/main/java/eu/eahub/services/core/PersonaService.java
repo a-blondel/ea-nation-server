@@ -170,6 +170,16 @@ public class PersonaService {
             pers = pers.split("@")[0] + pers.split("@")[1];
         }
 
+        // The persona must belong to the logged-in account
+        Optional<PersonaEntity> personaEntityOpt = personaRepository.findByPers(pers);
+        if (personaEntityOpt.isPresent() && (socketWrapper.getAccountEntity() == null
+                || !personaEntityOpt.get().getAccount().getId().equals(socketWrapper.getAccountEntity().getId()))) {
+            log.warn("Persona {} requested by another account", pers);
+            socketData.setIdMessage("persmaut");
+            socketWriter.write(socket, socketData);
+            return;
+        }
+
         // Check if the persona is already connected (allowed for host only)
         List<PersonaConnectionEntity> existingPersonaConnections =
                 personaConnectionRepository.findByVersAndPersonaPersAndIsHostFalseAndEndTimeIsNull(
@@ -179,8 +189,15 @@ public class PersonaService {
 //            socketData.setIdMessage("perspset");
 //            socketWriter.write(socket, socketData);
 //            return;
+            if (personaConnectionEntity.getId() != null
+                    && personaConnectionEntity.getId().equals(socketWrapper.getPersonaConnectionEntity().getId())) {
+                continue; // pers sent again on the same connection
+            }
             log.warn("Persona {} already connected, ending old session", pers);
-            Socket socketToClose = socketManager.getSocketWrapper(personaConnectionEntity.getAddress()).getSocket();
+            // Look the socket up by connection id: the stored address is rewritten for localhost clients (handleLocalhostIp),
+            // and the socket may already be gone
+            SocketWrapper oldSocketWrapper = socketManager.getSocketWrapperByPersonaConnectionId(personaConnectionEntity.getId());
+            Socket socketToClose = oldSocketWrapper != null ? oldSocketWrapper.getSocket() : null;
             if (socketToClose != null) {
                 log.info("Closing old socket {}", socketToClose.getRemoteSocketAddress());
                 try {
@@ -196,7 +213,6 @@ public class PersonaService {
 
         }
 
-        Optional<PersonaEntity> personaEntityOpt = personaRepository.findByPers(pers);
         if (personaEntityOpt.isPresent()) {
             PersonaEntity personaEntity = personaEntityOpt.get();
             if (personaEntity.getDeletedOn() != null) {

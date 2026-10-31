@@ -129,7 +129,7 @@ public class SocketProcessor {
                 accountService.acct(socket, socketData);
                 break;
             case ("edit"):
-                accountService.edit(socket, socketData);
+                accountService.edit(socket, socketData, socketWrapper);
                 break;
             case ("auth"):
                 accountService.auth(socket, socketData, socketWrapper);
