@@ -41,6 +41,30 @@ public interface GameConnectionRepository extends JpaRepository<GameConnectionEn
 
     List<GameConnectionEntity> findByGameIdAndEndTimeIsNull(Long gameId);
 
+    List<GameConnectionEntity> findByPersonaConnectionPersonaIdAndEndTimeIsNull(Long personaId);
+
+    /**
+     * Get a player's connections to the games of some versions that started at a given second (TW04 reports a match
+     * with the start time it was given)
+     *
+     * @param playerName The persona name
+     * @param startTime  The game start time, to the second
+     * @param vers       The game versions
+     * @return The matching game connections, latest game first
+     */
+    @Query("""
+                SELECT gc FROM GameConnectionEntity gc
+                WHERE gc.personaConnection.persona.pers = :playerName
+                AND gc.game.startTime = :startTime
+                AND gc.game.vers IN :vers
+                ORDER BY gc.game.id DESC
+            """)
+    List<GameConnectionEntity> findByPlayerNameAndGameStartTimeAndGameVersIn(
+            @Param("playerName") String playerName,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("vers") Collection<String> vers
+    );
+
     @Query("""
                 SELECT gc FROM GameConnectionEntity gc
                 WHERE gc.personaConnection.persona.pers = :playerName
