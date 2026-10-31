@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 @Slf4j
@@ -25,47 +24,15 @@ public class SocketParser {
     private final SocketProcessor socketProcessor;
 
     /**
-     * Parses input messages based on current content of the stream
-     * Loops until all complete messages are parsed
-     * Sends complete messages to the processor
+     * Parses a complete message (12-byte header and body) read by SocketReader
+     * Sends it to the processor
      *
-     * @param socket     the socket to exchange with
-     * @param buffer     the buffer to read from
-     * @param readLength the size of written content in buffer
+     * @param socket  the socket to exchange with
+     * @param message the complete message
      */
-    public void parse(Socket socket, byte[] buffer, int readLength) {
-        ByteBuffer messageBuffer = ByteBuffer.allocate(4096);
-        handleSocketData(socket, buffer, readLength, messageBuffer);
-    }
-
-    private void handleSocketData(Socket socket, byte[] buffer, int readLength, ByteBuffer messageBuffer) {
-        if (messageBuffer.remaining() < readLength) {
-            ByteBuffer newBuffer = ByteBuffer.allocate(messageBuffer.capacity() + readLength);
-            messageBuffer.flip();
-            newBuffer.put(messageBuffer);
-            messageBuffer = newBuffer;
-        }
-
-        messageBuffer.put(buffer, 0, readLength);
-        messageBuffer.flip();
-
-        while (messageBuffer.remaining() >= 12) {
-            int messageSize = SocketUtils.getlength(messageBuffer.array(), messageBuffer.position());
-            if (messageBuffer.remaining() >= messageSize) {
-                byte[] message = new byte[messageSize];
-                messageBuffer.get(message);
-                processCompleteMessage(socket, message, messageSize);
-            } else {
-                break;
-            }
-        }
-
-        messageBuffer.compact();
-    }
-
-    private void processCompleteMessage(Socket socket, byte[] message, int messageSize) {
+    public void parse(Socket socket, byte[] message) {
         String id = new String(message, 0, 4, StandardCharsets.ISO_8859_1);
-        String content = new String(message, 12, messageSize - 12, StandardCharsets.ISO_8859_1);
+        String content = new String(message, 12, message.length - 12, StandardCharsets.ISO_8859_1);
         SocketData socketData = new SocketData(id, content, null);
 
         String playerInfo = "";
