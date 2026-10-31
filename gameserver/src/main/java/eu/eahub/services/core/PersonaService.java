@@ -170,6 +170,16 @@ public class PersonaService {
             pers = pers.split("@")[0] + pers.split("@")[1];
         }
 
+        // The persona must belong to the logged-in account
+        Optional<PersonaEntity> personaEntityOpt = personaRepository.findByPers(pers);
+        if (personaEntityOpt.isPresent() && (socketWrapper.getAccountEntity() == null
+                || !personaEntityOpt.get().getAccount().getId().equals(socketWrapper.getAccountEntity().getId()))) {
+            log.warn("Persona {} requested by another account", pers);
+            socketData.setIdMessage("persmaut");
+            socketWriter.write(socket, socketData);
+            return;
+        }
+
         // Check if the persona is already connected (allowed for host only)
         List<PersonaConnectionEntity> existingPersonaConnections =
                 personaConnectionRepository.findByVersAndPersonaPersAndIsHostFalseAndEndTimeIsNull(
@@ -196,7 +206,6 @@ public class PersonaService {
 
         }
 
-        Optional<PersonaEntity> personaEntityOpt = personaRepository.findByPers(pers);
         if (personaEntityOpt.isPresent()) {
             PersonaEntity personaEntity = personaEntityOpt.get();
             if (personaEntity.getDeletedOn() != null) {
