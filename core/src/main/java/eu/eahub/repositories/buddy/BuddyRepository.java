@@ -23,6 +23,8 @@ public interface BuddyRepository extends JpaRepository<BuddyEntity, Long> {
     @Query("DELETE FROM BuddyEntity b WHERE b.fromPersona = :fromPersona AND b.toPersona = :toPersona AND b.list = :list")
     void deleteByFromPersonaAndToPersonaAndList(@Param("fromPersona") PersonaEntity fromPersona, @Param("toPersona") PersonaEntity toPersona, @Param("list") String list);
 
+    boolean existsByFromPersonaIdAndToPersonaIdAndList(Long fromPersonaId, Long toPersonaId, String list);
+
     @Query("SELECT b FROM BuddyEntity b WHERE (b.fromPersona = :persona OR b.toPersona = :persona) AND b.list = :list")
     List<BuddyEntity> findByPersonaInEitherDirectionAndList(@Param("persona") PersonaEntity persona, @Param("list") String list);
 }
