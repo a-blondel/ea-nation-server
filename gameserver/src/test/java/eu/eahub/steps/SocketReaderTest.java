@@ -64,7 +64,39 @@ class SocketReaderTest {
         }
     }
 
+    private static class ReadSizeTrackingStream extends InputStream {
+
+        private final byte[] data;
+        private int position;
+        private int largestRead;
+
+        ReadSizeTrackingStream(byte[] data) {
+            this.data = data;
+        }
+
+        @Override
+        public int read() {
+            return position == data.length ? -1 : data[position++] & 255;
+        }
+
+        @Override
+        public int read(byte[] dest, int offset, int length) {
+            largestRead = Math.max(largestRead, length);
+            if (position == data.length) {
+                return -1;
+            }
+            int count = Math.min(length, data.length - position);
+            System.arraycopy(data, position, dest, offset, count);
+            position += count;
+            return count;
+        }
+    }
+
     private List<SocketData> read(byte[] bytes, int... boundaries) throws Exception {
+        return read(new FragmentedStream(bytes, boundaries));
+    }
+
+    private List<SocketData> read(InputStream input) throws Exception {
         List<SocketData> messages = new ArrayList<>();
         SocketProcessor processor = mock(SocketProcessor.class);
         doAnswer(call -> messages.add(call.getArgument(1))).when(processor).process(any(), any());
@@ -72,7 +104,7 @@ class SocketReaderTest {
         when(props.getTcpDebugExclusions()).thenReturn(List.of());
         SocketParser parser = new SocketParser(props, mock(SocketManager.class), processor);
         Socket socket = mock(Socket.class);
-        when(socket.getInputStream()).thenReturn(new FragmentedStream(bytes, boundaries));
+        when(socket.getInputStream()).thenReturn(input);
         when(socket.getRemoteSocketAddress()).thenReturn(new InetSocketAddress("192.0.2.10", 12345));
         new SocketReader(parser).read(socket);
         return messages;
@@ -139,5 +171,18 @@ class SocketReaderTest {
             data.write(message("auth", "NAME=a\n\0"));
             assertTrue(read(data.toByteArray(), 5).isEmpty(), "length=" + length);
         }
+    }
+
+    @Test
+    void incompleteLargeMessageUsesBoundedReads() throws Exception {
+        byte[] header = ByteBuffer.allocate(12)
+                .putInt(0)
+                .putInt(0)
+                .putInt(SocketReader.MAX_MESSAGE_SIZE)
+                .array();
+        ReadSizeTrackingStream stream = new ReadSizeTrackingStream(header);
+
+        assertTrue(read(stream).isEmpty());
+        assertTrue(stream.largestRead <= SocketReader.INITIAL_MESSAGE_BUFFER_SIZE);
     }
 }

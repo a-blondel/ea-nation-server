@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -17,6 +18,7 @@ public class SocketReader {
 
     static final int HEADER_SIZE = 12;
     static final int MAX_MESSAGE_SIZE = 1024 * 1024;
+    static final int INITIAL_MESSAGE_BUFFER_SIZE = 8 * 1024;
 
     private final SocketParser parser;
 
@@ -44,9 +46,8 @@ public class SocketReader {
                     log.warn("Invalid message length {}, stop reading", Integer.toUnsignedString(length));
                     return;
                 }
-                byte[] message = new byte[length];
-                System.arraycopy(header, 0, message, 0, HEADER_SIZE);
-                if (is.readNBytes(message, HEADER_SIZE, length - HEADER_SIZE) < length - HEADER_SIZE) {
+                byte[] message = readMessage(is, header, length);
+                if (message == null) {
                     log.warn("Incomplete message body, stop reading");
                     return;
                 }
@@ -57,5 +58,37 @@ public class SocketReader {
         } catch (IOException e) {
             log.error("Error reading from socket : {}", e.getMessage());
         }
+    }
+
+    /**
+     * Grow the message buffer as body bytes arrive instead of reserving the
+     * entire declared message size before the body has been read.
+     */
+    private byte[] readMessage(InputStream is, byte[] header, int length) throws IOException {
+        int initialSize = Math.min(length, INITIAL_MESSAGE_BUFFER_SIZE);
+        byte[] message = Arrays.copyOf(header, initialSize);
+        int offset = HEADER_SIZE;
+
+        while (offset < length) {
+            if (offset == message.length) {
+                message = Arrays.copyOf(message, Math.min(length, message.length * 2));
+            }
+
+            int count = is.read(message, offset, message.length - offset);
+            if (count < 0) {
+                return null;
+            }
+            if (count == 0) {
+                int next = is.read();
+                if (next < 0) {
+                    return null;
+                }
+                message[offset++] = (byte) next;
+            } else {
+                offset += count;
+            }
+        }
+
+        return message;
     }
 }
