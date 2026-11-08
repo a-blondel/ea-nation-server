@@ -13,16 +13,16 @@
 
     <properties>
         <java.version>21</java.version>
-        <maven.compiler.source>{java.version}</maven.compiler.source>
-        <maven.compiler.target>{java.version}</maven.compiler.target>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jda.version>5.6.1</jda.version>
         <selenium.version>4.34.0</selenium.version>
         <com.h2database.version>2.4.240</com.h2database.version>
         <lombok.version>1.18.46</lombok.version>
         <liquibase.version>4.29.2</liquibase.version>
-        <postgresql.version>42.7.11</postgresql.version>
-        <jackson.databind.version>2.19.1</jackson.databind.version> <!-- Upgrade breaks ObjectMapper -->
+        <postgresql.version>42.7.14</postgresql.version>
+        <jackson.databind.version>2.21.7</jackson.databind.version> <!-- Upgrade breaks ObjectMapper -->
     </properties>
 
     <dependencies>
